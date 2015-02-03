@@ -1,99 +1,101 @@
-[![Build Status](https://travis-ci.org/GoogleChrome/webrtc.svg)](https://travis-ci.org/GoogleChrome/webrtc)
+# AppRTC Demo Code
 
-# WebRTC code samples #
+## Development
 
-This is a repository for client-side WebRTC code samples and the [AppRTC](https://apprtc.appspot.com) video chat client.
+Detailed information on devloping in the [GoogleChrome/webrtc](https://github.com/GoogleChrome/webrtc) github repo can be found in the [WebRTC GitHub repo developer's guide](https://docs.google.com/document/d/1tn1t6LW2ffzGuYTK3366w1fhTkkzsSvHsBnOHoDfRzY/edit?pli=1#heading=h.e3366rrgmkdk).
 
-Some of the samples use new browser features. They may only work in Chrome Canary and/or Firefox Beta, and may require flags to be set.
+The development AppRTC server can be accessed by visiting [http://localhost:8080](http://localhost:8080).
 
-All of the samples use [adapter.js](https://github.com/GoogleChrome/webrtc/blob/master/samples/web/js/adapter.js), a shim to insulate apps from spec changes and prefix differences. In fact, the standards and protocols used for WebRTC implementations are highly stable, and there are only a few prefixed names. For full interop information, see [webrtc.org/web-apis/interop](http://www.webrtc.org/web-apis/interop).
+Running AppRTC locally requires the [Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python) and [Grunt](http://gruntjs.com/).
 
-NB: all samples that use `getUserMedia()` must be run from a server. Calling `getUserMedia()` from a file:// URL will result in a PermissionDeniedError NavigatorUserMediaError.
+Detailed instructions for running on Ubuntu Linux are provided below.
 
-[webrtc.org/testing](http://www.webrtc.org/testing) lists command line flags useful for development and testing with Chrome.
+### Running on Ubuntu Linux
 
-For more information about WebRTC, we maintain a list of [WebRTC Resources](https://docs.google.com/document/d/1idl_NYQhllFEFqkGQOLv8KBK8M3EVzyvxnKkHl4SuM8/edit). If you've never worked with WebRTC, we recommend you start with the 2013 Google I/O [WebRTC presentation](http://www.youtube.com/watch?v=p2HzZkd2A40).
+Install grunt by first installing [npm](https://www.npmjs.com/),
 
-Patches and issues welcome! See [CONTRIBUTING](https://github.com/GoogleChrome/webrtc/blob/master/CONTRIBUTING.md) for instructions. All contributors must sign a contributor license agreement before code can be accepted. Please complete the agreement for an [individual](https://developers.google.com/open-source/cla/individual) or a [corporation](https://developers.google.com/open-source/cla/corporate) as appropriate. The [Developer's Guide](https://bit.ly/webrtcdevguide) for this repo has more information about code style, structure and validation.
+```
+sudo apt-get install npm
+```
 
-## The demos ##
+On Ubuntu 14.04 the default packages installs `/usr/bin/nodejs` but the `/usr/bin/node` executable is required for grunt. You can add this by installing the `nodejs-legacy` package,
 
-### getUserMedia ###
+```
+sudo apt-get install nodejs-legacy
+```
 
-[Basic getUserMedia demo](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/gum)
+It is easiest to install a shared version of `grunt-cli` from `npm` using the `-g` flag. This will allow you access the `grunt` command from `/usr/local/bin`. More information can be found on [`gruntjs` Getting Started](http://gruntjs.com/getting-started).
 
-[getUserMedia + canvas](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/canvas)
+```
+sudo npm -g install grunt-cli
+```
 
-[getUserMedia + canvas + CSS Filters](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/filter)
+*Omitting the `-g` flag will install `grunt-cli` to the current directory under the `node_modules` directory.*
 
-[getUserMedia with resolution constraints](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/resolution)
+Finally, you will want to install grunt and required grunt dependencies. *This can be done from any directory under your checkout of the [GoogleChrome/webrtc](https://github.com/GoogleChrome/webrtc) repository.*
 
-[getUserMedia with camera/mic selection](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/source)
+```
+npm install
+```
 
-[Audio-only getUserMedia output to local audio element](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/audio)
+Before you start the AppRTC dev server and *everytime you update the javascript* you need to recompile the App Engine package by running,
 
-[Audio-only getUserMedia displaying volume](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/volume)
+```
+grunt build
+```
 
-[Face tracking](https://googlechrome.github.io/webrtc/samples/web/content/getusermedia/face)
+Start the AppRTC dev server from the `out/app_engine` directory by running the Google App Engine SDK dev server,
 
-### RTCPeerConnection ###
+```
+<path to sdk>/dev_appserver.py ./out/app_engine
+```
 
-[Basic peer connection](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/pc1)
+### Testing
 
-[Audio-only peer connection](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/audio)
+All tests by running `grunt`.
 
-[Multiple peer connections at once](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/multiple)
+To run only the Python tests you can call,
 
-[Forward output of one peer connection into another](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/multiple-relay)
+```
+grunt shell:runPythonTests
+```
 
-[Munge SDP parameters](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/munge-sdp)
+### Enabling Local Logging
 
-[Use pranswer when setting up a peer connection](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/pr-answer)
+*Note that logging is automatically enabled when running on Google App Engine using an implicit service account.*
 
-[Adjust constraints, view stats](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/constraints)
+By default, logging to a BigQuery from the development server is disabled. Log information is presented on the console. Unless you are modifying the analytics API you will not need to enable remote logging.
 
-[Display createOffer output](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/create-offer)
+Logging to BigQuery when running LOCALLY requires a `secrets.json` containing Service Account credentials to a Google Developer project where BigQuery is enabled. DO NOT COMMIT `secrets.json` TO THE REPOSITORY.
 
-[Use RTCDTMFSender](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/dtmf)
+To generate a `secrets.json` file in the Google Developers Console for your project:
+1. Go to the project page.
+1. Under *APIs & auth* select *Credentials*.
+1. Confirm a *Service Account* already exists or create it by selecting *Create new Client ID*.
+1. Select *Generate new JSON key* from the *Service Account* area to create and download JSON credentials.
+1. Rename the downloaded file to `secrets.json` and place in the directory containing `analytics.py`.
 
-[Display peer connection states](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/states)
+When the `Analytics` class detects that AppRTC is running locally, all data is logged to `analytics` table in the `dev` dataset. You can bootstrap the `dev` dataset by following the instructions in the [Bootstrapping/Updating BigQuery](#bootstrappingupdating-bigquery).
 
-[ICE candidate gathering from STUN/TURN servers](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/trickle-ice)
+## BigQuery
 
-[Web Audio output as input to peer connection](https://googlechrome.github.io/webrtc/samples/web/content/peerconnection/webaudio-input)
+When running on App Engine the `Analytics` class will log to `analytics` table in the `prod` dataset for whatever project is defined in `app.yaml`.
 
-### RTCDataChannel ###
+### Schema
 
-[Data channels](https://googlechrome.github.io/webrtc/samples/web/content/datachannel)
+`bigquery/analytics_schema.json` contains the fields used in the BigQuery table. New fields can be added to the schema and the table updated. However, fields *cannot* be renamed or removed. *Caution should be taken when updating the production table as reverting schema updates is difficult.*
 
-### Video chat ###
+Update the BigQuery table from the schema by running,
 
-[AppRTC video chat client](https://apprtc.appspot.com) powered by Google App Engine
+```
+bq update -t prod.analytics bigquery/analytics_schema.json
+```
 
-[AppRTC URL parameters](https://apprtc.appspot.com/html/params.html)
+### Bootstrapping
 
-## Test pages ##
+Initialize the required BigQuery datasets and tables with the following,
 
-[Audio and Video streams](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/audio-and-video)
-
-[Iframe apprtc](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/iframe-apprtc)
-
-[Iframe video](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/iframe-video)
-
-[Multiple audio streams](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/multiple-audio)
-
-[Multiple peerconnections](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/multiple-peerconnections)
-
-[Multiple video devices](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/multiple-video-devices)
-
-[Multiple video streams](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/multiple-video)
-
-[Peer2peer](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/peer2peer)
-
-[Peer2peer iframe](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/peer2peer-iframe)
-
-[Single audio stream](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/single-audio)
-
-[Single video stream](https://googlechrome.github.io/webrtc/samples/web/content/manual-test/single-video)
-
-
+```
+bq mk prod
+bq mk -t prod.analytics bigquery/analytics_schema.json
+```
