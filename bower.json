@@ -1,41 +1,16 @@
 {
-  "name": "adapter.js",
-  "description": "A shim to insulate apps from WebRTC spec changes and prefix differences",
-  "homepage": "http://googlechrome.github.io/webrtc/",
+  "name": "AppRTC",
+  "description": "A video chat demo app based on WebRTC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GoogleChrome/webrtc.git"
+    "url": "git://github.com/webrtc/apprtc"
   },
   "authors": [
-    "The WebRTC project authors (http://www.webrtc.org/)",
-    "Jesús Leganés Combarro \"piranna\" <piranna@gmail.com>"
-  ],
-  "main": "samples/web/js/adapter.js",
-  "moduleType": [
-    "globals"
+    "The WebRTC project authors (http://www.webrtc.org/)"
   ],
   "keywords": [
     "WebRTC",
-    "PeerConnection",
-    "RTCPeerConnection",
-    "getUserMedia",
-    "Chrome",
-    "Chromium",
-    "Firefox"
+    "AppRTC"
   ],
-  "license": "BSD-3-Clause",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests",
-    "Gruntfile.js",
-    "index.html",
-    "package.json",
-    "samples/web/content",
-    "samples/web/css",
-    "samples/web/js/lib",
-    "samples/web/js/videopipe.js"
-  ]
+  "license": "BSD-3-Clause"
 }

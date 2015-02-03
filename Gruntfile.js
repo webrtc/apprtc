@@ -3,7 +3,6 @@
 /* globals module */
 
 module.exports = function(grunt) {
-
   // configure project
   grunt.initConfig({
     // make node configurations available
@@ -11,94 +10,77 @@ module.exports = function(grunt) {
 
     csslint: {
       options: {
-        csslintrc: 'samples/web/.csslintrc'
+        csslintrc: 'build/.csslintrc'
       },
       strict: {
         options: {
           import: 2
         },
-        src: ['samples/web/content/**/*.css',
-              '!samples/web/content/**/*_nolint.css',
-              '!samples/web/content/testrtc/bower_components/**/*.css'
+        src: ['src/**/*.css'
         ]
       },
       lax: {
         options: {
           import: false
         },
-        src: ['samples/web/content/**/*.css',
-              '!samples/web/content/**/*_nolint.css',
-              '!samples/web/content/testrtc/bower_components/**/*.css'
+        src: ['src/**/*.css'
         ]
       }
     },
 
     htmlhint: {
       html1: {
-        src: [
-        'samples/web/content/apprtc/index.html',
-        'samples/web/content/datachannel/index.html',
-        'samples/web/content/getusermedia/**/index.html',
-        'samples/web/content/peerconnection/**/index.html'
+        src: ['src/html/index.html'
         ]
       }
     },
 
     jscs: {
-      src: 'samples/web/content/**/*.js',
+      src: 'src/**/*.js',
       options: {
         preset: 'google', // as per Google style guide – could use '.jscsrc' instead
         'excludeFiles': [
-        'samples/web/content/apprtc/js/compiled/*.js',
-        'samples/web/content/apprtc/js/vr.js',
-        'samples/web/content/apprtc/js/stereoscopic.js',
-        'samples/web/content/getusermedia/desktopcapture/extension/content-script.js',
-        'samples/web/content/testrtc/bower_components/**',
-        // TODO (chuckhays) : remove these exclusions after code passes.
-        'samples/web/content/getusermedia/**/*.js',
-        'samples/web/content/peerconnection/**/*.js',
-        'samples/web/content/datachannel/**/*.js'
-        ]
+        'src/js/adapter.js'
+        ],
+        requireCurlyBraces: ['if']
       }
     },
 
     jshint: {
       options: {
-        ignores: [
-        'samples/web/content/getusermedia/desktopcapture/**',
-        'samples/web/content/apprtc/js/compiled/*.js',
-        'samples/web/content/apprtc/js/stereoscopic.js',
-        'samples/web/content/apprtc/js/ga.js',
-        'samples/web/content/apprtc/js/vr.js',
-        'samples/web/content/testrtc/bower_components/**'
-        ],
-        // use default .jshintrc files
-        jshintrc: true
+        jshintrc: 'build/.jshintrc'
       },
       // files to validate
       // can choose more than one name + array of paths
       // usage with this name: grunt jshint:files
-      files: ['samples/web/content/**/*.js']
+      files: ['src/**/*.js']
     },
 
     shell: {
       runPythonTests: {
-        command: './run_python_tests.sh'
+        command: './build/run_python_tests.sh'
       },
       buildVersion: {
-        command: 'samples/web/content/apprtc/build_version_file.sh',
+        command: './build/build_version_file.sh',
         options: {
           stdout: true,
           stderr: true
         }
       },
+      buildAppEnginePackage: {
+        command: './build/build_app_engine_package.sh',
+        options: {
+          stdout: true,
+          stderr: true
+        }
+      }
     },
 
     'grunt-chrome-build' : {
       apprtc: {
         options: {
-          buildDir: 'build/chrome-app',
-          zipFile: 'build/chrome-app/apprtc.zip',
+          buildDir: 'out/chrome-app',
+          zipFile: 'out/chrome-app/apprtc.zip',
           // If values for chromeBinary and keyFile are not provided, the packaging
           // step will be skipped.
           // chromeBinary should be set to the Chrome executable on your system.
@@ -109,18 +91,26 @@ module.exports = function(grunt) {
         files: [
           {
             expand: true,
-            cwd: 'samples/web/content/apprtc',
+            cwd: 'out/app_engine',
             src: [
               '**/*.js',
-              '!**/*test.js',
               '**/*.css',
-              'images/apprtc*.png',
-              'manifest.json',
-              '!*.pem'
+              '**/images/apprtc*.png',
+              '!**/*.pem'
             ],
-            dest: 'build/chrome-app/'
+            dest: 'out/chrome-app/'
+          },
+          {
+            expand: true,
+            cwd: 'src',
+            src: [
+              'js/background.js',
+              'js/appwindow.js',
+              '!**/*.pem'
+            ],
+            dest: 'out/chrome-app/'
           }
-        ]
+        ],
       }
     },
 
@@ -130,25 +120,25 @@ module.exports = function(grunt) {
         port: 9876,
       },
       files: [
-        'samples/web/content/apprtc/js_test_driver.conf',
+        'build/js_test_driver.conf',
       ]},
 
     closurecompiler: {
       debug: {
         files: {
           // Destination: [source files]
-          'samples/web/content/apprtc/js/compiled/apprtc.debug.js': [
-            'samples/web/content/apprtc/js/adapter.js',
-            'samples/web/content/apprtc/js/appcontroller.js',
-            'samples/web/content/apprtc/js/call.js',
-            'samples/web/content/apprtc/js/infobox.js',
-            'samples/web/content/apprtc/js/peerconnectionclient.js',
-            'samples/web/content/apprtc/js/roomselection.js',
-            'samples/web/content/apprtc/js/sdputils.js',
-            'samples/web/content/apprtc/js/signalingchannel.js',
-            'samples/web/content/apprtc/js/stats.js',
-            'samples/web/content/apprtc/js/storage.js',
-            'samples/web/content/apprtc/js/util.js',
+          'out/app_engine/js/apprtc.debug.js': [
+            'src/js/adapter.js',
+            'src/js/appcontroller.js',
+            'src/js/call.js',
+            'src/js/infobox.js',
+            'src/js/peerconnectionclient.js',
+            'src/js/roomselection.js',
+            'src/js/sdputils.js',
+            'src/js/signalingchannel.js',
+            'src/js/stats.js',
+            'src/js/storage.js',
+            'src/js/util.js',
           ]
         },
         options: {
@@ -168,14 +158,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
   grunt.loadNpmTasks('grunt-closurecompiler');
-  grunt.loadTasks('grunt-chrome-build');
+  grunt.loadTasks('build/grunt-chrome-build');
 
   // set default tasks to run when grunt is called without parameters
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
                                  'shell:buildVersion', 'shell:runPythonTests',
-                                 'jstests']);
+                                 'shell:buildAppEnginePackage', 'jstests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildVersion', 'grunt-chrome-build']);
+  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildVersion', 'grunt-chrome-build', 'shell:buildAppEnginePackage']);
   // also possible to call JavaScript directly in registerTask()
   // or to call external tasks with grunt.loadTasks()
 };
