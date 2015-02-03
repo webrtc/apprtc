@@ -8,6 +8,7 @@ from google.appengine.datastore import datastore_stub_util
 from google.appengine.ext import ndb
 from google.appengine.ext import testbed
 
+import analytics
 import apprtc
 import constants
 import gcm_register
@@ -29,8 +30,15 @@ class BasePageHandlerTest(unittest.TestCase):
 
     self.test_app = webtest.TestApp(apprtc.app)
 
+    # Fake out event reporting.
+    def fake_mock_event(*args, **kwargs):
+      pass
+    self.oldReportEvent = analytics.report_event
+    analytics.report_event = fake_mock_event
+
   def tearDown(self):
     self.testbed.deactivate()
+    analytics.report_event = self.oldReportEvent
 
   def checkInvalidRequests(self, path, params):
     body = {x: '' for x in params}
@@ -52,7 +60,7 @@ class BasePageHandlerTest(unittest.TestCase):
       ('callee4', True, [('callee4gcm1', 'callee4code1')]),
       ('callee4', False, [('callee4gcm2', 'callee4code2')]),
     ]
-  
+
     for data in records:
       self.addRecord(data[0], data[2], data[1])
 
@@ -68,7 +76,7 @@ class BasePageHandlerTest(unittest.TestCase):
       response = self.makePostRequest(path, json.dumps(body))
       self.assertEqual(constants.RESPONSE_INVALID_ARGUMENT, response.body)
       body.popitem()
-  
+
   def makeGetRequest(self, path):
     # PhantomJS uses WebKit, so Safari is closest to the thruth.
     return self.test_app.get(path, headers={'User-Agent': 'Safari'})
@@ -87,16 +95,16 @@ class BasePageHandlerTest(unittest.TestCase):
       constants.PARAM_CALLER_GCM_ID: caller_gcm_id,
       constants.PARAM_CALLEE_ID: callee_id
     }
-    
+
     response = self.makePostRequest('/join/' + room_id, json.dumps(body))
     self.verifyResultCode(response, expected_response)
-    
+
   def requestAcceptAndVerify(self, room_id, callee_gcm_id, expected_response):
     body = {
       constants.PARAM_ACTION: constants.ACTION_ACCEPT,
       constants.PARAM_CALLEE_GCM_ID: callee_gcm_id
     }
-    
+
     response = self.makePostRequest('/join/' + room_id, json.dumps(body))
     self.verifyResultCode(response, expected_response)
 

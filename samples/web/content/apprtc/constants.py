@@ -6,6 +6,9 @@
 
 This module contains the constants used in AppRTC Python modules.
 """
+import json
+import os
+
 ROOM_MEMCACHE_EXPIRATION_SEC = 60 * 60 * 24
 ROOM_MEMCACHE_RETRY_LIMIT = 100
 
@@ -44,3 +47,28 @@ PARAM_ACTION = 'action'
 PARAM_CALLER_GCM_ID = 'callerGcmId'
 PARAM_CALLEE_ID = 'calleeId'
 PARAM_CALLEE_GCM_ID = 'calleeGcmId'
+
+BIGQUERY_URL='https://www.googleapis.com/auth/bigquery'
+
+# Dataset used in production.
+BIGQUERY_DATASET_PROD='prod'
+
+# Dataset used when running locally.
+BIGQUERY_DATASET_LOCAL='dev'
+
+# BigQuery table within the dataset.
+BIGQUERY_TABLE='analytics'
+
+class EventType:
+  # Event signifying that a room enters the state of having exactly
+  # two participants.
+  ROOM_SIZE_2='room_size_2'
+
+class LogField:
+  pass
+
+with open(os.path.join(os.path.dirname(__file__),
+                       'bigquery', 'analytics_schema.json')) as f:
+  schema = json.load(f)
+  for field in schema:
+    setattr(LogField, field['name'].upper(), field['name'])

@@ -4,7 +4,7 @@ import unittest
 import webtest
 
 import apprtc
-import constants
+
 import json
 from google.appengine.api import memcache
 from google.appengine.ext import testbed

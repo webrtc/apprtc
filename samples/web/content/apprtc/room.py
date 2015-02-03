@@ -12,6 +12,7 @@ import logging
 
 from google.appengine.api import memcache
 
+import analytics
 import client
 import constants
 import parameter_handling
@@ -26,7 +27,7 @@ class Room:
   STATE_EMPTY = 0
   STATE_WAITING = 1
   STATE_FULL = 2
-  
+
   def __init__(self, room_type):
     self.clients = {}
     # The list of allowed clients will include the initiator and other
@@ -98,12 +99,12 @@ def remove_room_for_declined_call(host, room_id, callee_gcm_id):
 
   for retries in xrange(constants.ROOM_MEMCACHE_RETRY_LIMIT):
     room = memcache_client.gets(key)
-    
+
     if room is None:
       logging.warning('Can\'t remove room ' + room_id +
           ' because it doesn\'t exist, client: ' + callee_gcm_id)
       return constants.RESPONSE_INVALID_ROOM
-  
+
     if not room.is_client_allowed(callee_gcm_id):
       logging.warning('Can\'t remove room ' + room_id +
           ' because room does not allow client ' + callee_gcm_id)
@@ -115,35 +116,35 @@ def remove_room_for_declined_call(host, room_id, callee_gcm_id):
       logging.warning('Can\'t remove room ' + room_id +
           ' because client is caller: ' + callee_gcm_id)
       return constants.RESPONSE_INVALID_CALLEE
-  
+
     if room.room_type != Room.TYPE_DIRECT:
-      logging.warning('Can\'t remove room ' + room_id + 
+      logging.warning('Can\'t remove room ' + room_id +
           ' because it has type: ' + str(room.room_type) + ' client: ' +
           callee_gcm_id)
       return constants.RESPONSE_INVALID_ROOM
-  
+
     if room.get_room_state() == Room.STATE_FULL:
-      logging.warning('Can\'t remove room ' + room_id + 
+      logging.warning('Can\'t remove room ' + room_id +
           'because it is full (' + str(room.get_occupancy()) +') client: ' +
           callee_gcm_id)
       return constants.RESPONSE_INVALID_ROOM
-  
+
     # Reset the room to the initial state so it may be reused.
     room.reset()
     if memcache_client.cas(key, room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
       logging.info('Reset room %s to base state in remove_room by client %s, retries = %d' \
           %(room_id, callee_gcm_id, retries))
       return constants.RESPONSE_SUCCESS
-    
+
   logging.warning('Failed to remove room ' + room_id + ' after retry limit ' +
        ' client: ' + callee_gcm_id)
   return constants.RESPONSE_INTERNAL_ERROR
 
-def add_client_to_room(host, room_id, client_id,
-    is_loopback, room_type, allow_room_creation, 
+def add_client_to_room(request, room_id, client_id,
+    is_loopback, room_type, allow_room_creation,
     allowed_clients = None):
-  
-  key = get_memcache_key_for_room(host, room_id)
+
+  key = get_memcache_key_for_room(request.host_url, room_id)
   memcache_client = memcache.Client()
   error = None
   room = None
@@ -198,7 +199,7 @@ def add_client_to_room(host, room_id, client_id,
       other_client.clear_messages()
       # Check if the callee was the callee intended by the caller.
       if not room.is_client_allowed(client_id):
-        logging.warning('Client ' + client_id + ' not allowed in room ' + 
+        logging.warning('Client ' + client_id + ' not allowed in room ' +
             room_id + ' allowed clients: ' + ','.join(room.allowed_clients))
         error = constants.RESPONSE_INVALID_ROOM
         break;
@@ -206,6 +207,10 @@ def add_client_to_room(host, room_id, client_id,
     if memcache_client.cas(key, room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
       logging.info('Added client %s in room %s, retries = %d' \
           %(client_id, room_id, retries))
+      if room.get_occupancy() == 2:
+        analytics.report_event(constants.EventType.ROOM_SIZE_2,
+                               room_id,
+                               host=request.host)
       success = True
       break
   return {'error': error, 'is_initiator': is_initiator,

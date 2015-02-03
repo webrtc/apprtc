@@ -7,19 +7,23 @@
 This module demonstrates the WebRTC API by implementing a simple video chat app.
 """
 
+# Enables loading third_party modules
 import cgi
+import json
 import logging
 import os
-import json
-import jinja2
+import random
+import sys
 import threading
 import urllib
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
+import jinja2
 import webapp2
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
-import client
 import constants
 import decline_page
 import gcm_register
@@ -128,8 +132,4 @@ app = webapp2.WSGIApplication([
     ('/message/(\w+)/(\w+)', MessagePage),
     ('/params', ParamsPage),
     ('/r/(\w+)', RoomPage),
-    # TODO(jiayl): Remove support of the old APIs when all clients are updated.
-    ('/room/(\w+)', RoomPage),
-    ('/register/(\w+)', join_page.JoinPage),
-    ('/bye/(\w+)/(\w+)', LeavePage),
 ], debug=True)

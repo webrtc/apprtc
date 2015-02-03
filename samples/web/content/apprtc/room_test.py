@@ -27,13 +27,13 @@ class RoomUnitTest(unittest.TestCase):
     not_allowed = ['d', 'e', 'f', 'def', '456', '', None, {}, []]
     for item in not_allowed:
       self.assertEqual(True, room.is_client_allowed(item))
-    
+
     for item in allowed:
       room.add_allowed_client(item)
-    
+
     for item in allowed:
       self.assertEqual(True, room.is_client_allowed(item))
-      
+
     for item in not_allowed:
       self.assertEqual(False, room.is_client_allowed(item))
 
