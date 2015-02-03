@@ -39,9 +39,6 @@ module.exports = function(grunt) {
       src: 'src/**/*.js',
       options: {
         preset: 'google', // as per Google style guide – could use '.jscsrc' instead
-        'excludeFiles': [
-        'src/js/adapter.js'
-        ],
         requireCurlyBraces: ['if']
       }
     },
