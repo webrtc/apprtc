@@ -19,5 +19,6 @@ cp -r $SRC_DIR/app_engine/bigquery $DEST_DIR/
 cp -r $SRC_DIR/third_party $DEST_DIR/
 
 # Copy the python, .yaml, and html template files.
-find $SRC_DIR/app_engine -regex ".*\.\(py\|yaml\|html\)" -not -name '*test.py*' | xargs cp --target-directory=$DEST_DIR
-
+find $SRC_DIR/app_engine -iname "*.py" -not -iname '*test*.py*' | xargs -I {} cp {} $DEST_DIR/
+find $SRC_DIR/app_engine -iname "*.yaml" | xargs -I {} cp {} $DEST_DIR/
+find $SRC_DIR/app_engine -iname "*.html" | xargs -I {} cp {} $DEST_DIR/

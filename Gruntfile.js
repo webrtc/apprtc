@@ -30,7 +30,8 @@ module.exports = function(grunt) {
 
     htmlhint: {
       html1: {
-        src: ['src/html/index.html'
+        src: [
+          'src/app_engine/**/*.html'
         ]
       }
     },
