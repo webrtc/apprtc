@@ -53,7 +53,7 @@ div.warning {
   position: absolute;
 }
 
-#info {
+#info-div {
   z-index: 3;
 }
 
@@ -86,6 +86,7 @@ footer > div {
   background-color: black;
   bottom: 0;
   color: white;
+  display: none;
   font-size: .9em;
   font-weight: 300;
   line-height: 2em;
@@ -99,6 +100,7 @@ footer > div {
 }
 
 footer > div.active {
+  display: block;
   opacity: .8;
 }
 
