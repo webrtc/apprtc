@@ -13,12 +13,7 @@ import json
 import logging
 import os
 import random
-import sys
 import threading
-import urllib
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../third_party'))
 
 import jinja2
 import webapp2
@@ -143,7 +138,7 @@ def get_version_info():
       except ValueError as e:
         logging.warning('version_info.json cannot be decoded: ' + str(e))
   except IOError as e:
-    logging.warning('version_info.json cannot be opened: ' + str(e))
+    logging.info('version_info.json cannot be opened: ' + str(e))
   return None
 
 # Returns appropriate room parameters based on query parameters in the request.
