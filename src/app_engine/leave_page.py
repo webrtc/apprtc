@@ -18,7 +18,7 @@ import util
 
 class LeavePage(webapp2.RequestHandler):
   def post(self, room_id, client_id):
-    result = room_module.remove_client_from_room(
+    result = room_module.remove_client_from_open_room(
         self.request.host_url, room_id, client_id)
     if result['error'] is None:
       logging.info('Room ' + room_id + ' has state ' + result['room_state'])

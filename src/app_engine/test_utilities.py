@@ -86,9 +86,9 @@ class BasePageHandlerTest(unittest.TestCase):
   def makePostRequest(self, path, body=''):
     return self.test_app.post(path, body, headers={'User-Agent': 'Safari'})
 
-  def verifyResultCode(self, response, expectedCode):
+  def verifyResultCode(self, response, expectedCode, msg = None):
     self.assertEqual(response.status_int, 200)
-    self.assertEqual(expectedCode, json.loads(response.body)['result'])
+    self.assertEqual(expectedCode, json.loads(response.body)['result'], msg)
 
   def requestCallAndVerify(self, room_id, caller_gcm_id,
       callee_id, expected_response):

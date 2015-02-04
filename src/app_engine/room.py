@@ -94,12 +94,12 @@ def get_room_state(host, room_id):
   return room.get_room_state()
 
 def remove_room_for_declined_call(host, room_id, callee_gcm_id):
-  return remove_room(host, room_id, callee_gcm_id, True)
+  return remove_room_direct(host, room_id, callee_gcm_id, for_decline = True)
 
 def remove_room_for_leave_call(host, room_id, client_gcm_id):
-  return remove_room(host, room_id, client_gcm_id, False)
+  return remove_room_direct(host, room_id, client_gcm_id, for_decline = False)
   
-def remove_room(host, room_id, client_gcm_id, for_decline):
+def remove_room_direct(host, room_id, client_gcm_id, for_decline):
   memcache_client = memcache.Client()
   key = get_memcache_key_for_room(host, room_id)
 
@@ -134,6 +134,12 @@ def remove_room(host, room_id, client_gcm_id, for_decline):
         logging.warning('Can\'t remove room ' + room_id +
             ' because client is caller: ' + client_gcm_id)
         return constants.RESPONSE_INVALID_CALLEE
+    else:
+      # Be sure the user is in the room.
+      if not room.has_client(client_gcm_id):
+        logging.warning('Can\'t remove room ' + room_id + 
+            ' because user is not in the room: ' + client_gcm_id)
+        return constants.RESPONSE_INVALID_USER
 
     # Reset the room to the initial state so it may be reused.
     room.reset()
@@ -223,7 +229,7 @@ def add_client_to_room(request, room_id, client_id,
   return {'error': error, 'is_initiator': is_initiator,
           'messages': messages, 'room_state': str(room)}
 
-def remove_client_from_room(host, room_id, client_id):
+def remove_client_from_open_room(host, room_id, client_id):
   key = get_memcache_key_for_room(host, room_id)
   memcache_client = memcache.Client()
   # Compare and set retry loop.
@@ -236,6 +242,11 @@ def remove_client_from_room(host, room_id, client_id):
       logging.warning('remove_client_from_room: Unknown client ' + client_id + \
           ' for room ' + room_id)
       return {'error': constants.RESPONSE_UNKNOWN_CLIENT, 'room_state': None}
+
+    if room.room_type != Room.TYPE_OPEN:
+      logging.warning('remove_client_from_open_room: Room is not TYPE_OPEN ' + 
+          room_id + ' room type: ' + str(room.room_type))
+      return {'error': constants.RESPONSE_INVALID_ROOM, 'room_state': str(room)}
 
     room.remove_client(client_id)
     if room.has_client(constants.LOOPBACK_CLIENT_ID):
