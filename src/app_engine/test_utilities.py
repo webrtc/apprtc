@@ -15,6 +15,8 @@ import gcm_register
 import gcmrecord
 
 class BasePageHandlerTest(unittest.TestCase):
+  HOST = 'http://localhost'
+
   def setUp(self):
     # First, create an instance of the Testbed class.
     self.testbed = testbed.Testbed()

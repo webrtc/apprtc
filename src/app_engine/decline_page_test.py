@@ -16,7 +16,6 @@ import room
 import test_utilities
 
 class DeclinePageHandlerTest(test_utilities.BasePageHandlerTest):
-  HOST = 'http://localhost'
   def requestDeclineAndVerify(self, room_id, callee_gcm_id, expected_response):
     body = {
       constants.PARAM_CALLEE_GCM_ID: callee_gcm_id

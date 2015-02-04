@@ -83,6 +83,7 @@ app = webapp2.WSGIApplication([
     ('/decline/(\w+)', decline_page.DeclinePage),
     ('/join/(\w+)', join_page.JoinPage),
     ('/leave/(\w+)/(\w+)', leave_page.LeavePage),
+    ('/leave/(\w+)', leave_page.LeaveDirectCallPage),
     ('/message/(\w+)/(\w+)', message_page.MessagePage),
     ('/params', ParamsPage),
     ('/register/(\w+)', gcm_register.BindPage),
