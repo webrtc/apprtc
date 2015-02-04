@@ -13,12 +13,7 @@ import json
 import logging
 import os
 import random
-import sys
 import threading
-import urllib
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../third_party'))
 
 import jinja2
 import webapp2
