@@ -12,12 +12,16 @@ if [ ! -d "$DEST_DIR" ]; then
 fi
 
 # Do not copy the /js files since they are already compiled into the output directory during Closure compiling.
-cp -r $SRC_DIR/css $DEST_DIR/
-cp -r $SRC_DIR/html $DEST_DIR/
-cp -r $SRC_DIR/images $DEST_DIR/
+cp -r $SRC_DIR/*/css $DEST_DIR/
+cp -r $SRC_DIR/*/html $DEST_DIR/
+cp -r $SRC_DIR/*/images $DEST_DIR/
 cp -r $SRC_DIR/app_engine/bigquery $DEST_DIR/
 cp -r $SRC_DIR/third_party $DEST_DIR/
 
+# The HTML template files must be put in the app_engine root.
+mv $DEST_DIR/html/index.html $DEST_DIR
+mv $DEST_DIR/html/full.html $DEST_DIR
+
 # Copy the python, .yaml, and html template files.
-find $SRC_DIR/app_engine -regex ".*\.\(py\|yaml\|html\)" -not -name '*test.py*' | xargs cp --target-directory=$DEST_DIR
+find $SRC_DIR/app_engine -regex ".*\.\(py\|yaml\)" -not -name '*test.py*' | xargs cp --target-directory=$DEST_DIR
 

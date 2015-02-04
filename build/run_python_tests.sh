@@ -41,4 +41,8 @@ if [ ! -d 'webtest-master' ]; then
   cd ..
 fi
 
-python build/run_python_tests.py google_appengine/ src/app_engine/ webtest-master/
+cp src/app_engine/*test.py out/app_engine/
+
+python build/run_python_tests.py google_appengine/ out/app_engine/ webtest-master/
+
+rm out/app_engine/*test.py*

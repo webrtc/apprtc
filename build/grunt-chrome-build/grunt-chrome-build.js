@@ -26,9 +26,9 @@ module.exports = function (grunt) {
     // 3. Copy sources to build dir.
     grunt.log.writeln('Copying resources to buildDir: ' + buildDir);
     this.files.forEach(function (f) {
+      grunt.log.writeln(f.src + '-->' + f.dest);
       grunt.file.copy(f.src, f.dest);
     });
-    grunt.file.copy('src/chrome_app/manifest.json', 'out/chrome-app/manifest.json');
 
     grunt.option('grunt-chrome-build-options', options);
     grunt.task.run(
@@ -40,6 +40,10 @@ module.exports = function (grunt) {
 
   grunt.registerTask('grunt-chrome-build-transform', 'Transform templates to build directory.', function () {
     var options = grunt.option('grunt-chrome-build-options');
+    var appWindowFiles = {
+      src: options.appwindowHtmlSrc,
+      dest: options.appwindowHtmlDest
+    };
     // 4. Transform template file.
     grunt.log.writeln('Transforming files using jinja.');
     grunt.config.set('jinja.chrome-build', {
@@ -47,11 +51,7 @@ module.exports = function (grunt) {
         templateDirs: ['src/'],
         contextRoot: 'src/'
       },
-      files: [{
-        src: 'src/app_engine/index.html',
-        dest: 'out/chrome-app/appwindow.html'
-
-      }]
+      files: [appWindowFiles]
     });
     grunt.task.run('jinja:chrome-build');
   });

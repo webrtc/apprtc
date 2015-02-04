@@ -30,7 +30,7 @@ module.exports = function(grunt) {
 
     htmlhint: {
       html1: {
-        src: ['src/html/index.html'
+        src: ['src/**/index.html'
         ]
       }
     },
@@ -76,16 +76,26 @@ module.exports = function(grunt) {
     'grunt-chrome-build' : {
       apprtc: {
         options: {
-          buildDir: 'out/chrome-app',
-          zipFile: 'out/chrome-app/apprtc.zip',
+          buildDir: 'out/chrome_app',
+          zipFile: 'out/chrome_app/apprtc.zip',
           // If values for chromeBinary and keyFile are not provided, the packaging
           // step will be skipped.
           // chromeBinary should be set to the Chrome executable on your system.
           chromeBinary: null,
           // keyFile should be set to the key you want to use to create the crx package
-          keyFile: null
+          keyFile: null,
+          appwindowHtmlSrc: 'src/web_app/html/index.html',
+          appwindowHtmlDest: 'out/chrome_app/appwindow.html'
         },
         files: [
+          {
+            expand: true,
+            cwd: 'src/web_app/chrome_app',
+            src: [
+              'manifest.json'
+            ],
+            dest: 'out/chrome_app/'
+          },
           {
             expand: true,
             cwd: 'out/app_engine',
@@ -95,17 +105,17 @@ module.exports = function(grunt) {
               '**/images/apprtc*.png',
               '!**/*.pem'
             ],
-            dest: 'out/chrome-app/'
+            dest: 'out/chrome_app/'
           },
           {
             expand: true,
-            cwd: 'src',
+            cwd: 'src/web_app',
             src: [
               'js/background.js',
               'js/appwindow.js',
               '!**/*.pem'
             ],
-            dest: 'out/chrome-app/'
+            dest: 'out/chrome_app/'
           }
         ],
       }
@@ -125,17 +135,17 @@ module.exports = function(grunt) {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
-            'src/js/adapter.js',
-            'src/js/appcontroller.js',
-            'src/js/call.js',
-            'src/js/infobox.js',
-            'src/js/peerconnectionclient.js',
-            'src/js/roomselection.js',
-            'src/js/sdputils.js',
-            'src/js/signalingchannel.js',
-            'src/js/stats.js',
-            'src/js/storage.js',
-            'src/js/util.js',
+            'src/web_app/js/adapter.js',
+            'src/web_app/js/appcontroller.js',
+            'src/web_app/js/call.js',
+            'src/web_app/js/infobox.js',
+            'src/web_app/js/peerconnectionclient.js',
+            'src/web_app/js/roomselection.js',
+            'src/web_app/js/sdputils.js',
+            'src/web_app/js/signalingchannel.js',
+            'src/web_app/js/stats.js',
+            'src/web_app/js/storage.js',
+            'src/web_app/js/util.js',
           ]
         },
         options: {
@@ -159,10 +169,10 @@ module.exports = function(grunt) {
 
   // set default tasks to run when grunt is called without parameters
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
-                                 'shell:buildVersion', 'shell:runPythonTests',
-                                 'shell:buildAppEnginePackage', 'jstests']);
+                                 'shell:buildVersion', 'runPythonTests', 'jstests']);
+  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildVersion', 'grunt-chrome-build', 'shell:buildAppEnginePackage']);
+  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildVersion', 'shell:buildAppEnginePackage', 'grunt-chrome-build']);
   // also possible to call JavaScript directly in registerTask()
   // or to call external tasks with grunt.loadTasks()
 };
