@@ -364,10 +364,11 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
     if memcache_client.cas(key, room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
       logging.info('Added client %s in room %s, retries = %d' \
           %(client_id, room_id, retries))
-      if room.get_occupancy() == 2:
-        analytics.report_event(constants.EventType.ROOM_SIZE_2,
-                               room_id,
-                               host=request.host)
+
+      #if room.get_occupancy() == 2:
+      #  analytics.report_event(constants.EventType.ROOM_SIZE_2,
+      #                         room_id,
+      #                         host=request.host)
       success = True
       break
     else:
