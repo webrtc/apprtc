@@ -59,9 +59,14 @@ class Room:
   def get_client(self, client_id):
     return self.clients[client_id]
   def get_other_client(self, client_id):
-    for key, client in self.clients.items():
-      if key is not client_id:
+    for key, client in self.clients:
+      if key != client_id:
         return client
+    return None
+  def get_other_client_id(self, client_id):
+    for other_id in self.clients:
+      if other_id != client_id:
+        return other_id
     return None
   def get_room_state(self):
     occupancy = self.get_occupancy()
@@ -93,7 +98,7 @@ def get_room_state(host, room_id):
     return None
   return room.get_room_state()
 
-def remove_room_for_declined_call(host, room_id, callee_gcm_id):
+def remove_room(host, room_id):
   memcache_client = memcache.Client()
   key = get_memcache_key_for_room(host, room_id)
 
@@ -102,38 +107,24 @@ def remove_room_for_declined_call(host, room_id, callee_gcm_id):
 
     if room is None:
       logging.warning('Can\'t remove room ' + room_id +
-          ' because it doesn\'t exist, client: ' + callee_gcm_id)
+                      ' because it doesn\'t exist')
       return constants.RESPONSE_INVALID_ROOM
-
-    if not room.is_client_allowed(callee_gcm_id):
-      logging.warning('Can\'t remove room ' + room_id +
-          ' because room does not allow client ' + callee_gcm_id)
-      return constants.RESPONSE_INVALID_CALLEE
-
-    # The client already in the room is the caller.
-    # The caller should not be removing the room via decline.
-    if room.has_client(callee_gcm_id):
-      logging.warning('Can\'t remove room ' + room_id +
-          ' because client is caller: ' + callee_gcm_id)
-      return constants.RESPONSE_INVALID_CALLEE
 
     if room.room_type != Room.TYPE_DIRECT:
       logging.warning('Can\'t remove room ' + room_id +
-          ' because it has type: ' + str(room.room_type) + ' client: ' +
-          callee_gcm_id)
+                      ' because it has type: ' + str(room.room_type))
       return constants.RESPONSE_INVALID_ROOM
 
     if room.get_room_state() == Room.STATE_FULL:
       logging.warning('Can\'t remove room ' + room_id +
-          'because it is full (' + str(room.get_occupancy()) +') client: ' +
-          callee_gcm_id)
+                      'because it is full (' + str(room.get_occupancy()))
       return constants.RESPONSE_INVALID_ROOM
 
     # Reset the room to the initial state so it may be reused.
     room.reset()
     if memcache_client.cas(key, room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
-      logging.info('Reset room %s to base state in remove_room by client %s, retries = %d' \
-          %(room_id, callee_gcm_id, retries))
+      logging.info('Reset room %s to base state in remove_room, retries = %d',
+                   room_id, retries)
       return constants.RESPONSE_SUCCESS
 
   logging.warning('Failed to remove room ' + room_id + ' after retry limit ' +

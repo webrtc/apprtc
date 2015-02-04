@@ -86,7 +86,8 @@ class MainPage(webapp2.RequestHandler):
   def get(self):
     """Renders index.html."""
     # Parse out parameters from request.
-    params = parameter_handling.get_room_parameters(self.request, None, None, None)
+    params = parameter_handling.get_room_parameters(
+        self.request, None, None, None)
     # room_id/room_link will not be included in the returned parameters
     # so the client will show the landing page for room selection.
     self.write_response('index_template.html', params)
@@ -109,7 +110,8 @@ class RoomPage(webapp2.RequestHandler):
         self.write_response('full_template.html')
         return
     # Parse out room parameters from request.
-    params = parameter_handling.get_room_parameters(self.request, room_id, None, None)
+    params = parameter_handling.get_room_parameters(
+        self.request, room_id, None, None)
     # room_id/room_link will be included in the returned parameters
     # so the client will launch the requested room.
     self.write_response('index_template.html', params)
@@ -117,7 +119,8 @@ class RoomPage(webapp2.RequestHandler):
 class ParamsPage(webapp2.RequestHandler):
   def get(self):
     # Return room independent room parameters.
-    params = parameter_handling.get_room_parameters(self.request, None, None, None)
+    params = parameter_handling.get_room_parameters(
+        self.request, None, None, None)
     self.response.write(json.dumps(params))
 
 app = webapp2.WSGIApplication([

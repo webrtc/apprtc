@@ -21,7 +21,7 @@ class DeclinePageHandlerTest(test_utilities.BasePageHandlerTest):
     body = {
       constants.PARAM_CALLEE_GCM_ID: callee_gcm_id
     }
-    
+
     response = self.makePostRequest('/decline/' + room_id, json.dumps(body))
     self.verifyResultCode(response, expected_response)
 
@@ -34,7 +34,7 @@ class DeclinePageHandlerTest(test_utilities.BasePageHandlerTest):
     self.requestDeclineAndVerify(room_id, 'callee1gcm1',
         constants.RESPONSE_SUCCESS)
     self.assertEqual(room.Room.STATE_EMPTY, room.get_room_state(self.HOST, room_id))
-    
+
   def testJoinAfterDecline(self):
     self.addTestData()
     room_id = 'callercallee'
@@ -71,7 +71,7 @@ class DeclinePageHandlerTest(test_utilities.BasePageHandlerTest):
     # return a result code of constants.RESPONSE_INVALID_CALLEE.
     self.requestDeclineAndVerify(room_id, 'callee4gcm2',
         constants.RESPONSE_SUCCESS)
-        
+
   def testDeclineAcceptedRoom(self):
     self.addTestData()
     room_id = 'callercallee'
@@ -99,7 +99,7 @@ class DeclinePageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'room2'
     response = self.makePostRequest('/join/' + room_id)
     self.verifyResultCode(response, constants.RESPONSE_SUCCESS)
-    
+
     # Attempt to decline the room created by apprtc.
     self.requestDeclineAndVerify(room_id, 'callee1gcm1',
         constants.RESPONSE_INVALID_ROOM)

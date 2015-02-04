@@ -27,6 +27,7 @@ class BasePageHandlerTest(unittest.TestCase):
     # Initialize the datastore stub with this policy.
     self.testbed.init_datastore_v3_stub(consistency_policy=self.policy)
     self.testbed.init_memcache_stub()
+    self.testbed.init_urlfetch_stub()
 
     self.test_app = webtest.TestApp(apprtc.app)
 
