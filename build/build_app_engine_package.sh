@@ -15,6 +15,9 @@ fi
 cp -r $SRC_DIR/css $DEST_DIR/
 cp -r $SRC_DIR/html $DEST_DIR/
 cp -r $SRC_DIR/images $DEST_DIR/
+cp -r $SRC_DIR/app_engine/bigquery $DEST_DIR/
+cp -r $SRC_DIR/third_party $DEST_DIR/
 
 # Copy the python, .yaml, and html template files.
 find $SRC_DIR/app_engine -regex ".*\.\(py\|yaml\|html\)" -not -name '*test.py*' | xargs cp --target-directory=$DEST_DIR
+
