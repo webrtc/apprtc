@@ -30,7 +30,8 @@ module.exports = function(grunt) {
 
     htmlhint: {
       html1: {
-        src: ['src/**/index.html'
+        src: [
+          'src/**/*_template.html'
         ]
       }
     },
@@ -84,7 +85,7 @@ module.exports = function(grunt) {
           chromeBinary: null,
           // keyFile should be set to the key you want to use to create the crx package
           keyFile: null,
-          appwindowHtmlSrc: 'src/web_app/html/index.html',
+          appwindowHtmlSrc: 'src/web_app/html/index_template.html',
           appwindowHtmlDest: 'out/chrome_app/appwindow.html'
         },
         files: [

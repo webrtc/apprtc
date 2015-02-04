@@ -364,10 +364,11 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
     if memcache_client.cas(key, room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
       logging.info('Added client %s in room %s, retries = %d' \
           %(client_id, room_id, retries))
-      if room.get_occupancy() == 2:
-        analytics.report_event(constants.EventType.ROOM_SIZE_2,
-                               room_id,
-                               host=request.host)
+
+      #if room.get_occupancy() == 2:
+      #  analytics.report_event(constants.EventType.ROOM_SIZE_2,
+      #                         room_id,
+      #                         host=request.host)
       success = True
       break
     else:
@@ -519,7 +520,7 @@ class MainPage(webapp2.RequestHandler):
     params = get_room_parameters(self.request, None, None, None)
     # room_id/room_link will not be included in the returned parameters
     # so the client will show the landing page for room selection.
-    self.write_response('index.html', params)
+    self.write_response('index_template.html', params)
 
 class RoomPage(webapp2.RequestHandler):
   def write_response(self, target_page, params={}):
@@ -536,13 +537,13 @@ class RoomPage(webapp2.RequestHandler):
       logging.info('Room ' + room_id + ' has state ' + str(room))
       if room.get_occupancy() >= 2:
         logging.info('Room ' + room_id + ' is full')
-        self.write_response('full.html')
+        self.write_response('full_template.html')
         return
     # Parse out room parameters from request.
     params = get_room_parameters(self.request, room_id, None, None)
     # room_id/room_link will be included in the returned parameters
     # so the client will launch the requested room.
-    self.write_response('index.html', params)
+    self.write_response('index_template.html', params)
 
 class ParamsPage(webapp2.RequestHandler):
   def get(self):
