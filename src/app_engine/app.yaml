@@ -3,6 +3,7 @@ version: 2
 runtime: python27
 threadsafe: true
 api_version: 1
+default_expiration: "2h"
 
 handlers:
 - url: /html
