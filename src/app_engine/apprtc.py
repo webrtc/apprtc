@@ -122,11 +122,13 @@ class ParamsPage(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
-    ('/bind/(\w+)', gcm_register.BindPage),
     ('/decline/(\w+)', decline_page.DeclinePage),
     ('/join/(\w+)', join_page.JoinPage),
     ('/leave/(\w+)/(\w+)', LeavePage),
     ('/message/(\w+)/(\w+)', MessagePage),
     ('/params', ParamsPage),
+    ('/register/(\w+)', gcm_register.BindPage),
     ('/r/(\w+)', RoomPage),
+    # TODO(jiayl): Remove the deprecated API when Android is updated.
+    ('/bind/(\w+)', gcm_register.BindPage),
 ], debug=True)
