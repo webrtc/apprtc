@@ -263,11 +263,11 @@ def remove_client_from_open_room(host, room_id, client_id):
     room = memcache_client.gets(key)
     if room is None:
       logging.warning('remove_client_from_room: Unknown room ' + room_id)
-      return {'error': constants.RESPONSE_UNKNOWN_ROOM, 'room_state': None}
+      return {'error': constants.RESPONSE_INVALID_ROOM, 'room_state': None}
     if not room.has_client(client_id):
       logging.warning('remove_client_from_room: Unknown client ' + client_id +
                       ' for room ' + room_id)
-      return {'error': constants.RESPONSE_UNKNOWN_CLIENT, 'room_state': None}
+      return {'error': constants.RESPONSE_INVALID_USER, 'room_state': None}
 
     if room.room_type != Room.TYPE_OPEN:
       logging.warning('remove_client_from_open_room: Room is not TYPE_OPEN ' +
@@ -306,7 +306,7 @@ def save_message_from_client(host, room_id, client_id, message):
       return {'error': constants.RESPONSE_UNKNOWN_ROOM, 'saved': False}
     if not room.has_client(client_id):
       logging.warning('Unknown client: ' + client_id)
-      return {'error': constants.RESPONSE_UNKNOWN_CLIENT, 'saved': False}
+      return {'error': constants.RESPONSE_INVALID_USER, 'saved': False}
     if room.get_occupancy() > 1:
       return {'error': None, 'saved': False}
 

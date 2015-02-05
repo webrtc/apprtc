@@ -50,7 +50,7 @@ def get_message_from_json(body):
         + ', request=' + body)
     return None
   except Exception as e:
-    logging.warning('JSON load error from BindPage: error=' + str(e)
+    logging.warning('JSON load error=' + str(e)
         + ', request=' + body)
     return None
 
