@@ -5,8 +5,9 @@ threadsafe: true
 api_version: 1
 
 handlers:
-- url: /html
-  static_dir: html
+- url: /(.*\.html)
+  static_files: html/\1
+  upload: html/(.*\.html)
 
 - url: /images
   static_dir: images
