@@ -36,10 +36,6 @@ class Room(object):
       room_type = Room.TYPE_OPEN
     self.room_type = room_type
 
-  def reset(self):
-    self.clients = {}
-    self.allowed_clients = None
-
   def add_client(self, client_id, client):
     self.clients[client_id] = client
 
@@ -69,6 +65,12 @@ class Room(object):
     for key, client in self.clients.items():
       if key is not client_id:
         return client
+    return None
+
+  def get_other_client_id(self, client_id):
+    for other_id in self.clients:
+      if other_id != client_id:
+        return other_id
     return None
 
   def get_room_state(self):
@@ -106,7 +108,6 @@ def get_room_state(host, room_id):
     return None
   return room.get_room_state()
 
-
 def remove_room_for_declined_call(host, room_id, callee_gcm_id):
   return remove_room_direct(host, room_id, callee_gcm_id, for_decline=True)
 
@@ -125,51 +126,54 @@ def remove_room_direct(host, room_id, client_gcm_id, for_decline):
     if room is None:
       logging.warning('Can\'t remove room ' + room_id +
                       ' because it doesn\'t exist, client: ' + client_gcm_id)
-      return constants.RESPONSE_INVALID_ROOM
+      return (constants.RESPONSE_INVALID_ROOM, room)
 
     if not room.is_client_allowed(client_gcm_id):
       logging.warning('Can\'t remove room ' + room_id +
                       ' because room does not allow client ' + client_gcm_id)
-      return (constants.RESPONSE_INVALID_CALLEE
-              if for_decline else constants.RESPONSE_INVALID_USER)
+      if for_decline:
+        result = constants.RESPONSE_INVALID_CALLEE
+      else:
+        result = constants.RESPONSE_INVALID_USER
+      return (result, room)
 
     if room.room_type != Room.TYPE_DIRECT:
       logging.warning('Can\'t remove room ' + room_id +
                       ' because it has type: ' + str(room.room_type) +
                       ' client: ' + client_gcm_id)
-      return constants.RESPONSE_INVALID_ROOM
+      return (constants.RESPONSE_INVALID_ROOM, room)
 
     if for_decline:
       if room.get_room_state() == Room.STATE_FULL:
         logging.warning('Can\'t remove room ' + room_id +
                         'because it is full (' + str(room.get_occupancy()) +
                         ') client: ' + client_gcm_id)
-        return constants.RESPONSE_INVALID_ROOM
+        return (constants.RESPONSE_INVALID_ROOM, room)
       # If the room is not full, the client already in the room is the caller.
       # The caller should not be removing the room via decline.
       if room.has_client(client_gcm_id):
         logging.warning('Can\'t remove room ' + room_id +
                         ' because client is caller: ' + client_gcm_id)
-        return constants.RESPONSE_INVALID_CALLEE
+        return (constants.RESPONSE_INVALID_CALLEE, room)
     else:
       # Be sure the user is in the room.
       if not room.has_client(client_gcm_id):
         logging.warning('Can\'t remove room ' + room_id +
                         ' because user is not in the room: ' + client_gcm_id)
-        return constants.RESPONSE_INVALID_USER
+        return (constants.RESPONSE_INVALID_USER, room)
 
     # Reset the room to the initial state so it may be reused.
-    room.reset()
-    if memcache_client.cas(key, room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
+    reset_room = Room(room.room_type)
+    if memcache_client.cas(key, reset_room, constants.ROOM_MEMCACHE_EXPIRATION_SEC):
       logging.info('Reset room %s to base state in remove_room by'
                    ' client %s, retries = %d',
                    room_id, client_gcm_id, retries)
-      return constants.RESPONSE_SUCCESS
+      other_client_id = room.get_other_client_id(client_gcm_id)
+      return (constants.RESPONSE_SUCCESS, room)
 
   logging.warning('Failed to remove room ' + room_id + ' after retry limit '
                   ' client: ' + client_gcm_id)
-  return constants.RESPONSE_INTERNAL_ERROR
-
+  return (constants.RESPONSE_INTERNAL_ERROR, None)
 
 def add_client_to_room(request, room_id, client_id,
                        is_loopback, room_type, allow_room_creation,
