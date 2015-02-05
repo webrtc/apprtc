@@ -12,8 +12,10 @@
 
 Function.prototype.bind = Function.prototype.bind || function(thisp) {
   var fn = this;
+  var suppliedArgs = Array.prototype.slice.call(arguments, 1);
   return function() {
-    return fn.apply(thisp, arguments);
+    return fn.apply(thisp,
+                    suppliedArgs.concat(Array.prototype.slice.call(arguments)));
   };
 };
 
@@ -70,6 +72,13 @@ MyPromise.all = function(promises) {
 MyPromise.resolve = function(value) {
   return new MyPromise(function(resolve) {
     resolve(value);
+  });
+};
+
+MyPromise.reject = function(error) {
+  // JSHint flags the unused variable resolve.
+  return new MyPromise(function(resolve, reject) { // jshint ignore:line
+    reject(error);
   });
 };
 
