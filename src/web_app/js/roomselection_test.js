@@ -60,6 +60,12 @@ RoomSelectionTest.prototype.tearDown = function() {
   this.roomSelection_ = null;
 };
 
+RoomSelectionTest.createUIEvent = function(type) {
+  var event = document.createEvent('UIEvent');
+  event.initUIEvent(type, true, true);
+  return event;
+};
+
 RoomSelectionTest.prototype.testInputFilter = function() {
   var validInputs = [
     '123123',
@@ -78,10 +84,7 @@ RoomSelectionTest.prototype.testInputFilter = function() {
 
   var testInput = function(input, expectedResult) {
     this.inputBox_.value = input;
-
-    var event = document.createEvent('UIEvent');
-    event.initUIEvent('input', true, true);
-    this.inputBox_.dispatchEvent(event);
+    this.inputBox_.dispatchEvent(RoomSelectionTest.createUIEvent('input'));
 
     assertEquals('Incorrect result with input: "' + input + '"',
                  expectedResult,
@@ -154,9 +157,7 @@ RoomSelectionTest.prototype.testMakeClickHandler = function(queue) {
       joinedRoom = room;
     };
 
-    var event = document.createEvent('UIEvent');
-    event.initUIEvent('click', true, true);
-    link.dispatchEvent(event);
+    link.dispatchEvent(RoomSelectionTest.createUIEvent('click'));
 
     assertEquals('room1', joinedRoom);
   });
@@ -179,6 +180,40 @@ RoomSelectionTest.prototype.testMatchRandomRoomPattern = function() {
     assertEquals(expected[i],
                  RoomSelection.matchRandomRoomPattern(testCases[i]));
   }
+};
+
+RoomSelectionTest.prototype.testHitEnterInRoomIdInput = function() {
+  var joinedRoom = null;
+  this.roomSelection_.onRoomSelected = function(room) {
+    joinedRoom = room;
+  };
+  function createEnterKeyUpEvent() {
+    var e = document.createEvent('Event');
+    e.initEvent('keyup');
+    e.keyCode = 13;
+    e.which = 13;
+    return e;
+  }
+
+  // Hitting ENTER when the room name is invalid should do nothing.
+  this.inputBox_.value = '1';
+  this.inputBox_.dispatchEvent(RoomSelectionTest.createUIEvent('input'));
+  this.inputBox_.dispatchEvent(createEnterKeyUpEvent());
+  assertEquals(null, joinedRoom);
+
+  // Hitting ENTER when the room name is valid should select the room.
+  this.inputBox_.value = '12345';
+  this.inputBox_.dispatchEvent(RoomSelectionTest.createUIEvent('input'));
+  assertEquals(false, this.joinButton_.disabled);
+  this.inputBox_.dispatchEvent(createEnterKeyUpEvent());
+  assertEquals(this.inputBox_.value, joinedRoom);
+
+  joinedRoom = null;
+  // Hitting other keys should not select the room.
+  var e = document.createEvent('Event');
+  e.initEvent('keyup');
+  this.inputBox_.dispatchEvent(e);
+  assertEquals(null, joinedRoom);
 };
 
 var RecentlyUsedListTest = new AsyncTestCase('RecentlyUsedListTest');
