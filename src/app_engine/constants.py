@@ -2,7 +2,7 @@
 #
 # Copyright 2014 Google Inc. All Rights Reserved.
 
-"""AppRTC Constants
+"""AppRTC Constants.
 
 This module contains the constants used in AppRTC Python modules.
 """
@@ -26,9 +26,9 @@ RESPONSE_UNKNOWN_ROOM = 'ERR_UNKNOWN_ROOM'
 RESPONSE_UNKNOWN_CLIENT = 'ERR_UNKNOWN_CLIENT'
 RESPONSE_DUPLICATE_CLIENT = 'ERR_DUPLICATE_CLIENT'
 
-RESPONSE_INVALID_CALLEE = "ERR_INVALID_CALLEE"
-RESPONSE_INVALID_CALLER = "ERR_INVALID_CALLER"
-RESPONSE_INVALID_ROOM = "ERR_INVALID_ROOM"
+RESPONSE_INVALID_CALLEE = 'ERR_INVALID_CALLEE'
+RESPONSE_INVALID_CALLER = 'ERR_INVALID_CALLER'
+RESPONSE_INVALID_ROOM = 'ERR_INVALID_ROOM'
 RESPONSE_INVALID_ARGUMENT = 'ERR_INVALID_ARG'
 RESPONSE_INVALID_STATE = 'ERR_INVALID_STATE'
 RESPONSE_INVALID_CODE = 'ERR_INVALID_CODE'
@@ -49,24 +49,27 @@ PARAM_CALLER_GCM_ID = 'callerGcmId'
 PARAM_CALLEE_ID = 'calleeId'
 PARAM_CALLEE_GCM_ID = 'calleeGcmId'
 PARAM_USER_GCM_ID = 'userGcmId'
+PARAM_MESSAGE = 'message'
 
-BIGQUERY_URL='https://www.googleapis.com/auth/bigquery'
+BIGQUERY_URL = 'https://www.googleapis.com/auth/bigquery'
 
 # Dataset used in production.
-BIGQUERY_DATASET_PROD='prod'
+BIGQUERY_DATASET_PROD = 'prod'
 
 # Dataset used when running locally.
-BIGQUERY_DATASET_LOCAL='dev'
+BIGQUERY_DATASET_LOCAL = 'dev'
 
 # BigQuery table within the dataset.
-BIGQUERY_TABLE='analytics'
+BIGQUERY_TABLE = 'analytics'
 
-class EventType:
+
+class EventType(object):
   # Event signifying that a room enters the state of having exactly
   # two participants.
-  ROOM_SIZE_2='room_size_2'
+  ROOM_SIZE_2 = 'room_size_2'
 
-class LogField:
+
+class LogField(object):
   pass
 
 with open(os.path.join(os.path.dirname(__file__),
