@@ -58,15 +58,8 @@ module.exports = function(grunt) {
       runPythonTests: {
         command: './build/run_python_tests.sh'
       },
-      buildVersion: {
-        command: './build/build_version_file.sh',
-        options: {
-          stdout: true,
-          stderr: true
-        }
-      },
       buildAppEnginePackage: {
-        command: './build/build_app_engine_package.sh',
+        command: 'python ./build/build_app_engine_package.py src out/app_engine',
         options: {
           stdout: true,
           stderr: true
@@ -170,10 +163,10 @@ module.exports = function(grunt) {
 
   // set default tasks to run when grunt is called without parameters
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
-                                 'shell:buildVersion', 'runPythonTests', 'jstests']);
+                                 'runPythonTests', 'jstests']);
   grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildVersion', 'shell:buildAppEnginePackage', 'grunt-chrome-build']);
+  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildAppEnginePackage', 'grunt-chrome-build']);
   // also possible to call JavaScript directly in registerTask()
   // or to call external tasks with grunt.loadTasks()
 };
