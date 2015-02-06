@@ -35,6 +35,8 @@ var RoomSelection = function(roomSelectionDiv,
   this.onRoomIdInput_();
   this.roomIdInput_.addEventListener('input',
       this.onRoomIdInput_.bind(this), false);
+  this.roomIdInput_.addEventListener('keyup',
+      this.onRoomIdKeyPress_.bind(this), false);
   this.roomRandomButton_.addEventListener('click',
       this.onRandomButton_.bind(this), false);
   this.roomJoinButton_.addEventListener('click',
@@ -88,7 +90,6 @@ RoomSelection.prototype.buildRecentRoomList_ = function(recentRooms) {
 RoomSelection.prototype.onRoomIdInput_ = function() {
   // Validate room id, enable/disable join button.
   // The server currently accepts only the \w character class.
-  // TODO (chuckhays) : Add user hint for acceptable values.
   var room = this.roomIdInput_.value;
   var valid = room.length >= 5;
   var re = /^\w+$/;
@@ -102,6 +103,13 @@ RoomSelection.prototype.onRoomIdInput_ = function() {
     this.roomIdInput_.classList.add('invalid');
     this.roomIdInputLabel_.classList.remove('hidden');
   }
+};
+
+RoomSelection.prototype.onRoomIdKeyPress_ = function(event) {
+  if (event.which !== 13 || this.roomJoinButton_.disabled) {
+    return;
+  }
+  this.onJoinButton_();
 };
 
 RoomSelection.prototype.onRandomButton_ = function() {
