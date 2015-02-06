@@ -13,18 +13,20 @@
 
 'use strict';
 
+var MEDIA_STREAM_OBJECT = {value: 'stream'};
+
 var MockSignalingChannel = function() {
 };
 
 MockSignalingChannel.prototype.open = function() {
-  return new Promise(function(resolve) { resolve(); });
+  return Promise.resolve();
 };
 
 var CallTest = new TestCase('CallTest');
 
 function mockRequestUserMedia() {
   return new Promise(function(resolve) {
-    resolve('stream');
+    resolve(MEDIA_STREAM_OBJECT);
   });
 }
 
@@ -51,7 +53,7 @@ CallTest.prototype.testRestartInitializesMedia = function() {
   var mediaStarted = false;
   call.onlocalstreamadded = function(stream) {
     mediaStarted = true;
-    assertEquals('stream', stream);
+    assertEquals(MEDIA_STREAM_OBJECT, stream);
   };
   call.restart();
   assertTrue(mediaStarted);

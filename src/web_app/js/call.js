@@ -42,10 +42,10 @@ var Call = function(params) {
 
   this.getMediaPromise_ = null;
   this.getTurnServersPromise_ = null;
-  this.initPromises_();
+  this.requestMediaAndTurnServers_();
 };
 
-Call.prototype.initPromises_ = function() {
+Call.prototype.requestMediaAndTurnServers_ = function() {
   this.getMediaPromise_ = this.maybeGetMedia_();
   this.getTurnServersPromise_ = this.maybeGetTurnServers_();
 };
@@ -64,7 +64,7 @@ Call.prototype.start = function(roomId) {
 Call.prototype.restart = function() {
   // Reinitialize the promises so the media gets hooked up as a result
   // of calling maybeGetMedia_.
-  this.initPromises_();
+  this.requestMediaAndTurnServers_();
   this.start(this.params_.previousRoomId);
 };
 
