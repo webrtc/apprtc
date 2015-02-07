@@ -1,6 +1,7 @@
 'use strict';
 
 /* globals module */
+var out_app_engine_dir = 'out/app_engine';
 
 module.exports = function(grunt) {
   // configure project
@@ -59,7 +60,7 @@ module.exports = function(grunt) {
         command: './build/run_python_tests.sh'
       },
       buildAppEnginePackage: {
-        command: 'python ./build/build_app_engine_package.py src out/app_engine',
+        command: 'python ./build/build_app_engine_package.py src ' + out_app_engine_dir,
         options: {
           stdout: true,
           stderr: true
@@ -92,7 +93,7 @@ module.exports = function(grunt) {
           },
           {
             expand: true,
-            cwd: 'out/app_engine',
+            cwd: out_app_engine_dir,
             src: [
               '**/*.js',
               '**/*.css',
@@ -166,7 +167,8 @@ module.exports = function(grunt) {
                                  'runPythonTests', 'jstests']);
   grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildAppEnginePackage', 'grunt-chrome-build']);
+  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets the out/app_engine dir.
+  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'closurecompiler:debug', 'grunt-chrome-build']);
   // also possible to call JavaScript directly in registerTask()
   // or to call external tasks with grunt.loadTasks()
 };
