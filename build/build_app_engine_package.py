@@ -3,9 +3,11 @@
 """Build App Engine source package.
 """
 
+import json
 import optparse
 import os
 import shutil
+import subprocess
 import sys
 
 USAGE = """%prog SRC_PATH DEST_PATH
@@ -13,6 +15,46 @@ Build the GAE source code package.
 
 SRC_PATH     Path to the source code root directory.
 DEST_PATH    Path to the root directory to push/deploy GAE from."""
+
+
+def call_cmd_and_return_output_lines(cmd):
+  try:
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    output = process.communicate()[0]
+    return output.split('\n')
+  except OSError as e:
+    print str(e)
+    return []
+
+
+def build_version_info_file(dest_path):
+  """Build the version info JSON file."""
+  version_info = {
+      'gitHash': None,
+      'time': None,
+      'branch': None
+  }
+
+  lines = call_cmd_and_return_output_lines(['git', 'log', '-1'])
+  for line in lines:
+    if line.startswith('commit'):
+      version_info['gitHash'] = line.partition(' ')[2].strip()
+    elif line.startswith('Date'):
+      version_info['time'] = line.partition(':')[2].strip()
+    if version_info['gitHash'] is not None and version_info['time'] is not None:
+      break
+
+  lines = call_cmd_and_return_output_lines(['git', 'branch'])
+  for line in lines:
+    if line.startswith('*'):
+      version_info['branch'] = line.partition(' ')[2].strip()
+      break
+
+  try:
+    with open(dest_path, 'w') as f:
+      f.write(json.dumps(version_info))
+  except IOError as e:
+    print str(e)
 
 
 def main(src_path, dest_path):
@@ -51,7 +93,7 @@ def main(src_path, dest_path):
           shutil.copy(os.path.join(dirpath, name), dest_js_path)
           break
 
-    os.system('build/build_version_file.sh ' + dest_path)
+  build_version_info_file(os.path.join(dest_path, 'version_info.json'))
 
 if __name__ == '__main__':
   parser = optparse.OptionParser(USAGE)
