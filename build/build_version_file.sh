@@ -6,13 +6,13 @@ date=$(git log -1 | grep Date | sed  's/^Date: *//')
 
 branch=$(git branch | grep '* ' | sed 's/^\* *//')
 
-dest='out/app_engine/version_info.json'
+dest="$1/version_info.json"
 
 if [ ! -d "out" ]; then
   mkdir out
 fi
 
-if [ ! -d "out/app_engine" ]; then
+if [ ! -d "$1" ]; then
   mkdir out/app_engine
 fi
 
