@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import optparse
 import os
 import re
 import sys
@@ -57,42 +56,27 @@ def _Untar(path):
 def DownloadAppEngineSdkIfNecessary():
   gae_sdk_version = _GetLatestAppEngineSdkVersion()
   gae_sdk_file = 'google_appengine_%s.zip' % gae_sdk_version
+  if os.path.exists(gae_sdk_file):
+    print 'Already has %s, skipping' % gae_sdk_file
+    return
+
   _Download(GAE_DOWNLOAD_URL + gae_sdk_file, gae_sdk_file)
   _Unzip(gae_sdk_file)
 
 
 def DownloadWebTestIfNecessary():
   webtest_file = 'webtest-master.tar.gz'
+  if os.path.exists(webtest_file):
+    print 'Already has %s, skipping' % webtest_file
+    return
+
   _Download(WEBTEST_URL, webtest_file)
   _Untar(webtest_file)
 
 
-def _InstallWebTestOnLinux(webtest_dir):
-  cwd = os.getcwd()
-  try:
-    print 'About to install webtest into your system python.'
-    os.chdir(webtest_dir)
-    result = os.system('sudo python setup.py install')
-    if result == 0:
-      print 'Install successful.'
-    else:
-      return ('Failed to install webtest; are you missing setuptools / '
-              'easy_install in your system python?')
-  finally:
-    os.chdir(cwd)
-
-
 def main():
-  usage = 'usage: %prog [options]'
-  parser = optparse.OptionParser(usage)
-  parser.add_option('-a', '--auto-install-on-linux', action='store_true',
-                    help=('Attempt to install dependencies automatically '
-                          '(i.e. Travis mode). Only supported on Linux.'))
-  options, _ = parser.parse_args()
   DownloadAppEngineSdkIfNecessary()
   DownloadWebTestIfNecessary()
-  if options.auto_install_on_linux:
-    return _InstallWebTestOnLinux('webtest-master')
   
 if __name__ == '__main__':
   sys.exit(main())

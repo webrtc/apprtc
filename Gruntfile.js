@@ -59,8 +59,8 @@ module.exports = function(grunt) {
       getPythonTestDeps: {
         command: 'python build/get_python_test_deps.py'
       },
-      getPythonTestDepsAndAutoInstall: {
-        command: 'python build/get_python_test_deps.py --auto-install-on-linux'
+      installPythonTestDepsOnLinux: {
+        command: 'python build/install_webtest_on_linux.py webtest-master/'
       },
       runPythonTests: {
         command: ['python', 'build/run_python_tests.py', 'google_appengine/',
@@ -172,8 +172,11 @@ module.exports = function(grunt) {
   // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
                                  'runPythonTests', 'jstests']);
-  grunt.registerTask('travis', ['shell:getPythonTestDepsAndAutoInstall', 'default']);
-  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:getPythonTestDeps',
+  grunt.registerTask('travis', ['shell:getPythonTestDeps',
+                                'shell:installPythonTestDepsOnLinux',
+                                'default']);
+  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage',
+                                        'shell:getPythonTestDeps',
                                         'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
   // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
