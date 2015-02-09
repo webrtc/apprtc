@@ -13,11 +13,27 @@ TEST_PATH    Path to package containing test modules.
 WEBTEST_PATH Path to the webtest library."""
 
 
+def _WebTestIsInstalled():
+  try:
+    import webtest
+    return True
+  except ImportError:
+    print 'You need to install webtest before you can proceed running the '
+    print 'tests. To do this you need to get easy_install. See '
+    print 'https://pythonhosted.org/setuptools/easy_install.html'
+    print 'Then:'
+    print 'cd webtest-master'
+    print 'sudo python setup.py install'
+    return False
+
+
 def main(sdk_path, test_path, webtest_path):
     sys.path.insert(0, sdk_path)
     import dev_appserver
     dev_appserver.fix_sys_path()
     sys.path.append(webtest_path)
+    if not _WebTestIsInstalled():
+      return False
     suite = unittest.loader.TestLoader().discover(test_path,
                                                   pattern="*test.py")
     return unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful()

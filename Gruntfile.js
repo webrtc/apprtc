@@ -57,7 +57,8 @@ module.exports = function(grunt) {
 
     shell: {
       runPythonTests: {
-        command: './build/run_python_tests.sh'
+        command: ['python', 'build/run_python_tests.py', 'google-appengine/',
+                  'out/app_engine/', 'webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
         command: 'python ./build/build_app_engine_package.py src ' + out_app_engine_dir,

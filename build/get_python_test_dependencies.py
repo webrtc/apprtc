@@ -78,20 +78,6 @@ def DownloadWebTestIfNecessary():
   _Untar(webtest_file)
 
 
-def _EnsureWebTestIsInstalled():
-  try:
-    import webtest
-    return 0
-  except ImportError:
-    print 'You need to install webtest before you can proceed running the '
-    print 'tests. To do this you need to get easy_install. See '
-    print 'https://pythonhosted.org/setuptools/easy_install.html'
-    print 'Then:'
-    print 'cd webtest-master'
-    print 'sudo python setup.py install'
-    return 1
-
-
 def main():
   usage = 'usage: %prog [options]'
   parser = optparse.OptionParser(usage)
@@ -104,7 +90,5 @@ def main():
   if options.auto_install_on_linux:
     _InstallWebTestOnLinux('webtest-master')
   
-  return _EnsureWebTestIsInstalled()
-
 if __name__ == '__main__':
   sys.exit(main())
