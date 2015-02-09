@@ -10,11 +10,11 @@ import shutil
 import subprocess
 import sys
 
-USAGE = """%prog SRC_PATH DEST_PATH
+USAGE = """%prog src_path dest_path
 Build the GAE source code package.
 
-SRC_PATH     Path to the source code root directory.
-DEST_PATH    Path to the root directory to push/deploy GAE from."""
+src_path     Path to the source code root directory.
+dest_path    Path to the root directory to push/deploy GAE from."""
 
 
 def call_cmd_and_return_output_lines(cmd):
@@ -96,12 +96,9 @@ def main(src_path, dest_path):
 
 if __name__ == '__main__':
   parser = optparse.OptionParser(USAGE)
-  options, args = parser.parse_args()
+  _, args = parser.parse_args()
   if len(args) != 2:
-    print 'Error: Exactly 2 arguments required.'
-    parser.print_help()
-    sys.exit(1)
+    parser.error('Error: Exactly 2 arguments required.')
 
-  SRC_PATH = args[0]
-  DEST_PATH = args[1]
-  main(SRC_PATH, DEST_PATH)
+  src_path, dest_path = args[0:2]
+  main(src_path, dest_path)
