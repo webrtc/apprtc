@@ -1,6 +1,7 @@
 'use strict';
 
 /* globals module */
+var out_app_engine_dir = 'out/app_engine';
 
 module.exports = function(grunt) {
   // configure project
@@ -58,16 +59,9 @@ module.exports = function(grunt) {
       runPythonTests: {
         command: './build/run_python_tests.sh'
       },
-      buildVersion: {
-        command: './build/build_version_file.sh',
-        options: {
-          stdout: true,
-          stderr: true
-        }
-      },
       buildAppEnginePackage: {
         command: function(apiKey) {
-          var cmd = './build/build_app_engine_package.sh';
+          var cmd = 'python ./build/build_app_engine_package.py src ' + out_app_engine_dir;
           if (apiKey) {
             cmd += ' ' + apiKey;
           }
@@ -105,7 +99,7 @@ module.exports = function(grunt) {
           },
           {
             expand: true,
-            cwd: 'out/app_engine',
+            cwd: out_app_engine_dir,
             src: [
               '**/*.js',
               '**/*.css',
@@ -176,17 +170,19 @@ module.exports = function(grunt) {
 
   // set default tasks to run when grunt is called without parameters
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
-                                 'shell:buildVersion', 'runPythonTests', 'jstests']);
+                                 'runPythonTests', 'jstests']);
   grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
+
   grunt.registerTask('build', function(apiKey) {
     var appEngineTask = 'shell:buildAppEnginePackage';
     if (apiKey) {
       appEngineTask += ':' + apiKey;
     }
-    grunt.task.run(['closurecompiler:debug',
-                    'shell:buildVersion',
-                    appEngineTask,
+    // buildAppEnginePackage must be done before closurecompiler since
+    // buildAppEnginePackage resets the out/app_engine dir.
+    grunt.task.run([appEngineTask,
+                    'closurecompiler:debug',
                     'grunt-chrome-build']);
   });
   // also possible to call JavaScript directly in registerTask()

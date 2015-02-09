@@ -40,6 +40,12 @@ var Call = function(params) {
   this.onsignalingstatechange = null;
   this.onstatusmessage = null;
 
+  this.getMediaPromise_ = null;
+  this.getTurnServersPromise_ = null;
+  this.requestMediaAndTurnServers_();
+};
+
+Call.prototype.requestMediaAndTurnServers_ = function() {
   this.getMediaPromise_ = this.maybeGetMedia_();
   this.getTurnServersPromise_ = this.maybeGetTurnServers_();
 };
@@ -56,6 +62,9 @@ Call.prototype.start = function(roomId) {
 };
 
 Call.prototype.restart = function() {
+  // Reinitialize the promises so the media gets hooked up as a result
+  // of calling maybeGetMedia_.
+  this.requestMediaAndTurnServers_();
   this.start(this.params_.previousRoomId);
 };
 
