@@ -80,8 +80,7 @@ def main(src_path, dest_path):
           shutil.copy(os.path.join(dirpath, name), dest_html_path)
     elif dirpath.endswith('app_engine'):
       for name in files:
-        if (name.endswith('.py') and name.find('test') == -1 or
-            name.endswith('.yaml')):
+        if (name.endswith('.py') or name.endswith('.yaml')):
           shutil.copy(os.path.join(dirpath, name), dest_path)
     elif dirpath.endswith('js'):
       for name in files:

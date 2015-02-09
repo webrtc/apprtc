@@ -61,21 +61,25 @@ def DownloadAppEngineSdkIfNecessary():
   _Unzip(gae_sdk_file)
 
 
-def _InstallWebTestOnLinux(webtest_dir):
-  cwd = os.getcwd()
-  try:
-    print 'About to install webtest into your system python.'
-    print 'Enter your password if you agree.'
-    os.chdir(webtest_dir)
-    os.system('sudo python setup.py install')
-  finally:
-    os.chdir(cwd)
-
-
 def DownloadWebTestIfNecessary():
   webtest_file = 'webtest-master.tar.gz'
   _Download(WEBTEST_URL, webtest_file)
   _Untar(webtest_file)
+
+
+def _InstallWebTestOnLinux(webtest_dir):
+  cwd = os.getcwd()
+  try:
+    print 'About to install webtest into your system python.'
+    os.chdir(webtest_dir)
+    result = os.system('sudo python setup.py install')
+    if result == 0:
+      print 'Install successful.'
+    else:
+      return ('Failed to install webtest; are you missing setuptools / '
+              'easy_install in your system python?')
+  finally:
+    os.chdir(cwd)
 
 
 def main():
@@ -88,7 +92,7 @@ def main():
   DownloadAppEngineSdkIfNecessary()
   DownloadWebTestIfNecessary()
   if options.auto_install_on_linux:
-    _InstallWebTestOnLinux('webtest-master')
+    return _InstallWebTestOnLinux('webtest-master')
   
 if __name__ == '__main__':
   sys.exit(main())

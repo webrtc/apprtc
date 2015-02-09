@@ -56,8 +56,14 @@ module.exports = function(grunt) {
     },
 
     shell: {
+      getPythonTestDeps: {
+        command: 'python build/get_python_test_deps.py'
+      },
+      getPythonTestDepsAndAutoInstall: {
+        command: 'python build/get_python_test_deps.py --auto-install-on-linux'
+      },
       runPythonTests: {
-        command: ['python', 'build/run_python_tests.py', 'google-appengine/',
+        command: ['python', 'build/run_python_tests.py', 'google_appengine/',
                   'out/app_engine/', 'webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
@@ -153,7 +159,7 @@ module.exports = function(grunt) {
     },
   });
 
-  // enable plugins
+  // Enable plugins.
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-htmlhint');
   grunt.loadNpmTasks('grunt-jscs');
@@ -163,13 +169,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-closurecompiler');
   grunt.loadTasks('build/grunt-chrome-build');
 
-  // set default tasks to run when grunt is called without parameters
+  // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
                                  'runPythonTests', 'jstests']);
-  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
+  grunt.registerTask('travis', ['shell:getPythonTestDepsAndAutoInstall', 'default']);
+  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:getPythonTestDeps',
+                                        'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets the out/app_engine dir.
+  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
   grunt.registerTask('build', ['shell:buildAppEnginePackage', 'closurecompiler:debug', 'grunt-chrome-build']);
-  // also possible to call JavaScript directly in registerTask()
-  // or to call external tasks with grunt.loadTasks()
 };
