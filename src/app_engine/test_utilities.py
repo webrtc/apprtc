@@ -68,12 +68,18 @@ class BasePageHandlerTest(unittest.TestCase):
     self.testbed.deactivate()
     analytics.report_event = self.oldReportEvent
 
-  def checkInvalidRequests(self, path, params):
+  def checkInvalidRequests(self, path, params, jsonResult=False):
     body = {x: '' for x in params}
     while body:
       response = self.makePostRequest(path, json.dumps(body))
-      self.assertEqual(constants.RESPONSE_INVALID_ARGUMENT, response.body)
+      if jsonResult:
+        self.verifyResultCode(response, constants.RESPONSE_INVALID_ARGUMENT)
+      else:
+        self.assertEqual(constants.RESPONSE_INVALID_ARGUMENT, response.body)
       body.popitem()
+
+  def checkInvalidRequestsJsonResult(self, path, params):
+    self.checkInvalidRequests(path, params, jsonResult=True)
 
   def addTestData(self):
     records = [

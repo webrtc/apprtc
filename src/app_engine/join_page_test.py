@@ -2,16 +2,10 @@
 
 import json
 import unittest
-import webtest
 
-from google.appengine.datastore import datastore_stub_util
-from google.appengine.api import memcache
-from google.appengine.ext import testbed
-
-import apprtc
 import constants
-import gcmrecord
 import test_utilities
+
 
 class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
   def verifyJoinSuccessResponse(self, response, is_initiator, room_id):
@@ -78,13 +72,13 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
     # Caller that doesn't exist.
     self.requestCallAndVerify(room_id, 'foo', 'callee1',
-        constants.RESPONSE_INVALID_CALLER)
+                              constants.RESPONSE_INVALID_CALLER)
 
     # Caller from gcm that isn't verified.
-    # TODO (chuckhays): Once registration is enabled, this test should
+    # TODO(chuckhays): Once registration is enabled, this test should
     # return a result code of constants.RESPONSE_INVALID_CALLER.
     self.requestCallAndVerify(room_id, 'caller3gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
   def testJoinAsCallerInvalideCallee(self):
     self.addTestData()
@@ -92,13 +86,13 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
     # Callee that doesn't exist.
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'bar',
-        constants.RESPONSE_INVALID_CALLEE)
+                              constants.RESPONSE_INVALID_CALLEE)
 
     # Callee id that has no verified gcm records.
-    # TODO (chuckhays): Once registration is enabled, this test should
+    # TODO(chuckhays): Once registration is enabled, this test should
     # return a result code of constants.RESPONSE_INVALID_CALLER.
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee3',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
   def testJoinAsCallerRoomExists(self):
     self.addTestData()
@@ -106,12 +100,12 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
     # The room already exists because it was created by the first join.
     # Should result in an error response.
     self.requestCallAndVerify(room_id, 'caller2gcm1', 'callee2',
-        constants.RESPONSE_INVALID_ROOM)
+                              constants.RESPONSE_INVALID_ROOM)
 
   def testJoinAsCaller(self):
     self.addTestData()
@@ -119,10 +113,10 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
   def sendAndVerifyInvalidArguments(self, action, callerGcmId,
-      calleeId, calleeGcmId):
+                                    calleeId, calleeGcmId):
     body = {}
     if action is not None:
       body[constants.PARAM_ACTION] = action
@@ -143,24 +137,24 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.sendAndVerifyInvalidArguments(constants.ACTION_CALL, '', None, None)
     self.sendAndVerifyInvalidArguments(constants.ACTION_CALL, '', '', None)
     self.sendAndVerifyInvalidArguments(constants.ACTION_CALL, None, None, None)
-    self.sendAndVerifyInvalidArguments(constants.ACTION_ACCEPT, None, None, None)
+    self.sendAndVerifyInvalidArguments(constants.ACTION_ACCEPT,
+                                       None, None, None)
     self.sendAndVerifyInvalidArguments('other', None, None, None)
-
 
   def testJoinAsCalleeInvalidCallee(self):
     self.addTestData()
 
     room_id = 'callercallee'
 
-    # TODO (chuckhays): Once registration is enabled, this test should
+    # TODO(chuckhays): Once registration is enabled, this test should
     # return a result code of constants.RESPONSE_INVALID_CALLEE.
     self.requestAcceptAndVerify(room_id, 'caller3gcm1',
-        constants.RESPONSE_INVALID_ROOM)
+                                constants.RESPONSE_INVALID_ROOM)
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
     self.requestAcceptAndVerify(room_id, 'bar',
-        constants.RESPONSE_INVALID_CALLEE)
+                                constants.RESPONSE_INVALID_CALLEE)
 
   def testJoinAsCalleeRoomNotFound(self):
     self.addTestData()
@@ -168,7 +162,7 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestAcceptAndVerify(room_id, 'callee2gcm1',
-        constants.RESPONSE_INVALID_ROOM)
+                                constants.RESPONSE_INVALID_ROOM)
 
   def testJoinAsCallee(self):
     self.addTestData()
@@ -176,10 +170,10 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
     self.requestAcceptAndVerify(room_id, 'callee1gcm1',
-        constants.RESPONSE_SUCCESS)
+                                constants.RESPONSE_SUCCESS)
 
   def testJoinAsCalleeWrongCallee(self):
     # Tests the wrong callee attempting to accept a call.
@@ -189,11 +183,11 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
     # Try to join the room as a different callee than specified by caller.
     self.requestAcceptAndVerify(room_id, 'callee2gcm1',
-        constants.RESPONSE_INVALID_ROOM)
+                                constants.RESPONSE_INVALID_ROOM)
 
   def testJoinAsCalleeRoomFull(self):
     self.addTestData()
@@ -201,13 +195,13 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
 
     self.requestAcceptAndVerify(room_id, 'callee1gcm1',
-        constants.RESPONSE_SUCCESS)
+                                constants.RESPONSE_SUCCESS)
 
     self.requestAcceptAndVerify(room_id, 'callee1gcm1',
-        constants.RESPONSE_ROOM_FULL)
+                                constants.RESPONSE_ROOM_FULL)
 
   def testJoinDifferentRoomTypes(self):
     # Rooms created via apprtc and via call should not be joinable by
@@ -217,7 +211,7 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
 
     # Room created by a direct call.
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_SUCCESS)
+                              constants.RESPONSE_SUCCESS)
     response = self.makePostRequest('/join/' + room_id)
     self.verifyResultCode(response, constants.RESPONSE_INVALID_ROOM)
 
@@ -226,7 +220,7 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     response = self.makePostRequest('/join/' + room_id)
     self.verifyResultCode(response, constants.RESPONSE_SUCCESS)
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
-        constants.RESPONSE_INVALID_ROOM)
+                              constants.RESPONSE_INVALID_ROOM)
 
 if __name__ == '__main__':
   unittest.main()

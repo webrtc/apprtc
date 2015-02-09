@@ -8,6 +8,12 @@ import test_utilities
 
 
 class LeavePageHandlerTest(test_utilities.BasePageHandlerTest):
+  def testLeaveInvalidInput(self):
+    body = {
+        constants.PARAM_USER_GCM_ID: 'callee1gcm1'
+    }
+    self.checkInvalidRequestsJsonResult('/leave/room1', body.keys())
+
   def testLeaveNoRoom(self):
     self.addTestData()
     room_id = 'callercallee'
