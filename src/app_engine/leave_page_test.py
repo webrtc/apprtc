@@ -1,6 +1,5 @@
 # Copyright 2015 Google Inc. All Rights Reserved.
 
-import json
 import unittest
 
 import constants
@@ -9,16 +8,6 @@ import test_utilities
 
 
 class LeavePageHandlerTest(test_utilities.BasePageHandlerTest):
-
-  def requestLeaveAndVerify(self, room_id, user_gcm_id, expected_response,
-                            msg=None):
-    body = {
-        constants.PARAM_USER_GCM_ID: user_gcm_id
-    }
-
-    response = self.makePostRequest('/leave/' + room_id, json.dumps(body))
-    self.verifyResultCode(response, expected_response, msg)
-
   def testLeaveNoRoom(self):
     self.addTestData()
     room_id = 'callercallee'

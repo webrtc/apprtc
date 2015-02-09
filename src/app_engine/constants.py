@@ -45,11 +45,13 @@ ACTION_CALL = 'call'
 ACTION_ACCEPT = 'accept'
 
 PARAM_ACTION = 'action'
+PARAM_CALLER_ID = 'callerId'
 PARAM_CALLER_GCM_ID = 'callerGcmId'
 PARAM_CALLEE_ID = 'calleeId'
 PARAM_CALLEE_GCM_ID = 'calleeGcmId'
 PARAM_USER_GCM_ID = 'userGcmId'
 PARAM_MESSAGE = 'message'
+PARAM_ROOM_ID = 'roomId'
 
 BIGQUERY_URL = 'https://www.googleapis.com/auth/bigquery'
 

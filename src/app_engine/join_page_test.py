@@ -27,7 +27,6 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.assertEqual([], params['error_messages'])
     return caller_id
 
-    
   def testJoinAndLeave(self):
     room_id = 'foo'
     # Join the caller.
@@ -75,7 +74,7 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
 
   def testJoinAsCallerInvalidCaller(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
     # Caller that doesn't exist.
     self.requestCallAndVerify(room_id, 'foo', 'callee1',
@@ -86,15 +85,15 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     # return a result code of constants.RESPONSE_INVALID_CALLER.
     self.requestCallAndVerify(room_id, 'caller3gcm1', 'callee1',
         constants.RESPONSE_SUCCESS)
-    
+
   def testJoinAsCallerInvalideCallee(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
     # Callee that doesn't exist.
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'bar',
         constants.RESPONSE_INVALID_CALLEE)
-    
+
     # Callee id that has no verified gcm records.
     # TODO (chuckhays): Once registration is enabled, this test should
     # return a result code of constants.RESPONSE_INVALID_CALLER.
@@ -103,9 +102,9 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
 
   def testJoinAsCallerRoomExists(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
-    
+
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
         constants.RESPONSE_SUCCESS)
 
@@ -116,12 +115,12 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
 
   def testJoinAsCaller(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
-    
+
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
         constants.RESPONSE_SUCCESS)
-    
+
   def sendAndVerifyInvalidArguments(self, action, callerGcmId,
       calleeId, calleeGcmId):
     body = {}
@@ -133,10 +132,10 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
       body[constants.PARAM_CALLEE_ID] = calleeId
     if calleeGcmId is not None:
       body[constants.PARAM_CALLEE_GCM_ID] = calleeGcmId
-    
+
     response = self.makePostRequest('/join/room', json.dumps(body))
     self.verifyResultCode(response, constants.RESPONSE_INVALID_ARGUMENT)
-    
+
   def testJoinAsCallerInvalidInputs(self):
     self.sendAndVerifyInvalidArguments(constants.ACTION_CALL, None, 'a', None)
     self.sendAndVerifyInvalidArguments(constants.ACTION_CALL, None, '', None)
@@ -146,18 +145,18 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.sendAndVerifyInvalidArguments(constants.ACTION_CALL, None, None, None)
     self.sendAndVerifyInvalidArguments(constants.ACTION_ACCEPT, None, None, None)
     self.sendAndVerifyInvalidArguments('other', None, None, None)
-    
-  
+
+
   def testJoinAsCalleeInvalidCallee(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
 
     # TODO (chuckhays): Once registration is enabled, this test should
     # return a result code of constants.RESPONSE_INVALID_CALLEE.
     self.requestAcceptAndVerify(room_id, 'caller3gcm1',
         constants.RESPONSE_INVALID_ROOM)
-    
+
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
         constants.RESPONSE_SUCCESS)
     self.requestAcceptAndVerify(room_id, 'bar',
@@ -165,15 +164,15 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
 
   def testJoinAsCalleeRoomNotFound(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
 
     self.requestAcceptAndVerify(room_id, 'callee2gcm1',
         constants.RESPONSE_INVALID_ROOM)
-    
+
   def testJoinAsCallee(self):
     self.addTestData()
-    
+
     room_id = 'callercallee'
 
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
@@ -186,12 +185,12 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     # Tests the wrong callee attempting to accept a call.
     # Call is initiated to callee1, but callee2 calls accept.
     self.addTestData()
-    
+
     room_id = 'callercallee'
-    
+
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
         constants.RESPONSE_SUCCESS)
-    
+
     # Try to join the room as a different callee than specified by caller.
     self.requestAcceptAndVerify(room_id, 'callee2gcm1',
         constants.RESPONSE_INVALID_ROOM)

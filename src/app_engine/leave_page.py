@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.7
 #
 # Copyright 2015 Google Inc. All Rights Reserved.
 
@@ -13,6 +13,7 @@ import logging
 import webapp2
 
 import constants
+import gcm_notify
 import room as room_module
 import util
 
@@ -39,14 +40,18 @@ class LeaveDirectCallPage(webapp2.RequestHandler):
       return
 
     client_gcm_id = msg[constants.PARAM_USER_GCM_ID]
+    result, room = room_module.remove_room_for_leave_call(
+        self.request.host_url, room_id, client_gcm_id)
+    if result != constants.RESPONSE_SUCCESS:
+      self.write_response(result)
+      return
 
-    room = room_module.get_room(self.request.host_url, room_id)
-    if room is not None and room.room_type == room_module.Room.TYPE_DIRECT:
-      room_state = room.get_room_state()
-      if room_state == room_module.Room.STATE_WAITING:
-        # TODO(chuckhays): Send message to ringing clients to stop ringing.
-        pass
+    room_state = room.get_room_state()
+    if room_state == room_module.Room.STATE_WAITING:
+      # This is the caller hanging up. Send notification to all other endpoints.
+      gcm_ids_to_notify = [gcm_id for gcm_id in room.allowed_clients
+                           if gcm_id != client_gcm_id]
+      gcm_notify.send_byes(
+          gcm_ids_to_notify, room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_HANGUP)
 
-    result = room_module.remove_room_for_leave_call(self.request.host_url,
-                                                    room_id, client_gcm_id)
     self.write_response(result)

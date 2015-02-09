@@ -44,6 +44,23 @@ class GCMRecord(ndb.Model):
     return q.fetch()
 
   @classmethod
+  def get_user_id_for_gcm_id(cls, gcm_id, verified_only = False):
+    records = cls.get_by_gcm_id(gcm_id, verified_only)
+    if len(records):
+      return records[0].user_id
+    return None
+
+  @classmethod
+  def get_associated_records_for_gcm_id(cls, gcm_id, verified_only = False):
+    """Returns records which share the same user_id as the one for the
+    given gcm_id inclusive.
+    """
+    user_id = cls.get_user_id_for_gcm_id(gcm_id, verified_only)
+    if user_id is None:
+      return []
+    return cls.get_by_user_id(user_id, verified_only)
+
+  @classmethod
   def get_by_ids(cls, user_id, gcm_id, verified_only = False):
     q = GCMRecord.query(ancestor=get_ancestor_key()) \
         .filter(GCMRecord.user_id == user_id).filter(GCMRecord.gcm_id == gcm_id)

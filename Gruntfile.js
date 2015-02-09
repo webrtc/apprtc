@@ -66,7 +66,13 @@ module.exports = function(grunt) {
         }
       },
       buildAppEnginePackage: {
-        command: './build/build_app_engine_package.sh',
+        command: function(apiKey) {
+          var cmd = './build/build_app_engine_package.sh';
+          if (apiKey) {
+            cmd += ' ' + apiKey;
+          }
+          return cmd;
+        },
         options: {
           stdout: true,
           stderr: true
@@ -173,7 +179,16 @@ module.exports = function(grunt) {
                                  'shell:buildVersion', 'runPythonTests', 'jstests']);
   grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  grunt.registerTask('build', ['closurecompiler:debug', 'shell:buildVersion', 'shell:buildAppEnginePackage', 'grunt-chrome-build']);
+  grunt.registerTask('build', function(apiKey) {
+    var appEngineTask = 'shell:buildAppEnginePackage';
+    if (apiKey) {
+      appEngineTask += ':' + apiKey;
+    }
+    grunt.task.run(['closurecompiler:debug',
+                    'shell:buildVersion',
+                    appEngineTask,
+                    'grunt-chrome-build']);
+  });
   // also possible to call JavaScript directly in registerTask()
   // or to call external tasks with grunt.loadTasks()
 };
