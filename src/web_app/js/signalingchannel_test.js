@@ -9,86 +9,13 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals TestCase, assertEquals, assertNotNull, assertTrue, assertFalse,
-   WebSocket:true, XMLHttpRequest:true, SignalingChannel */
+   WebSocket:true, XMLHttpRequest:true, SignalingChannel, webSockets:true,
+   xhrs:true, FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID, FAKE_CLIENT_ID,
+   MockXMLHttpRequest, MockWebSocket */
 
 'use strict';
 
-var FAKE_WSS_URL = 'wss://foo.com';
-var FAKE_WSS_POST_URL = 'https://foo.com';
-var FAKE_ROOM_ID = 'bar';
-var FAKE_CLIENT_ID = 'barbar';
-
 var SignalingChannelTest = new TestCase('SignalingChannelTest');
-
-var webSockets = [];
-var MockWebSocket = function(url) {
-  assertEquals(FAKE_WSS_URL, url);
-
-  this.url = url;
-  this.messages = [];
-  this.readyState = WebSocket.CONNECTING;
-
-  this.onopen = null;
-  this.onclose = null;
-  this.onerror = null;
-  this.onmessage = null;
-
-  webSockets.push(this);
-};
-
-MockWebSocket.CONNECTING = WebSocket.CONNECTING;
-MockWebSocket.OPEN = WebSocket.OPEN;
-MockWebSocket.CLOSED = WebSocket.CLOSED;
-
-MockWebSocket.prototype.simulateOpenResult = function(success) {
-  if (success) {
-    this.readyState = WebSocket.OPEN;
-    if (this.onopen) {
-      this.onopen();
-    }
-  } else {
-    this.readyState = WebSocket.CLOSED;
-    if (this.onerror) {
-      this.onerror(Error('Mock open error'));
-    }
-  }
-};
-
-MockWebSocket.prototype.send = function(msg) {
-  if (this.readyState !== WebSocket.OPEN) {
-    throw 'Send called when the conneciton is not open';
-  }
-  this.messages.push(msg);
-};
-
-MockWebSocket.prototype.close = function() {
-  this.readyState = WebSocket.CLOSED;
-};
-
-var xhrs = [];
-var MockXMLHttpRequest = function() {
-  this.url = null;
-  this.method = null;
-  this.async = true;
-  this.body = null;
-  this.readyState = 0;
-
-  xhrs.push(this);
-};
-MockXMLHttpRequest.prototype.open = function(method, path, async) {
-  this.url = path;
-  this.method = method;
-  this.async = async;
-  this.readyState = 1;
-};
-MockXMLHttpRequest.prototype.send = function(body) {
-  this.body = body;
-  if (this.async) {
-    this.readyState = 2;
-  } else {
-    this.readyState = 4;
-  }
-};
 
 SignalingChannelTest.prototype.setUp = function() {
   webSockets = [];

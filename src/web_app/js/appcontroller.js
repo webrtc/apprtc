@@ -193,7 +193,6 @@ AppController.prototype.showRoomSelection_ = function() {
 AppController.prototype.finishCallSetup_ = function(roomId) {
   this.call_.start(roomId);
 
-  window.onbeforeunload = this.call_.hangup.bind(this.call_);
   document.onkeypress = this.onKeyPress_.bind(this);
   window.onmousemove = this.showIcons_.bind(this);
 
@@ -205,6 +204,13 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
   setUpFullScreen();
 
   if (!isChromeApp()) {
+    // Call hangup with async = false. Required to complete multiple
+    // clean up steps before page is closed.
+    // Chrome apps can't use onbeforeunload.
+    window.onbeforeunload = function() {
+      this.call_.hangup(false);
+    }.bind(this);
+
     window.onpopstate = function(event) {
       if (!event.state) {
         // TODO (chuckhays) : Resetting back to room selection page not
@@ -227,7 +233,8 @@ AppController.prototype.hangup_ = function() {
   this.displayStatus_('Hanging up');
   this.transitionToDone_();
 
-  this.call_.hangup();
+  // Call hangup with async = true.
+  this.call_.hangup(true);
 };
 
 AppController.prototype.onRemoteHangup_ = function() {

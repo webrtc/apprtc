@@ -8,9 +8,9 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace, requestTurnServers, sendAsyncUrlRequest,
+/* globals trace, requestTurnServers, sendUrlRequest, sendAsyncUrlRequest,
    requestUserMedia, SignalingChannel, PeerConnectionClient, setupLoopback,
-   parseJSON */
+   parseJSON, isChromeApp, WindowPort, Constants */
 
 /* exported Call */
 
@@ -61,6 +61,48 @@ Call.prototype.start = function(roomId) {
   }
 };
 
+Call.prototype.queueCleanupMessages_ = function() {
+  // Set up the cleanup queue.
+  // These steps mirror the cleanup done in hangup(), but will be
+  // executed when the Chrome App is closed by background.js.
+  WindowPort.sendMessage({
+    action: Constants.QUEUEADD_ACTION,
+    queueMessage: {
+      action: Constants.XHR_ACTION,
+      method: 'POST',
+      url: this.getLeaveUrl_(),
+      body: null
+    }
+  });
+
+  WindowPort.sendMessage({
+    action: Constants.QUEUEADD_ACTION,
+    queueMessage: {
+      action: Constants.WS_ACTION,
+      wsAction: Constants.WS_SEND_ACTION,
+      data: JSON.stringify({
+        cmd: 'send',
+        msg: JSON.stringify({type: 'bye'})
+      })
+    }
+  });
+
+  WindowPort.sendMessage({
+    action: Constants.QUEUEADD_ACTION,
+    queueMessage: {
+      action: Constants.XHR_ACTION,
+      method: 'DELETE',
+      url: this.channel_.getWssPostUrl(),
+      body: null
+    }
+  });
+};
+
+Call.prototype.clearCleanupQueue_ = function() {
+  // Clear the cleanup queue.
+  WindowPort.sendMessage({action: Constants.QUEUECLEAR_ACTION});
+};
+
 Call.prototype.restart = function() {
   // Reinitialize the promises so the media gets hooked up as a result
   // of calling maybeGetMedia_.
@@ -68,8 +110,12 @@ Call.prototype.restart = function() {
   this.start(this.params_.previousRoomId);
 };
 
-Call.prototype.hangup = function() {
+Call.prototype.hangup = function(async) {
   this.startTime = null;
+
+  if (isChromeApp()) {
+    this.clearCleanupQueue_();
+  }
 
   if (this.localStream_) {
     this.localStream_.stop();
@@ -89,19 +135,81 @@ Call.prototype.hangup = function() {
   // When the other client sees BYE it attempts to post offer and candidates to
   // GAE. GAE needs to know that we're disconnected at that point otherwise
   // it will forward messages to this client instead of storing them.
-  var path = this.roomServer_ + '/leave/' + this.params_.roomId +
+
+  // This section of code is executed in both sync and async depending on
+  // where it is called from. When the browser is closed, the requests must
+  // be executed as sync to finish before the browser closes. When called
+  // from pressing the hang up button, the requests are executed async.
+
+  // If you modify the steps used to hang up a call, you must also modify
+  // the clean up queue steps set up in queueCleanupMessages_.');
+
+  var sendLeaveStep = function() {
+    // Send POST request to /leave.
+    var path = this.getLeaveUrl_();
+    return sendUrlRequest('POST', path, async);
+  }.bind(this);
+  var sendLeaveErrorString = 'Error sending /leave:';
+
+  var sendByeStep = function() {
+    // Send bye to the other client.
+    this.channel_.send(JSON.stringify({type: 'bye'}));
+  }.bind(this);
+  var sendByeErrorString = 'Error sending bye:';
+
+  var closeChannelStep = function() {
+    // Close signaling channel.
+    return this.channel_.close(async);
+  }.bind(this);
+  var closeChannelErrorString = 'Error closing signaling channel:';
+
+  var setParamsStep = function() {
+    this.params_.previousRoomId = this.params_.roomId;
+    this.params_.roomId = null;
+    this.params_.clientId = null;
+  }.bind(this);
+  var setParamsErrorString = 'Error setting params:';
+
+  if (async) {
+    var handleError = function(errorString, error) {
+      trace(errorString + ' ' + error.message);
+    };
+    var sendLeave = sendLeaveStep().catch(
+        handleError.bind(this, sendLeaveErrorString));
+    var sendBye = sendLeave.then(sendByeStep).catch(
+        handleError.bind(this, sendByeErrorString));
+    var closeChannel = sendBye.then(closeChannelStep).catch(
+        handleError.bind(this, closeChannelErrorString));
+    var setParams = closeChannel.then(setParamsStep).catch(
+        handleError.bind(this, setParamsErrorString));
+    return setParams;
+  } else {
+    // Execute the cleanup steps.
+    var executeStep = function(executor, errorString) {
+      try {
+        executor();
+      } catch (ex) {
+        trace(errorString + ' ' + ex);
+      }
+    };
+
+    executeStep(sendLeaveStep, sendLeaveErrorString);
+    executeStep(sendByeStep, sendByeErrorString);
+    executeStep(closeChannelStep, closeChannelErrorString);
+    executeStep(setParamsStep, setParamsErrorString);
+
+    if (this.params_.roomId !== null || this.params_.clientId !== null) {
+      trace('ERROR: sync cleanup tasks did not complete successfully.');
+    } else {
+      trace('Cleanup completed.');
+    }
+    return Promise.resolve();
+  }
+};
+
+Call.prototype.getLeaveUrl_ = function() {
+  return this.roomServer_ + '/leave/' + this.params_.roomId +
       '/' + this.params_.clientId;
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', path, false);
-  xhr.send();
-
-  // Send bye to other client.
-  this.channel_.send(JSON.stringify({type: 'bye'}));
-  this.channel_.close();
-
-  this.params_.previousRoomId = this.params_.roomId;
-  this.params_.roomId = null;
-  this.params_.clientId = null;
 };
 
 Call.prototype.onRemoteHangup = function() {
@@ -209,6 +317,13 @@ Call.prototype.connectToRoom_ = function(roomId) {
     Promise.all([this.getTurnServersPromise_, this.getMediaPromise_])
         .then(function() {
           this.startSignaling_();
+          if (isChromeApp()) {
+            // We need to register the required clean up steps with the
+            // background window as soon as we have the information available.
+            // This is required because only the background window is notified
+            // when the window closes.
+            this.queueCleanupMessages_();
+          }
         }.bind(this)).catch(function(error) {
           this.onError_('Failed to start signaling: ' + error.message);
         }.bind(this));
