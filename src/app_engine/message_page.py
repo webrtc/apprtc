@@ -26,12 +26,12 @@ class MessagePage(webapp2.RequestHandler):
     content = json.dumps({'result': result})
     self.response.write(content)
 
-  def send_message_to_collider(self, room_id, client_id, message):
+  def send_message_to_collider(self, room_id, client_session_id, message):
     """Forward message to the collider service."""
     logging.info('Forwarding message to collider for room ' + room_id +
                  ' client ' + client_id)
     wss_post_url = parameter_handling.get_wss_parameters(self.request)[1]
-    url = wss_post_url + '/' + room_id + '/' + client_id
+    url = wss_post_url + '/' + room_id + '/' + client_session_id
     result = urlfetch.fetch(url=url,
                             payload=message,
                             method=urlfetch.POST)
@@ -43,10 +43,10 @@ class MessagePage(webapp2.RequestHandler):
       return
     self.write_response(constants.RESPONSE_SUCCESS)
 
-  def post(self, room_id, client_id):
+  def post(self, room_id, client_session_id):
     message_json = self.request.body
     result = room_module.save_message_from_client(
-        self.request.host_url, room_id, client_id, message_json)
+        self.request.host_url, room_id, client_session_id, message_json)
     if result['error'] is not None:
       self.write_response(result['error'])
       return
@@ -57,4 +57,4 @@ class MessagePage(webapp2.RequestHandler):
       # certificate file locally for SSL validation.
       # Note: loopback scenario follows this code path.
       # TODO(tkchin): consider async fetch here.
-      self.send_message_to_collider(room_id, client_id, message_json)
+      self.send_message_to_collider(room_id, client_session_id, message_json)

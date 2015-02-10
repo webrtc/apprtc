@@ -34,9 +34,10 @@ class JoinPage(webapp2.RequestHandler):
   def report_error(self, error):
     self.write_response(error, {}, [])
 
-  def write_room_parameters(self, room_id, client_id, messages, is_initiator):
+  def write_room_parameters(self, room_id, client_session_id,
+                            messages, is_initiator):
     params = parameter_handling.get_room_parameters(
-        self.request, room_id, client_id, is_initiator)
+        self.request, room_id, client_session_id, is_initiator)
     self.write_response('SUCCESS', params, messages)
 
   def handle_call(self, msg, room_id):
@@ -96,7 +97,8 @@ class JoinPage(webapp2.RequestHandler):
     gcm_notify.send_invites(callee_gcm_ids, room_id, caller_id)
 
     self.write_room_parameters(
-        room_id, caller_id, result['messages'], result['is_initiator'])
+        room_id, result['session_id'], result['messages'],
+        result['is_initiator'])
 
     logging.info('User ' + caller_id + ' initiated call to ' + callee_id +
                  ' from gcmId ' + caller_gcm_id)
@@ -147,7 +149,8 @@ class JoinPage(webapp2.RequestHandler):
         gcm_ids_to_notify, room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_ACCEPTED)
 
     self.write_room_parameters(
-        room_id, callee_id, result['messages'], result['is_initiator'])
+        room_id, result['session_id'], result['messages'],
+        result['is_initiator'])
 
     logging.info('User ' + callee_id + ' accepted call ' +
                  'from gcmId ' + callee_gcm_id)
@@ -155,6 +158,8 @@ class JoinPage(webapp2.RequestHandler):
                  ' with state ' + result['room_state'])
 
   def post(self, room_id):
+    """Handle post request for /join."""
+
     # Check request body to determine what action to take.
     msg = util.get_message_from_json(self.request.body)
     if util.has_msg_field(msg, constants.PARAM_ACTION, basestring):
@@ -186,6 +191,7 @@ class JoinPage(webapp2.RequestHandler):
       return
 
     self.write_room_parameters(
-        room_id, client_id, result['messages'], result['is_initiator'])
+        room_id, result['session_id'], result['messages'],
+        result['is_initiator'])
     logging.info('User ' + client_id + ' joined room ' + room_id +
                  ' with state ' + result['room_state'])

@@ -2,17 +2,19 @@
 #
 # Copyright 2015 Google Inc. All Rights Reserved.
 
-"""Request Parameter Handling
+"""Request Parameter Handling.
 
 This module implements methods to parse request parameters.
 """
 
 import cgi
-import constants
 import json
 import logging
 import os
+
+import constants
 import util
+
 
 # HD is on by default for desktop Chrome, but not Android or Firefox (yet)
 def get_hd_default(user_agent):
@@ -20,12 +22,14 @@ def get_hd_default(user_agent):
     return 'false'
   return 'true'
 
+
 # iceServers will be filled in by the TURN HTTP request.
 def make_pc_config(ice_transports):
-  config = { 'iceServers': [] };
+  config = {'iceServers': []}
   if ice_transports:
     config['iceTransports'] = ice_transports
   return config
+
 
 def add_media_track_constraint(track_constraints, constraint_string):
   tokens = constraint_string.split(':')
@@ -47,6 +51,7 @@ def add_media_track_constraint(track_constraints, constraint_string):
   else:
     logging.error('Ignoring malformed constraint: ' + constraint_string)
 
+
 def make_media_track_constraints(constraints_string):
   if not constraints_string or constraints_string.lower() == 'true':
     track_constraints = True
@@ -59,6 +64,7 @@ def make_media_track_constraints(constraints_string):
 
   return track_constraints
 
+
 def make_media_stream_constraints(audio, video, firefox_fake_device):
   stream_constraints = (
       {'audio': make_media_track_constraints(audio),
@@ -68,21 +74,24 @@ def make_media_stream_constraints(audio, video, firefox_fake_device):
   logging.info('Applying media constraints: ' + str(stream_constraints))
   return stream_constraints
 
+
 def maybe_add_constraint(constraints, param, constraint):
-  if (param.lower() == 'true'):
+  if param.lower() == 'true':
     constraints['optional'].append({constraint: True})
-  elif (param.lower() == 'false'):
+  elif param.lower() == 'false':
     constraints['optional'].append({constraint: False})
 
   return constraints
 
+
 def make_pc_constraints(dtls, dscp, ipv6):
-  constraints = { 'optional': [] }
+  constraints = {'optional': []}
   maybe_add_constraint(constraints, dtls, 'DtlsSrtpKeyAgreement')
   maybe_add_constraint(constraints, dscp, 'googDscp')
   maybe_add_constraint(constraints, ipv6, 'googIPv6')
 
   return constraints
+
 
 def append_url_arguments(request, link):
   arguments = request.arguments()
@@ -94,6 +103,7 @@ def append_url_arguments(request, link):
     link += ('&' + cgi.escape(argument, True) + '=' +
              cgi.escape(request.get(argument), True))
   return link
+
 
 def get_wss_parameters(request):
   ws_host_port_pair = request.get('wshpp')
@@ -110,6 +120,7 @@ def get_wss_parameters(request):
     wss_post_url = 'https://' + ws_host_port_pair
   return (wss_url, wss_post_url)
 
+
 def get_version_info():
   try:
     f = open('version_info.json')
@@ -122,9 +133,10 @@ def get_version_info():
     logging.warning('version_info.json cannot be opened: ' + str(e))
   return None
 
+
 # Returns appropriate room parameters based on query parameters in the request.
 # TODO(tkchin): move query parameter parsing to JS code.
-def get_room_parameters(request, room_id, client_id, is_initiator):
+def get_room_parameters(request, room_id, client_session_id, is_initiator):
   error_messages = []
   # Get the base url without arguments.
   base_url = request.path_url
@@ -141,7 +153,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   turn_transports = request.get('tt')
   # A HTTP server that will be used to find the right TURN servers to use, as
   # described in http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00.
-  turn_base_url = request.get('ts', default_value = constants.TURN_BASE_URL)
+  turn_base_url = request.get('ts', default_value=constants.TURN_BASE_URL)
 
   # Use "audio" and "video" to set the media stream constraints. Defined here:
   # http://goo.gl/V7cZg
@@ -193,7 +205,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
 
   if request.get('minre') or request.get('maxre'):
     message = ('The "minre" and "maxre" parameters are no longer supported. '
-              'Use "video" instead.')
+               'Use "video" instead.')
     logging.error(message)
     error_messages.append(message)
 
@@ -213,35 +225,36 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # TODO(tkchin): We want to provide a TURN request url on the initial get,
   # but we don't provide client_id until a join. For now just generate
   # a random id, but we should make this better.
-  username = client_id if client_id is not None else util.generate_random(9)
+  username = (client_session_id if client_session_id is not None
+              else util.generate_random(9))
   if len(turn_base_url) > 0:
-    turn_url = constants.TURN_URL_TEMPLATE % \
-        (turn_base_url, username, constants.CEOD_KEY)
+    turn_url = (constants.TURN_URL_TEMPLATE %
+                (turn_base_url, username, constants.CEOD_KEY))
 
   pc_config = make_pc_config(ice_transports)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
-  offer_constraints = { 'mandatory': {}, 'optional': [] }
+  offer_constraints = {'mandatory': {}, 'optional': []}
   media_constraints = make_media_stream_constraints(audio, video,
                                                     firefox_fake_device)
   wss_url, wss_post_url = get_wss_parameters(request)
 
-  bypass_join_confirmation = 'BYPASS_JOIN_CONFIRMATION' in os.environ and \
-      os.environ['BYPASS_JOIN_CONFIRMATION'] == 'True'
+  bypass_join_confirmation = ('BYPASS_JOIN_CONFIRMATION' in os.environ and
+                              os.environ['BYPASS_JOIN_CONFIRMATION'] == 'True')
 
   params = {
-    'error_messages': error_messages,
-    'is_loopback' : json.dumps(debug == 'loopback'),
-    'pc_config': json.dumps(pc_config),
-    'pc_constraints': json.dumps(pc_constraints),
-    'offer_constraints': json.dumps(offer_constraints),
-    'media_constraints': json.dumps(media_constraints),
-    'turn_url': turn_url,
-    'turn_transports': turn_transports,
-    'include_loopback_js' : include_loopback_js,
-    'wss_url': wss_url,
-    'wss_post_url': wss_post_url,
-    'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
-    'version_info': json.dumps(get_version_info())
+      'error_messages': error_messages,
+      'is_loopback': json.dumps(debug == 'loopback'),
+      'pc_config': json.dumps(pc_config),
+      'pc_constraints': json.dumps(pc_constraints),
+      'offer_constraints': json.dumps(offer_constraints),
+      'media_constraints': json.dumps(media_constraints),
+      'turn_url': turn_url,
+      'turn_transports': turn_transports,
+      'include_loopback_js': include_loopback_js,
+      'wss_url': wss_url,
+      'wss_post_url': wss_post_url,
+      'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
+      'version_info': json.dumps(get_version_info())
   }
 
   if room_id is not None:
@@ -249,8 +262,8 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     room_link = append_url_arguments(request, room_link)
     params['room_id'] = room_id
     params['room_link'] = room_link
-  if client_id is not None:
-    params['client_id'] = client_id
+  if client_session_id is not None:
+    params['client_id'] = client_session_id
   if is_initiator is not None:
     params['is_initiator'] = json.dumps(is_initiator)
   return params
