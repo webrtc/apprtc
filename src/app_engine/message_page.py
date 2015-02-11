@@ -29,7 +29,7 @@ class MessagePage(webapp2.RequestHandler):
   def send_message_to_collider(self, room_id, client_session_id, message):
     """Forward message to the collider service."""
     logging.info('Forwarding message to collider for room ' + room_id +
-                 ' client ' + client_id)
+                 ' client ' + client_session_id)
     wss_post_url = parameter_handling.get_wss_parameters(self.request)[1]
     url = wss_post_url + '/' + room_id + '/' + client_session_id
     result = urlfetch.fetch(url=url,
