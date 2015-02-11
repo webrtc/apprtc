@@ -13,7 +13,7 @@ import httplib2
 import webapp2
 from apiclient import discovery
 from google.appengine.api import app_identity
-from oauth2client.appengine import AppAssertionCredentials
+import oauth2client.appengine
 import oauth2client.client
 
 import constants
@@ -24,7 +24,7 @@ class Analytics(object):
 
   All data is streamed to BigQuery.
 
-"""
+  """
   def __init__(self):
     is_running_locally = os.environ.get('APPLICATION_ID', '').startswith('dev')
 
@@ -52,7 +52,7 @@ class Analytics(object):
             'No credentials provided for BigQuery. Logging disabled.')
     else:
       # Use the GAE service credentials.
-      credentials = AppAssertionCredentials(
+      credentials = oauth2client.appengine.AppAssertionCredentials(
           scope=constants.BIGQUERY_URL)
       self.bigquery = self._build_bigquery_object(credentials)
 
@@ -100,7 +100,8 @@ def report_event(*args, **kwargs):
   """Used by other modules to actually do logging.
 
   A passthrough to a global Analytics instance intialized on use.
-"""
+
+  """
   global analytics
 
   # Initialization is delayed until the first use so that our

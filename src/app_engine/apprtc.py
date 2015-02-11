@@ -7,7 +7,6 @@
 This module demonstrates the WebRTC API by implementing a simple video chat app.
 """
 
-# Enables loading third_party modules
 import cgi
 import json
 import logging
