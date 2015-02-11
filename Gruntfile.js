@@ -64,14 +64,15 @@ module.exports = function(grunt) {
       },
       runPythonTests: {
         command: ['python', 'build/run_python_tests.py', 'google_appengine/',
-                  'out/app_engine/', 'webtest-master/'].join(' ')
+                  out_app_engine_dir, 'webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
-        command: 'python ./build/build_app_engine_package.py src ' + out_app_engine_dir,
-        options: {
-          stdout: true,
-          stderr: true
-        }
+        command: ['python', './build/build_app_engine_package.py', 'src',
+                  out_app_engine_dir].join(' ')
+      },
+      buildAppEnginePackageWithTests: {
+        command: ['python', './build/build_app_engine_package.py', 'src',
+                  out_app_engine_dir, '--include-tests'].join(' ')
       }
     },
 
@@ -175,7 +176,7 @@ module.exports = function(grunt) {
   grunt.registerTask('travis', ['shell:getPythonTestDeps',
                                 'shell:installPythonTestDepsOnLinux',
                                 'default']);
-  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage',
+  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackageWithTests',
                                         'shell:getPythonTestDeps',
                                         'shell:runPythonTests']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
