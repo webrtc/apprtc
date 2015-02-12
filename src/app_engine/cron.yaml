@@ -1,8 +1,8 @@
 cron:
-- description: bi-hourly CEOD probing job
+- description: hourly CEOD probing job
   url: /probe/ceod
-  schedule: every 2 hours synchronized
+  schedule: every 1 hours synchronized
 
-- description: bi-hourly collider probing job
+- description: hourly collider probing job
   url: /probe/collider
-  schedule: every 2 hours synchronized
+  schedule: every 1 hours synchronized
