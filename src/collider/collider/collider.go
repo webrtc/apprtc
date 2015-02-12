@@ -24,7 +24,6 @@ const registerTimeoutSec = 10
 // This is a temporary solution to avoid holding a zombie connection forever, by
 // setting a 1 day timeout on reading from the WebSocket connection.
 const wsReadTimeoutSec = 60 * 60 * 24
-const wsWriteTimeoutSec = 10
 
 type Collider struct {
 	*roomTable
@@ -136,11 +135,6 @@ loop:
 		err := ws.SetReadDeadline(time.Now().Add(time.Duration(wsReadTimeoutSec) * time.Second))
 		if err != nil {
 			c.wsError("ws.SetReadDeadline error: "+err.Error(), ws)
-			break
-		}
-		err = ws.SetWriteDeadline(time.Now().Add(time.Duration(wsWriteTimeoutSec) * time.Second))
-		if err != nil {
-			c.wsError("ws.SetWriteDeadline error: "+err.Error(), ws)
 			break
 		}
 

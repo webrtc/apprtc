@@ -110,7 +110,9 @@ func (rm *room) remove(clientID string) {
 		if err != nil {
 			log.Printf("Failed to post BYE to room server %s: %v", rm.roomSrvUrl, err)
 		}
-		resp.Body.Close()
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
 	}
 }
 
