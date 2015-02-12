@@ -9,6 +9,10 @@ handlers:
   static_files: html/\1
   upload: html/(.*\.html)
 
+- url: /(.*\.json)
+  static_files: html/\1
+  upload: html/(.*\.json)
+
 - url: /images
   static_dir: images
 
