@@ -13,6 +13,10 @@ handlers:
   static_files: html/\1
   upload: html/(.*\.json)
 
+- url: /(.*\.txt)
+  static_files: html/\1
+  upload: html/(.*\.txt)
+
 - url: /images
   static_dir: images
 
