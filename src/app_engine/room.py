@@ -179,7 +179,7 @@ def remove_room_direct(host, room_id, client_gcm_id, for_decline):
       # Be sure the user is in the room.
       if not room.has_client(client_gcm_id):
         logging.warning('Can\'t remove room ' + room_id +
-                        ' because user is not in the room: ' + client_gcm_id)
+                        ' because user is not in the room. Client: ' + client_gcm_id)
         return (constants.RESPONSE_INVALID_USER, room)
 
     # Reset the room to the initial state so it may be reused.
