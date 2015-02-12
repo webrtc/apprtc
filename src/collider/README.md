@@ -8,13 +8,13 @@ A websocket-based signaling server in Go.
 
 2. Checkout the `webrtc` repository,
 
-        git clone https://github.com/GoogleChrome/webrtc.git
+        git clone https://github.com/webrtc/apprtc.git
 
 3. Link the collider directories into `$GOPATH/src`
 
-        ln -s webrtc/samples/web/content/apprtc/collider/collider $GOPATH/src/
-        ln -s webrtc/samples/web/content/apprtc/collider/collidermain $GOPATH/src/
-        ln -s webrtc/samples/web/content/apprtc/collider/collidertest $GOPATH/src/
+        ln -s apprtc/src/collider/collider $GOPATH/src/
+        ln -s apprtc/src/collider/collidermain $GOPATH/src/
+        ln -s apprtc/src/collider/collidertest $GOPATH/src/
 
 4. Install dependencies
 
