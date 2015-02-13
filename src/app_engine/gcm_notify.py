@@ -49,62 +49,48 @@ def get_gcm_api_key():
 def send_gcm_messages(gcm_ids, message, collapse_key):
   """Sends the message to each endpoint specified in gcm_ids.
 
-  Makes asynchronous posts to the GCM server with the appropriate payload
-  format. GCM server will then deliver the message the each endpoint. Will
-  block until all posts complete or fail.
+  Makes a synchronous post to the GCM server with the appropriate payload
+  format.
 
   Args:
     gcm_ids: List of verified GCM ids.
     message: Dictionary containing custom data.
     collapse_key: String used for GCM collapse key.
   """
-  start_time = time.time()
   gcm_api_key = get_gcm_api_key()
   if gcm_api_key is None:
     logging.warning('Did not send GCM message due to missing API key.')
     return
 
-  def handle_rpc_result(rpc):
-    result = rpc.get_result()
-    status_code = result.status_code
-    if status_code != 200:
-      logging.error('Failed to send GCM message. Result:%d', status_code)
-
   headers = {
       'Content-Type': 'application/json',
       'Authorization': ('key=%s' % gcm_api_key)
   }
-
-  # Create async requests.
-  rpcs = []
-  for gcm_id in gcm_ids:
-    payload = create_gcm_payload(gcm_id, collapse_key, message)
-    rpc = urlfetch.create_rpc()
-    rpc.callback = lambda: handle_rpc_result(rpc)
-    # TODO(tkchin): investigate setting follow_redirects=False.
-    urlfetch.make_fetch_call(
-        rpc, GCM_API_URL, payload=payload, method=urlfetch.POST,
-        headers=headers)
-    rpcs.append(rpc)
-
-  # Wait for all the requests to finish.
-  # TODO(tkchin): check performance on live server and multiple devices. Move
-  # requests to separate thread and return early if needed.
-  rpc_wait_start_time = time.time()
-  for rpc in rpcs:
-    rpc.wait()
-  rpc_wait_end_time = time.time()
-  logging.info('Took %.3fs to send %d GCM messages, spent %.3fs waiting for '
-               'rpcs to complete,',
-               rpc_wait_end_time - start_time,
-               len(rpcs),
-               rpc_wait_end_time - rpc_wait_start_time)
+  payload = create_gcm_payload(gcm_ids, collapse_key, message)
+  start_time = time.time()
+  # TODO(tkchin): investigate setting follow_redirects=False.
+  result = urlfetch.fetch(url=GCM_API_URL,
+                          payload=payload,
+                          method=urlfetch.POST,
+                          headers=headers)
+  end_time = time.time()
+  logging.info('Took %.3fs to send GCM message request with %d endpoints.',
+               end_time - start_time,
+               len(gcm_ids))
+  status_code = result.status_code
+  if status_code != 200:
+    logging.error('Failed to send GCM message. Result:%d', status_code)
+    logging.error('Response: %s', result.content)
+    return
+  # It's possible to get a 200 but receive an error from GCM server. This will
+  # be recorded in the response.
+  logging.info('GCM request result:\n%s', result.content)
 
 
-def create_gcm_payload(gcm_id, collapse_key, data):
+def create_gcm_payload(gcm_ids, collapse_key, data):
   return json.dumps({
       'data': data,
-      'registration_ids': [gcm_id],
+      'registration_ids': gcm_ids,
       'collapse_key': collapse_key,
       'time_to_live': GCM_TIME_TO_LIVE_IN_SECONDS
   })

@@ -13,9 +13,8 @@ class GCMNotifyTest(test_utilities.BasePageHandlerTest):
     self.requestCallAndVerify(
         room_id, 'caller1gcm1', 'callee1', constants.RESPONSE_SUCCESS)
     expected_payloads = [
-        self.createGCMInvitePayload('callee1gcm1', room_id, 'caller1'),
-        self.createGCMInvitePayload('callee1gcm2', room_id, 'caller1'),
-        self.createGCMInvitePayload('callee1gcm3', room_id, 'caller1')
+        self.createGCMInvitePayload(
+            ['callee1gcm1', 'callee1gcm2', 'callee1gcm3'], room_id, 'caller1'),
     ]
     self.verifyGCMPayloads(expected_payloads)
 
@@ -30,8 +29,7 @@ class GCMNotifyTest(test_utilities.BasePageHandlerTest):
     self.requestAcceptAndVerify(
         room_id, 'callee1gcm1', constants.RESPONSE_SUCCESS)
     expected_payloads = [
-        self.createGCMAcceptedPayload('callee1gcm2', room_id),
-        self.createGCMAcceptedPayload('callee1gcm3', room_id),
+        self.createGCMAcceptedPayload(['callee1gcm2', 'callee1gcm3'], room_id),
     ]
     self.verifyGCMPayloads(expected_payloads)
 
@@ -46,9 +44,8 @@ class GCMNotifyTest(test_utilities.BasePageHandlerTest):
     self.requestDeclineAndVerify(
         room_id, 'callee1gcm1', constants.RESPONSE_SUCCESS)
     expected_payloads = [
-        self.createGCMDeclinedPayload('caller1gcm1', room_id),
-        self.createGCMDeclinedPayload('callee1gcm2', room_id),
-        self.createGCMDeclinedPayload('callee1gcm3', room_id),
+        self.createGCMDeclinedPayload(
+            ['caller1gcm1', 'callee1gcm2', 'callee1gcm3'], room_id),
     ]
     self.verifyGCMPayloads(expected_payloads)
 
@@ -63,9 +60,8 @@ class GCMNotifyTest(test_utilities.BasePageHandlerTest):
     self.requestLeaveAndVerify(
         room_id, 'caller1gcm1', constants.RESPONSE_SUCCESS)
     expected_payloads = [
-        self.createGCMHangupPayload('callee1gcm1', room_id),
-        self.createGCMHangupPayload('callee1gcm2', room_id),
-        self.createGCMHangupPayload('callee1gcm3', room_id),
+        self.createGCMHangupPayload(
+            ['callee1gcm1', 'callee1gcm2', 'callee1gcm3'], room_id),
     ]
     self.verifyGCMPayloads(expected_payloads)
 

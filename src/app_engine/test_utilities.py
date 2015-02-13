@@ -114,24 +114,24 @@ class BasePageHandlerTest(unittest.TestCase):
   def makePostRequest(self, path, body=''):
     return self.test_app.post(path, body, headers={'User-Agent': 'Safari'})
 
-  def createGCMInvitePayload(self, gcm_id, room_id, caller_id):
+  def createGCMInvitePayload(self, gcm_ids, room_id, caller_id):
     return gcm_notify.create_gcm_payload(
-        gcm_id, room_id, gcm_notify.create_invite_message(room_id, caller_id))
+        gcm_ids, room_id, gcm_notify.create_invite_message(room_id, caller_id))
 
-  def createGCMAcceptedPayload(self, gcm_id, room_id):
+  def createGCMAcceptedPayload(self, gcm_ids, room_id):
     message = gcm_notify.create_bye_message(
         room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_ACCEPTED)
-    return gcm_notify.create_gcm_payload(gcm_id, room_id, message)
+    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
 
-  def createGCMDeclinedPayload(self, gcm_id, room_id):
+  def createGCMDeclinedPayload(self, gcm_ids, room_id):
     message = gcm_notify.create_bye_message(
         room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED)
-    return gcm_notify.create_gcm_payload(gcm_id, room_id, message)
+    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
 
-  def createGCMHangupPayload(self, gcm_id, room_id):
+  def createGCMHangupPayload(self, gcm_ids, room_id):
     message = gcm_notify.create_bye_message(
         room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_HANGUP)
-    return gcm_notify.create_gcm_payload(gcm_id, room_id, message)
+    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
 
   def clearGCMPayloads(self):
     self.urlfetch_stub.gcm_payloads = []
