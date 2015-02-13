@@ -130,7 +130,8 @@ def get_wss_parameters(request):
 
 def get_version_info():
   try:
-    f = open('version_info.json')
+    path = os.path.join(os.path.dirname(__file__), 'version_info.json')
+    f = open(path)
     if f is not None:
       try:
         return json.load(f)
