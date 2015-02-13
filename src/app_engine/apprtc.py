@@ -21,6 +21,7 @@ from google.appengine.api import urlfetch
 
 import analytics
 import analytics_page
+import compute_page
 import constants
 
 jinja_environment = jinja2.Environment(
@@ -552,6 +553,7 @@ class ParamsPage(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/a/', analytics_page.AnalyticsPage),
+    ('/compute/(\w+)/(\S+)/(\S+)', compute_page.ComputePage),
     ('/join/(\w+)', JoinPage),
     ('/leave/(\w+)/(\w+)', LeavePage),
     ('/message/(\w+)/(\w+)', MessagePage),
