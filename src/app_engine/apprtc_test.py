@@ -1,13 +1,16 @@
 # Copyright 2014 Google Inc. All Rights Reserved.
 
-import unittest
-import webtest
-
-import apprtc
-import analytics
 import json
-from google.appengine.api import memcache
+import time
+import unittest
+
+import webtest
 from google.appengine.ext import testbed
+
+import analytics
+import apprtc
+from test_util import CapturingFunction
+from test_util import ReplaceFunction
 
 
 class AppRtcUnitTest(unittest.TestCase):
@@ -28,6 +31,7 @@ class AppRtcUnitTest(unittest.TestCase):
 
 
 class AppRtcPageHandlerTest(unittest.TestCase):
+
   def setUp(self):
     # First, create an instance of the Testbed class.
     self.testbed = testbed.Testbed()
@@ -41,14 +45,17 @@ class AppRtcPageHandlerTest(unittest.TestCase):
     self.test_app = webtest.TestApp(apprtc.app)
 
     # Fake out event reporting.
-    def fake_mock_event(*args, **kwargs):
-      pass
-    self.oldReportEvent = analytics.report_event
-    analytics.report_event = fake_mock_event
+    self.time_now = time.time()
+
+    # Fake out event reporting and capture arguments.
+    self.report_event_replacement = ReplaceFunction(
+        analytics,
+        'report_event',
+        CapturingFunction())
 
   def tearDown(self):
     self.testbed.deactivate()
-    analytics.report_event = self.oldReportEvent
+    del self.report_event_replacement
 
   def makeGetRequest(self, path):
     # PhantomJS uses WebKit, so Safari is closest to the thruth.
@@ -124,6 +131,7 @@ class AppRtcPageHandlerTest(unittest.TestCase):
 
     self.makePostRequest('/leave/' + room_id + '/' + caller_id)
     self.makePostRequest('/leave/' + room_id + '/' + callee_id)
+
 
 if __name__ == '__main__':
   unittest.main()
