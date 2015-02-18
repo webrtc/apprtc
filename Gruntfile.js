@@ -73,6 +73,10 @@ module.exports = function(grunt) {
       buildAppEnginePackageWithTests: {
         command: ['python', './build/build_app_engine_package.py', 'src',
                   out_app_engine_dir, '--include-tests'].join(' ')
+      },
+      removePythonTestsFromOutAppEngineDir: {
+        command: ['python', './build/remove_python_tests.py',
+                  out_app_engine_dir].join(' ')
       }
     },
 
@@ -178,7 +182,8 @@ module.exports = function(grunt) {
                                 'default']);
   grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackageWithTests',
                                         'shell:getPythonTestDeps',
-                                        'shell:runPythonTests']);
+                                        'shell:runPythonTests',
+                                        'shell:removePythonTestsFromOutAppEngineDir']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
   // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
   grunt.registerTask('build', ['shell:buildAppEnginePackage', 'closurecompiler:debug', 'grunt-chrome-build']);

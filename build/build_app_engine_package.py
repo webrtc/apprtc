@@ -10,6 +10,8 @@ import shutil
 import subprocess
 import sys
 
+import test_file_herder
+
 USAGE = """%prog src_path dest_path
 Build the GAE source code package.
 
@@ -96,14 +98,6 @@ def CopyApprtcSource(src_path, dest_path):
   build_version_info_file(os.path.join(dest_path, 'version_info.json'))
 
 
-def CopyTests(src_path, dest_path):
-  for dirpath, _, files in os.walk(src_path):
-    if dirpath.endswith('app_engine'):
-      tests = [name for name in files if 'test' in name]
-      for test in tests:
-        shutil.copy(os.path.join(dirpath, test), dest_path)
-
-
 def main():
   parser = optparse.OptionParser(USAGE)
   parser.add_option("-t", "--include-tests", action="store_true",
@@ -115,7 +109,8 @@ def main():
   src_path, dest_path = args[0:2]
   CopyApprtcSource(src_path, dest_path)
   if options.include_tests:
-    CopyTests(src_path, dest_path)
+    app_engine_code = os.path.join(src_path, 'app_engine')
+    test_file_herder.CopyTests(os.path.join(src_path, 'app_engine'), dest_path)
 
 
 if __name__ == '__main__':
