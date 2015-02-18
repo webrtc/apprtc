@@ -81,20 +81,30 @@ When the `Analytics` class detects that AppRTC is running locally, all data is l
 
 ## GCM
 
-Call notifications are sent and received using GCM. In order for the server to send GCM messages, an API key is required. This key should be obtained from the developer console for the app engine project. In order to specify a key for the build, run,
+Call notifications are sent and received using GCM. In order for the server to send GCM messages, an API key is required. This key should be obtained from the developer console for the app engine project. It should be placed in a file named gcm_api_key in the following location:
 
 ```
-grunt build:<API_KEY>
+out/app_engine/gcm_api_key
 ```
 
-When building the app engine package only, run,
+This must be provided for GCM notifications to work correctly. See internal documentation (Google only) for a script that will generate this for you.
+
+## PyCrypto
+
+We use the PyCrypto module for AES encryption and SHA256 hashing. This module is not included in the Google AppEngine SDK. In order to run a local development server, please install PyCrypto into your local site-packages directory. You can download it from:
+
+https://pypi.python.org/pypi/pycrypto
+
+If using pip or easy_install you may run into egg problems with the dev appserver; if so, install the module manually.
+
+Two files should be provided, one named aes_key and another named hash_salt. They should contain the relevant encryption key and hash salt and be placed in:
 
 ```
-grunt shell:buildAppEnginePackage:<API_KEY>
+out/app_engine/aes_key
+out/app_engine/hash_salt
 ```
 
-This must be given for GCM notifications to work correctly.
-
+These must be provided for encryption to work correctly. See internal documentation (Google only) for a script that will generate this for you.
 
 ## BigQuery
 
