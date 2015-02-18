@@ -8,7 +8,6 @@ import apprtc
 import datetime
 import json
 import time
-from constants import LogField
 from google.appengine.api import memcache
 from google.appengine.ext import testbed
 
@@ -91,8 +90,8 @@ class AnalyticsTest(unittest.TestCase):
   def testOnlyEvent(self):
     event_type = 'an_event'
     logDict = self.create_log_dict(
-        {LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         LogField.EVENT_TYPE: event_type})
+        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+         analytics.LogField.EVENT_TYPE: event_type})
 
     self.tics.report_event(event_type)
     self.assertEqual(logDict, self.bigquery.insertAll.lastKwargs)
@@ -101,9 +100,9 @@ class AnalyticsTest(unittest.TestCase):
     event_type = 'an_event_with_room'
     room_id = 'my_room_that_is_the_best'
     logDict = self.create_log_dict(
-        {LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         LogField.EVENT_TYPE: event_type,
-         LogField.ROOM_ID: room_id})
+        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+         analytics.LogField.EVENT_TYPE: event_type,
+         analytics.LogField.ROOM_ID: room_id})
 
     self.tics.report_event(event_type, room_id=room_id)
     self.assertEqual(logDict, self.bigquery.insertAll.lastKwargs)
@@ -116,13 +115,13 @@ class AnalyticsTest(unittest.TestCase):
     host = 'super_host.domain.org:8112'
 
     logDict = self.create_log_dict(
-        {LogField.TIMESTAMP: '{0}'.format(
+        {analytics.LogField.TIMESTAMP: '{0}'.format(
              datetime.datetime.fromtimestamp(time_s).isoformat()),
-         LogField.EVENT_TYPE: event_type,
-         LogField.ROOM_ID: room_id,
-         LogField.CLIENT_TIMESTAMP: '{0}'.format(
+         analytics.LogField.EVENT_TYPE: event_type,
+         analytics.LogField.ROOM_ID: room_id,
+         analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
              datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-         LogField.HOST: host})
+         analytics.LogField.HOST: host})
 
     self.tics.report_event(event_type,
                            room_id=room_id,
