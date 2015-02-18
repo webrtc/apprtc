@@ -3,6 +3,7 @@
 """Module for pushing analytics data to BigQuery."""
 
 import datetime
+import json
 import logging
 import os
 import sys
@@ -12,9 +13,23 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
 
 import apiauth
 import constants
-from constants import LogField
 
 from google.appengine.api import app_identity
+
+class EventType(object):
+  # Event signifying that a room enters the state of having exactly
+  # two participants.
+  ROOM_SIZE_2 = 'room_size_2'
+  ICE_CONNECTION_STATE_CONNECTED = 'ice_connection_state_connected'
+
+class LogField(object):
+  pass
+
+with open(os.path.join(os.path.dirname(__file__),
+                       'bigquery', 'analytics_schema.json')) as f:
+  schema = json.load(f)
+  for field in schema:
+    setattr(LogField, field['name'].upper(), field['name'])
 
 
 class Analytics(object):

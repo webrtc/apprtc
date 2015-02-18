@@ -36,19 +36,3 @@ BIGQUERY_DATASET_LOCAL = 'dev'
 
 # BigQuery table within the dataset.
 BIGQUERY_TABLE = 'analytics'
-
-
-class EventType(object):
-  # Event signifying that a room enters the state of having exactly
-  # two participants.
-  ROOM_SIZE_2 = 'room_size_2'
-
-
-class LogField(object):
-  pass
-
-with open(os.path.join(os.path.dirname(__file__),
-                       'bigquery', 'analytics_schema.json')) as f:
-  schema = json.load(f)
-  for field in schema:
-    setattr(LogField, field['name'].upper(), field['name'])
