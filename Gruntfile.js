@@ -56,15 +56,27 @@ module.exports = function(grunt) {
     },
 
     shell: {
+      getPythonTestDeps: {
+        command: 'python build/get_python_test_deps.py'
+      },
+      installPythonTestDepsOnLinux: {
+        command: 'python build/install_webtest_on_linux.py webtest-master/'
+      },
       runPythonTests: {
-        command: './build/run_python_tests.sh'
+        command: ['python', 'build/run_python_tests.py', 'google_appengine/',
+                  out_app_engine_dir, 'webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
-        command: 'python ./build/build_app_engine_package.py src ' + out_app_engine_dir,
-        options: {
-          stdout: true,
-          stderr: true
-        }
+        command: ['python', './build/build_app_engine_package.py', 'src',
+                  out_app_engine_dir].join(' ')
+      },
+      buildAppEnginePackageWithTests: {
+        command: ['python', './build/build_app_engine_package.py', 'src',
+                  out_app_engine_dir, '--include-tests'].join(' ')
+      },
+      removePythonTestsFromOutAppEngineDir: {
+        command: ['python', './build/remove_python_tests.py',
+                  out_app_engine_dir].join(' ')
       }
     },
 
@@ -152,7 +164,7 @@ module.exports = function(grunt) {
     },
   });
 
-  // enable plugins
+  // Enable plugins.
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-htmlhint');
   grunt.loadNpmTasks('grunt-jscs');
@@ -162,13 +174,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-closurecompiler');
   grunt.loadTasks('build/grunt-chrome-build');
 
-  // set default tasks to run when grunt is called without parameters
+  // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
                                  'runPythonTests', 'jstests']);
-  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackage', 'shell:runPythonTests']);
+  grunt.registerTask('travis', ['shell:getPythonTestDeps',
+                                'shell:installPythonTestDepsOnLinux',
+                                'default']);
+  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackageWithTests',
+                                        'shell:getPythonTestDeps',
+                                        'shell:runPythonTests',
+                                        'shell:removePythonTestsFromOutAppEngineDir']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
-  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets the out/app_engine dir.
+  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
   grunt.registerTask('build', ['shell:buildAppEnginePackage', 'closurecompiler:debug', 'grunt-chrome-build']);
-  // also possible to call JavaScript directly in registerTask()
-  // or to call external tasks with grunt.loadTasks()
 };
