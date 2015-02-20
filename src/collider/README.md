@@ -27,7 +27,7 @@ A websocket-based signaling server in Go.
 
 ## Running
 
-    $GOPATH/bin/collidermain -port=8089 -tls=true
+    $GOPATH/bin/collidermain -port=8089 -tls=true -log-dir=/tmp -log-retention=10
 
 ## Testing
 
