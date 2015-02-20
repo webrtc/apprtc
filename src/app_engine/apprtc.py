@@ -20,6 +20,7 @@ from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
 import analytics
+import analytics_page
 import constants
 
 jinja_environment = jinja2.Environment(
@@ -547,11 +548,13 @@ class ParamsPage(webapp2.RequestHandler):
     params = get_room_parameters(self.request, None, None, None)
     self.response.write(json.dumps(params))
 
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
+    ('/a/', analytics_page.AnalyticsPage),
+    ('/join/(\w+)', JoinPage),
     ('/leave/(\w+)/(\w+)', LeavePage),
     ('/message/(\w+)/(\w+)', MessagePage),
-    ('/join/(\w+)', JoinPage),
-    ('/r/(\w+)', RoomPage),
     ('/params', ParamsPage),
+    ('/r/(\w+)', RoomPage),
 ], debug=True)
