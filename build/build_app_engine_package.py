@@ -10,11 +10,13 @@ import shutil
 import subprocess
 import sys
 
-USAGE = """%prog SRC_PATH DEST_PATH
+import test_file_herder
+
+USAGE = """%prog src_path dest_path
 Build the GAE source code package.
 
-SRC_PATH     Path to the source code root directory.
-DEST_PATH    Path to the root directory to push/deploy GAE from."""
+src_path     Path to the source code root directory.
+dest_path    Path to the root directory to push/deploy GAE from."""
 
 
 def call_cmd_and_return_output_lines(cmd):
@@ -57,7 +59,7 @@ def build_version_info_file(dest_path):
     print str(e)
 
 
-def main(src_path, dest_path):
+def CopyApprtcSource(src_path, dest_path):
   if os.path.exists(dest_path):
     shutil.rmtree(dest_path)
   os.makedirs(dest_path)
@@ -80,8 +82,8 @@ def main(src_path, dest_path):
           shutil.copy(os.path.join(dirpath, name), dest_html_path)
     elif dirpath.endswith('app_engine'):
       for name in files:
-        if (name.endswith('.py') and name.find('test') == -1 or
-            name.endswith('.yaml')):
+        if (name.endswith('.py') and 'test' not in name
+            or name.endswith('.yaml')):
           shutil.copy(os.path.join(dirpath, name), dest_path)
     elif dirpath.endswith('js'):
       for name in files:
@@ -95,14 +97,21 @@ def main(src_path, dest_path):
 
   build_version_info_file(os.path.join(dest_path, 'version_info.json'))
 
-if __name__ == '__main__':
+
+def main():
   parser = optparse.OptionParser(USAGE)
+  parser.add_option("-t", "--include-tests", action="store_true",
+                    help='Also copy python tests to the out dir.')
   options, args = parser.parse_args()
   if len(args) != 2:
-    print 'Error: Exactly 2 arguments required.'
-    parser.print_help()
-    sys.exit(1)
+    parser.error('Error: Exactly 2 arguments required.')
 
-  SRC_PATH = args[0]
-  DEST_PATH = args[1]
-  main(SRC_PATH, DEST_PATH)
+  src_path, dest_path = args[0:2]
+  CopyApprtcSource(src_path, dest_path)
+  if options.include_tests:
+    app_engine_code = os.path.join(src_path, 'app_engine')
+    test_file_herder.CopyTests(os.path.join(src_path, 'app_engine'), dest_path)
+
+
+if __name__ == '__main__':
+  sys.exit(main())

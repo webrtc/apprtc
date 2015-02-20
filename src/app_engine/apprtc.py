@@ -7,7 +7,6 @@
 This module demonstrates the WebRTC API by implementing a simple video chat app.
 """
 
-# Enables loading third_party modules
 import cgi
 import json
 import logging
@@ -131,7 +130,8 @@ def get_wss_parameters(request):
 
 def get_version_info():
   try:
-    f = open('version_info.json')
+    path = os.path.join(os.path.dirname(__file__), 'version_info.json')
+    f = open(path)
     if f is not None:
       try:
         return json.load(f)
@@ -360,10 +360,10 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
       logging.info('Added client %s in room %s, retries = %d' \
           %(client_id, room_id, retries))
 
-      #if room.get_occupancy() == 2:
-      #  analytics.report_event(constants.EventType.ROOM_SIZE_2,
-      #                         room_id,
-      #                         host=request.host)
+      if room.get_occupancy() == 2:
+        analytics.report_event(analytics.EventType.ROOM_SIZE_2,
+                               room_id,
+                               host=request.host)
       success = True
       break
     else:
@@ -465,7 +465,6 @@ class MessagePage(webapp2.RequestHandler):
     if result['error'] is not None:
       self.write_response(result['error'])
       return
-    self.write_response(constants.RESPONSE_SUCCESS)
     if not result['saved']:
       # Other client joined, forward to collider. Do this outside the lock.
       # Note: this may fail in local dev server due to not having the right
@@ -473,6 +472,8 @@ class MessagePage(webapp2.RequestHandler):
       # Note: loopback scenario follows this code path.
       # TODO(tkchin): consider async fetch here.
       self.send_message_to_collider(room_id, client_id, message_json)
+    else:
+      self.write_response(constants.RESPONSE_SUCCESS)
 
 class JoinPage(webapp2.RequestHandler):
   def write_response(self, result, params, messages):

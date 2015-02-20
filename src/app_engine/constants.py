@@ -1,8 +1,6 @@
-#!/usr/bin/python2.4
-#
-# Copyright 2014 Google Inc. All Rights Reserved.
+# Copyright 2015 Google Inc. All Rights Reserved.
 
-"""AppRTC Constants
+"""AppRTC Constants.
 
 This module contains the constants used in AppRTC Python modules.
 """
@@ -26,27 +24,15 @@ RESPONSE_UNKNOWN_CLIENT = 'UNKNOWN_CLIENT'
 RESPONSE_DUPLICATE_CLIENT = 'DUPLICATE_CLIENT'
 RESPONSE_SUCCESS = 'SUCCESS'
 
-BIGQUERY_URL='https://www.googleapis.com/auth/bigquery'
+IS_DEV_SERVER = os.environ.get('APPLICATION_ID', '').startswith('dev')
+
+BIGQUERY_URL = 'https://www.googleapis.com/auth/bigquery'
 
 # Dataset used in production.
-BIGQUERY_DATASET_PROD='prod'
+BIGQUERY_DATASET_PROD = 'prod'
 
 # Dataset used when running locally.
-BIGQUERY_DATASET_LOCAL='dev'
+BIGQUERY_DATASET_LOCAL = 'dev'
 
 # BigQuery table within the dataset.
-BIGQUERY_TABLE='analytics'
-
-class EventType:
-  # Event signifying that a room enters the state of having exactly
-  # two participants.
-  ROOM_SIZE_2='room_size_2'
-
-class LogField:
-  pass
-
-with open(os.path.join(os.path.dirname(__file__),
-                       'bigquery', 'analytics_schema.json')) as f:
-  schema = json.load(f)
-  for field in schema:
-    setattr(LogField, field['name'].upper(), field['name'])
+BIGQUERY_TABLE = 'analytics'
