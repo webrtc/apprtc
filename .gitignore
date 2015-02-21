@@ -1,9 +1,10 @@
-node_modules
-.DS_Store
 *.pyc
-validation-report.json
-validation-status.json
+.DS_Store
 bower_components
 google_appengine*
-webtest-master*
+node_modules
 out
+secrets.json
+validation-report.json
+validation-status.json
+webtest-master*
