@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: google-api-python-client
+Version: 1.2
+Summary: Google API Client Library for Python
+Home-page: http://code.google.com/p/google-api-python-client/
+Author: Joe Gregorio
+Author-email: jcgregorio@google.com
+License: Apache 2.0
+Description: The Google API Client for Python is a client library for
+        accessing the Plus, Moderator, and many other Google APIs.
+Keywords: google api client
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX
+Classifier: Topic :: Internet :: WWW/HTTP
