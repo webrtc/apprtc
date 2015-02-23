@@ -10,6 +10,8 @@ import apprtc
 import constants
 import gcm_notify
 import gcmrecord
+from test_util import CapturingFunction
+from test_util import ReplaceFunction
 
 from google.appengine.api import apiproxy_stub
 from google.appengine.datastore import datastore_stub_util
@@ -50,11 +52,11 @@ class BasePageHandlerTest(unittest.TestCase):
 
     self.test_app = webtest.TestApp(apprtc.app)
 
-    # Fake out event reporting.
-    def fake_mock_event(*args, **kwargs):
-      pass
-    self.oldReportEvent = analytics.report_event
-    analytics.report_event = fake_mock_event
+    # Fake out event reporting and capture arguments.
+    self.report_event_replacement = ReplaceFunction(
+        analytics,
+        'report_event',
+        CapturingFunction())
 
     # Fake out urlfetch service.
     self.urlfetch_stub = GCMURLFetchServiceStub()
@@ -66,7 +68,7 @@ class BasePageHandlerTest(unittest.TestCase):
 
   def tearDown(self):
     self.testbed.deactivate()
-    analytics.report_event = self.oldReportEvent
+    del self.report_event_replacement
 
   def checkInvalidRequests(self, path, params, jsonResult=False):
     body = {x: '' for x in params}
