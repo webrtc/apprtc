@@ -6,4 +6,4 @@ install:
   - npm install
 
 script:
-  - grunt
+  - grunt travis

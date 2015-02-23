@@ -106,9 +106,12 @@ func (rm *room) remove(clientID string) {
 		log.Printf("Removed client %s from room %s", clientID, rm.id)
 
 		// Send bye to the room Server.
-		_, err := http.Post(rm.roomSrvUrl+"/bye/"+rm.id+"/"+clientID, "text", nil)
+		resp, err := http.Post(rm.roomSrvUrl+"/bye/"+rm.id+"/"+clientID, "text", nil)
 		if err != nil {
 			log.Printf("Failed to post BYE to room server %s: %v", rm.roomSrvUrl, err)
+		}
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
 		}
 	}
 }

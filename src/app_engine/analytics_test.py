@@ -1,51 +1,28 @@
 # Copyright 2014 Google Inc. All Rights Reserved.
 
-import unittest
-import webtest
-
-import analytics
-import apprtc
 import datetime
 import json
 import time
-from constants import LogField
+import unittest
+import webtest
+
 from google.appengine.api import memcache
 from google.appengine.ext import testbed
 
-class ReplaceFunction(object):
-  """Makes it easier to replace a function in a class or module."""
-  def __init__(self, obj, function_name, new_function):
-    self.obj = obj
-    self.function_name = function_name
-    self.old_function = getattr(self.obj, self.function_name)
-    setattr(self.obj, self.function_name, new_function)
+import analytics
+from test_util import CapturingFunction
+from test_util import ReplaceFunction
 
-  def __del__(self):
-    setattr(self.obj, self.function_name, self.old_function)
-
-class CapturingFunction(object):
-  """Captures the last arguments called on a function."""
-  def __init__(self, retValue=None):
-    self.retValue = retValue
-    self.lastArgs = None
-    self.lastKwargs = None
-
-  def __call__(self, *args, **kwargs):
-    self.lastArgs = args
-    self.lastKwargs = kwargs
-
-    if callable(self.retValue):
-      return self.retValue()
-
-    return self.retValue
 
 class FakeBigQuery(object):
   """Handles long function calls to the Google API client."""
+
   def __init__(self):
     self.tabledata = CapturingFunction(self)
     self.insertAll = CapturingFunction(self)
     self.execute = CapturingFunction(
         {u'kind': u'bigquery#tableDataInsertAllResponse'})
+
 
 class AnalyticsTest(unittest.TestCase):
   """Test the Analytics class in the analytics module."""
@@ -58,7 +35,7 @@ class AnalyticsTest(unittest.TestCase):
     return datetime.datetime.fromtimestamp(self.now).isoformat()
 
   def create_log_dict(self, record):
-    return {'body': {'rows': [{'json':record }]},
+    return {'body': {'rows': [{'json': record}]},
             'projectId': 'testbed-test',
             'tableId': 'analytics',
             'datasetId': 'prod'}
@@ -71,42 +48,42 @@ class AnalyticsTest(unittest.TestCase):
     self.testbed.activate()
 
     # Inject our own instance of bigquery.
-    self.buildBigQueryReplacement = ReplaceFunction(
+    self.build_big_query_replacement = ReplaceFunction(
         analytics.Analytics,
         '_build_bigquery_object',
         self.fake_build_bigquery_object)
 
     # Inject our own time function
     self.now = time.time()
-    self.timeReplacement = ReplaceFunction(time, 'time', lambda: self.now)
+    self.time_replacement = ReplaceFunction(time, 'time', lambda: self.now)
 
     # Instanciate an instance.
     self.tics = analytics.Analytics()
 
   def tearDown(self):
     # Cleanup our replacement functions.
-    del self.timeReplacement
-    del self.buildBigQueryReplacement
+    del self.time_replacement
+    del self.build_big_query_replacement
 
   def testOnlyEvent(self):
     event_type = 'an_event'
-    logDict = self.create_log_dict(
-        {LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         LogField.EVENT_TYPE: event_type})
+    log_dict = self.create_log_dict(
+        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+         analytics.LogField.EVENT_TYPE: event_type})
 
     self.tics.report_event(event_type)
-    self.assertEqual(logDict, self.bigquery.insertAll.lastKwargs)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
   def testEventRoom(self):
     event_type = 'an_event_with_room'
     room_id = 'my_room_that_is_the_best'
-    logDict = self.create_log_dict(
-        {LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         LogField.EVENT_TYPE: event_type,
-         LogField.ROOM_ID: room_id})
+    log_dict = self.create_log_dict(
+        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+         analytics.LogField.EVENT_TYPE: event_type,
+         analytics.LogField.ROOM_ID: room_id})
 
     self.tics.report_event(event_type, room_id=room_id)
-    self.assertEqual(logDict, self.bigquery.insertAll.lastKwargs)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
   def testEventAll(self):
     event_type = 'an_event_with_everything'
@@ -115,21 +92,21 @@ class AnalyticsTest(unittest.TestCase):
     client_time_s = self.now + 60
     host = 'super_host.domain.org:8112'
 
-    logDict = self.create_log_dict(
-        {LogField.TIMESTAMP: '{0}'.format(
+    log_dict = self.create_log_dict(
+        {analytics.LogField.TIMESTAMP: '{0}'.format(
              datetime.datetime.fromtimestamp(time_s).isoformat()),
-         LogField.EVENT_TYPE: event_type,
-         LogField.ROOM_ID: room_id,
-         LogField.CLIENT_TIMESTAMP: '{0}'.format(
+         analytics.LogField.EVENT_TYPE: event_type,
+         analytics.LogField.ROOM_ID: room_id,
+         analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
              datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-         LogField.HOST: host})
+         analytics.LogField.HOST: host})
 
     self.tics.report_event(event_type,
                            room_id=room_id,
                            time_ms=time_s*1000.,
                            client_time_ms=client_time_s*1000.,
                            host=host)
-    self.assertEqual(logDict, self.bigquery.insertAll.lastKwargs)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
 
 class AnalyticsModuleTest(unittest.TestCase):
@@ -137,15 +114,16 @@ class AnalyticsModuleTest(unittest.TestCase):
 
   def setUp(self):
     # Create a fake constructor to replace the Analytics class.
-    self.analyticsFake = CapturingFunction(lambda: self.analyticsFake)
-    self.analyticsFake.report_event = CapturingFunction()
+    self.analytics_fake = CapturingFunction(lambda: self.analytics_fake)
+    self.analytics_fake.report_event = CapturingFunction()
 
     # Replace the Analytics class with the fake constructor.
-    self.analyticsClassReplacement = ReplaceFunction(analytics, 'Analytics',
-                                                     self.analyticsFake)
+    self.analytics_class_replacement = ReplaceFunction(analytics, 'Analytics',
+                                                       self.analytics_fake)
+
   def tearDown(self):
     # This will replace the Analytics class back to normal.
-    del self.analyticsClassReplacement
+    del self.analytics_class_replacement
 
   def testModule(self):
     event_type = 'an_event_with_everything'
@@ -166,5 +144,5 @@ class AnalyticsModuleTest(unittest.TestCase):
         'client_time_ms': client_time_ms,
         'host': host,
         }
-    self.assertEqual((event_type,), self.analyticsFake.report_event.lastArgs)
-    self.assertEqual(kwargs, self.analyticsFake.report_event.lastKwargs)
+    self.assertEqual((event_type,), self.analytics_fake.report_event.last_args)
+    self.assertEqual(kwargs, self.analytics_fake.report_event.last_kwargs)

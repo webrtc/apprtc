@@ -7,7 +7,6 @@
 This module demonstrates the WebRTC API by implementing a simple video chat app.
 """
 
-# Enables loading third_party modules
 import json
 import logging
 import os
@@ -15,6 +14,7 @@ import os
 import jinja2
 import webapp2
 
+import analytics_page
 import decline_page
 import gcm_register
 import join_page
@@ -80,8 +80,10 @@ class ParamsPage(webapp2.RequestHandler):
                                                     None, None, None)
     self.response.write(json.dumps(params))
 
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
+    (r'/a/', analytics_page.AnalyticsPage),
     (r'/decline/(\w+)', decline_page.DeclinePage),
     (r'/join/(\w+)', join_page.JoinPage),
     (r'/leave/(\w+)/([\w-]+)', leave_page.LeavePage),

@@ -1,6 +1,4 @@
-#!/usr/bin/python2.4
-#
-# Copyright 2014 Google Inc. All Rights Reserved.
+# Copyright 2015 Google Inc. All Rights Reserved.
 
 """AppRTC Constants.
 
@@ -38,6 +36,9 @@ RESPONSE_CODE_RESENT = 'CODE_RESENT'
 RESPONSE_UNVERIFIED = 'UNVERIFIED'
 RESPONSE_VERIFIED = 'VERIFIED'
 RESPONSE_SUCCESS = 'SUCCESS'
+RESPONSE_INVALID_REQUEST = "INVALID_REQUEST"
+
+IS_DEV_SERVER = os.environ.get('APPLICATION_ID', '').startswith('dev')
 
 ACTION_CALL = 'call'
 ACTION_ACCEPT = 'accept'
@@ -61,19 +62,3 @@ BIGQUERY_DATASET_LOCAL = 'dev'
 
 # BigQuery table within the dataset.
 BIGQUERY_TABLE = 'analytics'
-
-
-class EventType(object):
-  # Event signifying that a room enters the state of having exactly
-  # two participants.
-  ROOM_SIZE_2 = 'room_size_2'
-
-
-class LogField(object):
-  pass
-
-with open(os.path.join(os.path.dirname(__file__),
-                       'bigquery', 'analytics_schema.json')) as f:
-  schema = json.load(f)
-  for field in schema:
-    setattr(LogField, field['name'].upper(), field['name'])
