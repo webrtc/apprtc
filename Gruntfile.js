@@ -73,7 +73,6 @@ module.exports = function(grunt) {
             cmd += ' ' + apiKey;
           }
           return cmd;
-
         },
       },
       buildAppEnginePackageWithTests: {

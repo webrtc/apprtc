@@ -107,7 +107,7 @@ def main():
   parser.add_option("-t", "--include-tests", action="store_true",
                     help='Also copy python tests to the out dir.')
   options, args = parser.parse_args()
-  if len(args) != 2:
+  if len(args) < 2:
     parser.error('At least 2 arguments required.')
 
   src_path, dest_path = args[0:2]
