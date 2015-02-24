@@ -1,0 +1,12 @@
+../httplib2/__init__.py
+../httplib2/socks.py
+../httplib2/iri2uri.py
+../httplib2/cacerts.txt
+../httplib2/__init__.pyc
+../httplib2/socks.pyc
+../httplib2/iri2uri.pyc
+./
+top_level.txt
+PKG-INFO
+SOURCES.txt
+dependency_links.txt
