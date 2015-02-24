@@ -12,7 +12,9 @@ import logging
 import json
 import numbers
 import webapp2
+
 from google.appengine.api import mail
+from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
 def send_alert_email(tag, message):
@@ -94,18 +96,65 @@ class ProbeCEODPage(webapp2.RequestHandler):
     self.handle_ceod_response(error_message, status_code)
 
 class ProbeColliderPage(webapp2.RequestHandler):
-  def handle_collider_response(self, error_message, status_code):
-    self.response.set_status(status_code)
+  def handle_collider_response(
+      self, error_message, status_code, collider_instance):
+    result = {
+        constants.WSS_HOST_STATUS_CODE_KEY: status_code
+    }
     if error_message is not None:
-      send_alert_email('Collider Error', error_message)
+      send_alert_email('Collider Error (' + collider_instance + ')',
+                       error_message)
 
       logging.warning('Collider prober error: ' + error_message)
-      self.response.out.write(error_message)
+      result[constants.WSS_HOST_ERROR_MESSAGE_KEY] = error_message
+      result[constants.WSS_HOST_IS_UP_KEY] = False
     else:
-      self.response.out.write('Success!')
+      result[constants.WSS_HOST_IS_UP_KEY] = True
+    return result
+
+  def store_instance_state(self, probing_results):
+    # Store an active collider host to memcache to be served to clients.
+    # If the currently active host is still up, keep it. If not, pick a 
+    # new active host that is up.
+    memcache_client = memcache.Client()
+    for retries in xrange(constants.MEMCACHE_RETRY_LIMIT):
+      active_host = memcache_client.gets(constants.WSS_HOST_ACTIVE_HOST_KEY)
+      if active_host is None:
+        memcache_client.set(constants.WSS_HOST_ACTIVE_HOST_KEY, '')
+        active_host = memcache_client.gets(constants.WSS_HOST_ACTIVE_HOST_KEY)
+      active_host = self.create_collider_active_host(active_host,
+                                                     probing_results)
+      if memcache_client.cas(constants.WSS_HOST_ACTIVE_HOST_KEY, active_host):
+        logging.info('collider active host saved to memcache: ' +
+                     str(active_host))
+        break
+      logging.warning('retry # ' + str(retries) + ' to set collider status')
+
+  def create_collider_active_host(self, old_active_host, probing_results):
+    # If the old_active_host is still up, keep it. If not, pick a new active
+    # host that is up.
+    try:
+      if (old_active_host in probing_results and
+          probing_results[old_active_host].get(
+              constants.WSS_HOST_IS_UP_KEY, False)):
+        return old_active_host
+    except TypeError:
+      pass
+    for instance in probing_results:
+      if probing_results[instance].get(constants.WSS_HOST_IS_UP_KEY, False):
+        return instance
+    return None
 
   def get(self):
-    url = 'https://' + constants.WSS_HOST_PORT_PAIR + '/status';
+    results = {}
+    for collider_instance in constants.WSS_HOST_PORT_PAIRS:
+      results[collider_instance] = self.probe_collider_instance(
+          collider_instance)
+    self.response.write(json.dumps(results, indent=2, sort_keys=True))
+    self.store_instance_state(results)
+
+  def probe_collider_instance(self, collider_instance):
+    url = 'https://' + collider_instance + '/status';
 
     error_message = None
     result = None
@@ -113,8 +162,7 @@ class ProbeColliderPage(webapp2.RequestHandler):
       result = urlfetch.fetch(url=url, method=urlfetch.GET)
     except Exception as e:
       error_message = 'urlfetch throws exception: ' + str(e) + ', url = ' + url
-      self.handle_collider_response(error_message, 500)
-      return
+      return self.handle_collider_response(error_message, 500, collider_instance)
 
     status_code = result.status_code
     if status_code != 200:
@@ -139,7 +187,8 @@ class ProbeColliderPage(webapp2.RequestHandler):
         """ % (str(e), result.content, url)
         status_code = 500
 
-    self.handle_collider_response(error_message, status_code)
+    return self.handle_collider_response(
+        error_message, status_code, collider_instance)
 
 app = webapp2.WSGIApplication([
     ('/probe/ceod', ProbeCEODPage),
