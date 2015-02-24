@@ -20,6 +20,7 @@ class CapturingFunction(object):
   """Captures the last arguments called on a function."""
 
   def __init__(self, return_value=None):
+    self.num_calls = 0
     self.return_value = return_value
     self.last_args = None
     self.last_kwargs = None
@@ -27,6 +28,7 @@ class CapturingFunction(object):
   def __call__(self, *args, **kwargs):
     self.last_args = args
     self.last_kwargs = kwargs
+    self.num_calls += 1
 
     if callable(self.return_value):
       return self.return_value()
