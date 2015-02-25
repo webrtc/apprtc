@@ -144,45 +144,49 @@ Call.prototype.hangup = function(async) {
   // If you modify the steps used to hang up a call, you must also modify
   // the clean up queue steps set up in queueCleanupMessages_.');
 
-  var sendLeaveStep = function() {
-    // Send POST request to /leave.
-    var path = this.getLeaveUrl_();
-    return sendUrlRequest('POST', path, async);
-  }.bind(this);
-  var sendLeaveErrorString = 'Error sending /leave:';
-
-  var sendByeStep = function() {
-    // Send bye to the other client.
-    this.channel_.send(JSON.stringify({type: 'bye'}));
-  }.bind(this);
-  var sendByeErrorString = 'Error sending bye:';
-
-  var closeChannelStep = function() {
-    // Close signaling channel.
-    return this.channel_.close(async);
-  }.bind(this);
-  var closeChannelErrorString = 'Error closing signaling channel:';
-
-  var setParamsStep = function() {
-    this.params_.previousRoomId = this.params_.roomId;
-    this.params_.roomId = null;
-    this.params_.clientId = null;
-  }.bind(this);
-  var setParamsErrorString = 'Error setting params:';
+  var steps = [];
+  steps.push({
+    step: function() {
+        // Send POST request to /leave.
+        var path = this.getLeaveUrl_();
+        return sendUrlRequest('POST', path, async);
+      }.bind(this),
+    errorString: 'Error sending /leave:'
+  });
+  steps.push({
+    step: function() {
+        // Send bye to the other client.
+        this.channel_.send(JSON.stringify({type: 'bye'}));
+      }.bind(this),
+    errorString: 'Error sending bye:'
+  });
+  steps.push({
+    step: function() {
+        // Close signaling channel.
+        return this.channel_.close(async);
+      }.bind(this),
+    errorString: 'Error closing signaling channel:'
+  });
+  steps.push({
+    step: function() {
+        this.params_.previousRoomId = this.params_.roomId;
+        this.params_.roomId = null;
+        this.params_.clientId = null;
+      }.bind(this),
+    errorString: 'Error setting params:'
+  });
 
   if (async) {
-    var handleError = function(errorString, error) {
+    var errorHandler = function(errorString, error) {
       trace(errorString + ' ' + error.message);
     };
-    var sendLeave = sendLeaveStep().catch(
-        handleError.bind(this, sendLeaveErrorString));
-    var sendBye = sendLeave.then(sendByeStep).catch(
-        handleError.bind(this, sendByeErrorString));
-    var closeChannel = sendBye.then(closeChannelStep).catch(
-        handleError.bind(this, closeChannelErrorString));
-    var setParams = closeChannel.then(setParamsStep).catch(
-        handleError.bind(this, setParamsErrorString));
-    return setParams;
+    var promise = Promise.resolve();
+    for (var i = 0; i < steps.length; ++i) {
+      promise = promise.then(steps[i].step).catch(
+        errorHandler.bind(this, steps[i].errorString));
+    }
+
+    return promise;
   } else {
     // Execute the cleanup steps.
     var executeStep = function(executor, errorString) {
@@ -193,10 +197,9 @@ Call.prototype.hangup = function(async) {
       }
     };
 
-    executeStep(sendLeaveStep, sendLeaveErrorString);
-    executeStep(sendByeStep, sendByeErrorString);
-    executeStep(closeChannelStep, closeChannelErrorString);
-    executeStep(setParamsStep, setParamsErrorString);
+    for (var j = 0; j < steps.length; ++j) {
+      executeStep(steps[j].step, steps[j].errorString);
+    }
 
     if (this.params_.roomId !== null || this.params_.clientId !== null) {
       trace('ERROR: sync cleanup tasks did not complete successfully.');
