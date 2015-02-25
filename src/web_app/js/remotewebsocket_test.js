@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, assertEquals, Constants, FAKE_WSS_URL, WindowPort:true,
+/* globals TestCase, assertEquals, Constants, FAKE_WSS_URL, apprtc,
    RemoteWebSocket, MockWindowPort */
 
 'use strict';
@@ -17,21 +17,22 @@ var TEST_MESSAGE = 'foobar';
 var RemoteWebSocketTest = new TestCase('RemoteWebSocketTest');
 
 RemoteWebSocketTest.prototype.setUp = function() {
-  this.realWindowPort = WindowPort;
-  WindowPort = new MockWindowPort();
+  this.realWindowPort = apprtc.windowPort;
+  apprtc.windowPort = new MockWindowPort();
 
   this.rws_ = new RemoteWebSocket(FAKE_WSS_URL);
   // Should have an message to request create.
-  assertEquals(1, WindowPort.messages.length);
-  assertEquals(Constants.WS_ACTION, WindowPort.messages[0].action);
-  assertEquals(Constants.WS_CREATE_ACTION, WindowPort.messages[0].wsAction);
-  assertEquals(FAKE_WSS_URL, WindowPort.messages[0].wssUrl);
+  assertEquals(1, apprtc.windowPort.messages.length);
+  assertEquals(Constants.WS_ACTION, apprtc.windowPort.messages[0].action);
+  assertEquals(Constants.WS_CREATE_ACTION,
+      apprtc.windowPort.messages[0].wsAction);
+  assertEquals(FAKE_WSS_URL, apprtc.windowPort.messages[0].wssUrl);
   assertEquals(WebSocket.CONNECTING, this.rws_.readyState);
 
 };
 
 RemoteWebSocketTest.prototype.tearDown = function() {
-  WindowPort = this.realWindowPort;
+  apprtc.windowPort = this.realWindowPort;
 };
 
 RemoteWebSocketTest.prototype.testSendBeforeOpen = function() {
@@ -48,19 +49,20 @@ RemoteWebSocketTest.prototype.testSendBeforeOpen = function() {
 };
 
 RemoteWebSocketTest.prototype.testSend = function() {
-  WindowPort.simulateMessageFromBackground({
+  apprtc.windowPort.simulateMessageFromBackground({
     action: Constants.WS_ACTION,
     wsAction: Constants.EVENT_ACTION,
     wsEvent: Constants.WS_EVENT_ONOPEN,
     data: TEST_MESSAGE
   });
 
-  assertEquals(1, WindowPort.messages.length);
+  assertEquals(1, apprtc.windowPort.messages.length);
   this.rws_.send(TEST_MESSAGE);
-  assertEquals(2, WindowPort.messages.length);
-  assertEquals(Constants.WS_ACTION, WindowPort.messages[1].action);
-  assertEquals(Constants.WS_SEND_ACTION, WindowPort.messages[1].wsAction);
-  assertEquals(TEST_MESSAGE, WindowPort.messages[1].data);
+  assertEquals(2, apprtc.windowPort.messages.length);
+  assertEquals(Constants.WS_ACTION, apprtc.windowPort.messages[1].action);
+  assertEquals(Constants.WS_SEND_ACTION,
+      apprtc.windowPort.messages[1].wsAction);
+  assertEquals(TEST_MESSAGE, apprtc.windowPort.messages[1].data);
 };
 
 RemoteWebSocketTest.prototype.testClose = function() {
@@ -71,15 +73,16 @@ RemoteWebSocketTest.prototype.testClose = function() {
     message = e;
   };
 
-  assertEquals(1, WindowPort.messages.length);
+  assertEquals(1, apprtc.windowPort.messages.length);
   this.rws_.close();
 
-  assertEquals(2, WindowPort.messages.length);
-  assertEquals(Constants.WS_ACTION, WindowPort.messages[1].action);
-  assertEquals(Constants.WS_CLOSE_ACTION, WindowPort.messages[1].wsAction);
+  assertEquals(2, apprtc.windowPort.messages.length);
+  assertEquals(Constants.WS_ACTION, apprtc.windowPort.messages[1].action);
+  assertEquals(Constants.WS_CLOSE_ACTION,
+      apprtc.windowPort.messages[1].wsAction);
 
   assertEquals(WebSocket.CLOSING, this.rws_.readyState);
-  WindowPort.simulateMessageFromBackground({
+  apprtc.windowPort.simulateMessageFromBackground({
     action: Constants.WS_ACTION,
     wsAction: Constants.EVENT_ACTION,
     wsEvent: Constants.WS_EVENT_ONCLOSE,
@@ -98,7 +101,7 @@ RemoteWebSocketTest.prototype.testOnError = function() {
     message = e;
   };
 
-  WindowPort.simulateMessageFromBackground({
+  apprtc.windowPort.simulateMessageFromBackground({
     action: Constants.WS_ACTION,
     wsAction: Constants.EVENT_ACTION,
     wsEvent: Constants.WS_EVENT_ONERROR,
@@ -114,7 +117,7 @@ RemoteWebSocketTest.prototype.testOnOpen = function() {
     called = true;
   };
 
-  WindowPort.simulateMessageFromBackground({
+  apprtc.windowPort.simulateMessageFromBackground({
     action: Constants.WS_ACTION,
     wsAction: Constants.EVENT_ACTION,
     wsEvent: Constants.WS_EVENT_ONOPEN,
@@ -132,7 +135,7 @@ RemoteWebSocketTest.prototype.testOnMessage = function() {
     message = e;
   };
 
-  WindowPort.simulateMessageFromBackground({
+  apprtc.windowPort.simulateMessageFromBackground({
     action: Constants.WS_ACTION,
     wsAction: Constants.EVENT_ACTION,
     wsEvent: Constants.WS_EVENT_ONMESSAGE,
@@ -150,7 +153,7 @@ RemoteWebSocketTest.prototype.testOnSendError = function() {
     message = e;
   };
 
-  WindowPort.simulateMessageFromBackground({
+  apprtc.windowPort.simulateMessageFromBackground({
     action: Constants.WS_ACTION,
     wsAction: Constants.EVENT_ACTION,
     wsEvent: Constants.WS_EVENT_SENDERROR,

@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals WindowPort, Constants */
+/* globals apprtc, Constants */
 /* exported RemoteWebSocket */
 
 'use strict';
@@ -20,7 +20,7 @@
 // properly terminated when the app window is closed.
 var RemoteWebSocket = function(wssUrl, wssPostUrl) {
   this.wssUrl_ = wssUrl;
-  WindowPort.addMessageListener(this.handleMessage_.bind(this));
+  apprtc.windowPort.addMessageListener(this.handleMessage_.bind(this));
   this.sendMessage_({
     action: Constants.WS_ACTION,
     wsAction: Constants.WS_CREATE_ACTION,
@@ -31,7 +31,7 @@ var RemoteWebSocket = function(wssUrl, wssPostUrl) {
 };
 
 RemoteWebSocket.prototype.sendMessage_ = function(message) {
-  WindowPort.sendMessage(message);
+  apprtc.windowPort.sendMessage(message);
 };
 
 RemoteWebSocket.prototype.send = function(data) {

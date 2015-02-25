@@ -9,7 +9,7 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals trace, chrome */
-/* exported WindowPort */
+/* exported apprtc, apprtc.windowPort */
 
 'use strict';
 
@@ -17,10 +17,12 @@
 // It opens a Port object to send and receive messages. When the Chrome
 // App window is closed, background.js receives notification and can
 // handle clean up tasks.
-var WindowPort = (function() {
+var apprtc = apprtc || {};
+apprtc.windowPort = apprtc.windowPort || {};
+(function() {
   var port_;
 
-  var sendMessage = function(message) {
+  apprtc.windowPort.sendMessage = function(message) {
     var port = getPort_();
     try {
       port.postMessage(message);
@@ -30,7 +32,7 @@ var WindowPort = (function() {
     }
   };
 
-  var addMessageListener = function(listener) {
+  apprtc.windowPort.addMessageListener = function(listener) {
     var port = getPort_();
     port.onMessage.addListener(listener);
   };
@@ -40,10 +42,5 @@ var WindowPort = (function() {
       port_ = chrome.runtime.connect();
     }
     return port_;
-  };
-
-  return {
-    sendMessage: sendMessage,
-    addMessageListener: addMessageListener
   };
 })();

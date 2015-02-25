@@ -10,7 +10,7 @@
 
 /* globals TestCase, SignalingChannel:true, requestUserMedia:true,
    assertEquals, assertTrue, MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
-   FAKE_CLIENT_ID, WindowPort:true, Constants */
+   FAKE_CLIENT_ID, apprtc, Constants */
 
 'use strict';
 
@@ -67,13 +67,13 @@ CallTest.prototype.testRestartInitializesMedia = function() {
 };
 
 CallTest.prototype.testSetUpCleanupQueue = function() {
-  var realWindowPort = WindowPort;
-  WindowPort = new MockWindowPort();
+  var realWindowPort = apprtc.windowPort;
+  apprtc.windowPort = new MockWindowPort();
 
   var call = new Call(this.params_);
-  assertEquals(0, WindowPort.messages.length);
+  assertEquals(0, apprtc.windowPort.messages.length);
   call.queueCleanupMessages_();
-  assertEquals(3, WindowPort.messages.length);
+  assertEquals(3, apprtc.windowPort.messages.length);
 
   var verifyXhrMessage = function(message, method, url) {
     assertEquals(Constants.QUEUEADD_ACTION, message.action);
@@ -83,11 +83,12 @@ CallTest.prototype.testSetUpCleanupQueue = function() {
     assertEquals(null, message.queueMessage.body);
   };
 
-  verifyXhrMessage(WindowPort.messages[0], 'POST', '/leave/' + FAKE_ROOM_ID +
-      '/' + FAKE_CLIENT_ID);
-  verifyXhrMessage(WindowPort.messages[2], 'DELETE', FAKE_WSS_POST_URL);
+  verifyXhrMessage(apprtc.windowPort.messages[0], 'POST', '/leave/' +
+      FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID);
+  verifyXhrMessage(apprtc.windowPort.messages[2], 'DELETE',
+      FAKE_WSS_POST_URL);
 
-  var message = WindowPort.messages[1];
+  var message = apprtc.windowPort.messages[1];
   assertEquals(Constants.QUEUEADD_ACTION, message.action);
   assertEquals(Constants.WS_ACTION, message.queueMessage.action);
   assertEquals(Constants.WS_SEND_ACTION, message.queueMessage.wsAction);
@@ -96,21 +97,21 @@ CallTest.prototype.testSetUpCleanupQueue = function() {
   var msg = JSON.parse(data.msg);
   assertEquals('bye', msg.type);
 
-  WindowPort = realWindowPort;
+  apprtc.windowPort = realWindowPort;
 };
 
 CallTest.prototype.testClearCleanupQueue = function() {
-  var realWindowPort = WindowPort;
-  WindowPort = new MockWindowPort();
+  var realWindowPort = apprtc.windowPort;
+  apprtc.windowPort = new MockWindowPort();
 
   var call = new Call(this.params_);
   call.queueCleanupMessages_();
-  assertEquals(3, WindowPort.messages.length);
+  assertEquals(3, apprtc.windowPort.messages.length);
 
   call.clearCleanupQueue_();
-  assertEquals(4, WindowPort.messages.length);
-  var message = WindowPort.messages[3];
+  assertEquals(4, apprtc.windowPort.messages.length);
+  var message = apprtc.windowPort.messages[3];
   assertEquals(Constants.QUEUECLEAR_ACTION, message.action);
 
-  WindowPort = realWindowPort;
+  apprtc.windowPort = realWindowPort;
 };

@@ -10,7 +10,7 @@
 
 /* globals trace, requestTurnServers, sendUrlRequest, sendAsyncUrlRequest,
    requestUserMedia, SignalingChannel, PeerConnectionClient, setupLoopback,
-   parseJSON, isChromeApp, WindowPort, Constants */
+   parseJSON, isChromeApp, apprtc, Constants */
 
 /* exported Call */
 
@@ -65,7 +65,7 @@ Call.prototype.queueCleanupMessages_ = function() {
   // Set up the cleanup queue.
   // These steps mirror the cleanup done in hangup(), but will be
   // executed when the Chrome App is closed by background.js.
-  WindowPort.sendMessage({
+  apprtc.windowPort.sendMessage({
     action: Constants.QUEUEADD_ACTION,
     queueMessage: {
       action: Constants.XHR_ACTION,
@@ -75,7 +75,7 @@ Call.prototype.queueCleanupMessages_ = function() {
     }
   });
 
-  WindowPort.sendMessage({
+  apprtc.windowPort.sendMessage({
     action: Constants.QUEUEADD_ACTION,
     queueMessage: {
       action: Constants.WS_ACTION,
@@ -87,7 +87,7 @@ Call.prototype.queueCleanupMessages_ = function() {
     }
   });
 
-  WindowPort.sendMessage({
+  apprtc.windowPort.sendMessage({
     action: Constants.QUEUEADD_ACTION,
     queueMessage: {
       action: Constants.XHR_ACTION,
@@ -100,7 +100,7 @@ Call.prototype.queueCleanupMessages_ = function() {
 
 Call.prototype.clearCleanupQueue_ = function() {
   // Clear the cleanup queue.
-  WindowPort.sendMessage({action: Constants.QUEUECLEAR_ACTION});
+  apprtc.windowPort.sendMessage({action: Constants.QUEUECLEAR_ACTION});
 };
 
 Call.prototype.restart = function() {
