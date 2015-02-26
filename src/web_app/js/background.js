@@ -46,20 +46,15 @@
       var ws = new WebSocket(message.wssUrl);
       port.wssPostUrl_ = message.wssPostUrl;
       ws.onopen = function() {
-        trace('RWS: onopen');
         sendWSEventMessageToWindow(port, Constants.WS_EVENT_ONOPEN);
       };
       ws.onerror = function() {
-        trace('RWS: onerror.');
         sendWSEventMessageToWindow(port, Constants.WS_EVENT_ONERROR);
       };
       ws.onclose = function(event) {
-        trace('RWS: onclose - code: ' + event.code + ' reason: ' +
-            event.reason);
         sendWSEventMessageToWindow(port, Constants.WS_EVENT_ONCLOSE, event);
       };
       ws.onmessage = function(event) {
-        trace('RWS: onmessage: ' + event.data);
         sendWSEventMessageToWindow(port, Constants.WS_EVENT_ONMESSAGE, event);
       };
       port.webSocket_ = ws;
@@ -69,7 +64,6 @@
         try {
           port.webSocket_.send(message.data);
         } catch (ex) {
-          trace('RWS: exception sending: ' + ex);
           sendWSEventMessageToWindow(port, Constants.WS_EVENT_SENDERROR, ex);
         }
       } else {
