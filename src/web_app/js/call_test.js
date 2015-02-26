@@ -10,21 +10,34 @@
 
 /* globals TestCase, SignalingChannel:true, requestUserMedia:true,
    assertEquals, assertTrue, MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
-   FAKE_CLIENT_ID, apprtc, Constants */
+   FAKE_CLIENT_ID, apprtc, Constants, xhrs, MockXMLHttpRequest, assertFalse,
+   XMLHttpRequest:true */
 
 'use strict';
 
+var FAKE_LEAVE_URL = '/leave/' + FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID;
 var MEDIA_STREAM_OBJECT = {value: 'stream'};
 
 var MockSignalingChannel = function() {
 };
 
+MockSignalingChannel.isOpen = null;
 MockSignalingChannel.prototype.open = function() {
+  MockSignalingChannel.isOpen = true;
   return Promise.resolve();
 };
 
 MockSignalingChannel.prototype.getWssPostUrl = function() {
   return FAKE_WSS_POST_URL;
+};
+
+MockSignalingChannel.sends = [];
+MockSignalingChannel.prototype.send = function(data) {
+  MockSignalingChannel.sends.push(data);
+};
+
+MockSignalingChannel.prototype.close = function() {
+  MockSignalingChannel.isOpen = false;
 };
 
 var CallTest = new TestCase('CallTest');
@@ -83,8 +96,7 @@ CallTest.prototype.testSetUpCleanupQueue = function() {
     assertEquals(null, message.queueMessage.body);
   };
 
-  verifyXhrMessage(apprtc.windowPort.messages[0], 'POST', '/leave/' +
-      FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID);
+  verifyXhrMessage(apprtc.windowPort.messages[0], 'POST', FAKE_LEAVE_URL);
   verifyXhrMessage(apprtc.windowPort.messages[2], 'DELETE',
       FAKE_WSS_POST_URL);
 
@@ -114,4 +126,40 @@ CallTest.prototype.testClearCleanupQueue = function() {
   assertEquals(Constants.QUEUECLEAR_ACTION, message.action);
 
   apprtc.windowPort = realWindowPort;
+};
+
+CallTest.prototype.testCallHangupSync = function() {
+  var call = new Call(this.params_);
+  var stopCalled = false;
+  var closeCalled = false;
+  call.localStream_ = {stop: function() {stopCalled = true; }};
+  call.pcClient_ = {close: function() {closeCalled = true; }};
+
+  assertEquals(0, xhrs.length);
+  assertEquals(0, MockSignalingChannel.sends.length);
+  assertTrue(MockSignalingChannel.isOpen !== false);
+  var realXMLHttpRequest = XMLHttpRequest;
+  XMLHttpRequest = MockXMLHttpRequest;
+
+  call.hangup(false);
+  XMLHttpRequest = realXMLHttpRequest;
+
+  assertEquals(true, stopCalled);
+  assertEquals(true, closeCalled);
+  // Send /leave.
+  assertEquals(1, xhrs.length);
+  assertEquals(FAKE_LEAVE_URL, xhrs[0].url);
+  assertEquals('POST', xhrs[0].method);
+
+  // Send 'bye' to ws.
+  assertEquals(1, MockSignalingChannel.sends.length);
+  assertEquals(JSON.stringify({type: 'bye'}), MockSignalingChannel.sends[0]);
+
+  // Close ws.
+  assertFalse(MockSignalingChannel.isOpen);
+
+  // Clean up params state.
+  assertEquals(null, call.params_.roomId);
+  assertEquals(null, call.params_.clientId);
+  assertEquals(FAKE_ROOM_ID, call.params_.previousRoomId);
 };
