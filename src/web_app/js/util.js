@@ -9,7 +9,7 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
-   requestTurnServers, sendAsyncUrlRequest, randomString, $,
+   requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString, $,
    queryStringToDictionary */
 /* globals chrome */
 
@@ -37,21 +37,40 @@ function queryStringToDictionary(queryString) {
 
 // Sends the URL request and returns a Promise as the result.
 function sendAsyncUrlRequest(method, url, body) {
+  return sendUrlRequest(method, url, true, body);
+}
+
+// If async is true, returns a Promise and executes the xhr request
+// async. If async is false, the xhr will be executed sync and a
+// resolved promise is returned.
+function sendUrlRequest(method, url, async, body) {
   return new Promise(function(resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState !== 4) {
-        return;
-      }
+    var xhr;
+    var reportResults = function() {
       if (xhr.status !== 200) {
         reject(
-            Error('Status=' + xhr.status + ', response=' + xhr.responseText));
+            Error('Status=' + xhr.status + ', response=' +
+                  xhr.responseText));
         return;
       }
       resolve(xhr.responseText);
     };
-    xhr.open(method, url, true);
+
+    xhr = new XMLHttpRequest();
+    if (async) {
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) {
+          return;
+        }
+        reportResults();
+      };
+    }
+    xhr.open(method, url, async);
     xhr.send(body);
+
+    if (!async) {
+      reportResults();
+    }
   });
 }
 
