@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals parseJSON, trace */
+/* globals parseJSON, trace, sendUrlRequest, isChromeApp, RemoteWebSocket */
 /* exported SignalingChannel */
 
 'use strict';
@@ -35,7 +35,11 @@ SignalingChannel.prototype.open = function() {
 
   trace('Opening signaling channel.');
   return new Promise(function(resolve, reject) {
-    this.websocket_ = new WebSocket(this.wssUrl_);
+    if (isChromeApp()) {
+      this.websocket_ = new RemoteWebSocket(this.wssUrl_, this.wssPostUrl_);
+    } else {
+      this.websocket_ = new WebSocket(this.wssUrl_);
+    }
 
     this.websocket_.onopen = function() {
       trace('Signaling channel opened.');
@@ -112,7 +116,7 @@ SignalingChannel.prototype.register = function(roomId, clientId) {
   trace('Signaling channel registered.');
 };
 
-SignalingChannel.prototype.close = function() {
+SignalingChannel.prototype.close = function(async) {
   if (this.websocket_) {
     this.websocket_.close();
     this.websocket_ = null;
@@ -122,14 +126,15 @@ SignalingChannel.prototype.close = function() {
     return;
   }
   // Tell WSS that we're done.
-  var path = this.wssPostUrl_ + '/' + this.roomId_ + '/' + this.clientId_;
-  var xhr = new XMLHttpRequest();
-  xhr.open('DELETE', path, false);
-  xhr.send();
+  var path = this.getWssPostUrl();
 
-  this.clientId_ = null;
-  this.roomId_ = null;
-  this.registered_ = false;
+  return sendUrlRequest('DELETE', path, async).catch(function(error) {
+    trace('Error deleting web socket connection: ' + error.message);
+  }.bind(this)).then(function() {
+    this.clientId_ = null;
+    this.roomId_ = null;
+    this.registered_ = false;
+  }.bind(this));
 };
 
 SignalingChannel.prototype.send = function(message) {
@@ -148,9 +153,13 @@ SignalingChannel.prototype.send = function(message) {
   if (this.websocket_ && this.websocket_.readyState === WebSocket.OPEN) {
     this.websocket_.send(msgString);
   } else {
-    var path = this.wssPostUrl_ + '/' + this.roomId_ + '/' + this.clientId_;
+    var path = this.getWssPostUrl();
     var xhr = new XMLHttpRequest();
     xhr.open('POST', path, true);
     xhr.send(wssMessage.msg);
   }
+};
+
+SignalingChannel.prototype.getWssPostUrl = function() {
+  return this.wssPostUrl_ + '/' + this.roomId_ + '/' + this.clientId_;
 };

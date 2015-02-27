@@ -150,14 +150,17 @@ module.exports = function(grunt) {
             'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',
             'src/web_app/js/call.js',
+            'src/web_app/js/constants.js',
             'src/web_app/js/infobox.js',
             'src/web_app/js/peerconnectionclient.js',
             'src/web_app/js/roomselection.js',
+            'src/web_app/js/remotewebsocket.js',
             'src/web_app/js/sdputils.js',
             'src/web_app/js/signalingchannel.js',
             'src/web_app/js/stats.js',
             'src/web_app/js/storage.js',
             'src/web_app/js/util.js',
+            'src/web_app/js/windowport.js',
           ]
         },
         options: {
@@ -189,7 +192,7 @@ module.exports = function(grunt) {
                                         'shell:getPythonTestDeps',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
-  grunt.registerTask('jstests', ['closurecompiler:debug', 'jstdPhantom']);
+  grunt.registerTask('jstests', ['closurecompiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
   // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets the out/app_engine dir.
   grunt.registerTask('build', function(apiKey) {
     var appEngineTask = 'shell:buildAppEnginePackage';

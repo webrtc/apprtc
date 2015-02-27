@@ -23,6 +23,8 @@ def send_alert_email(tag, message):
   AppRTC Prober detected an error:
 
   %s
+
+  Goto go/apprtc-sheriff for how to handle this error.
   """ % message
 
   logging.info('Sending email to %s: subject=%s, message=%s' \
