@@ -46,7 +46,7 @@ Before you start the AppRTC dev server and *everytime you update the source code
 grunt build
 ```
 
-Start the AppRTC dev server from the `out/app_engine` directory by running the Google App Engine SDK dev server,
+See GCM section below about compiling the package with a GCM API key. Start the AppRTC dev server from the `out/app_engine` directory by running the Google App Engine SDK dev server,
 
 ```
 <path to sdk>/dev_appserver.py ./out/app_engine
@@ -78,6 +78,23 @@ To generate a `secrets.json` file in the Google Developers Console for your proj
 1. Rename the downloaded file to `secrets.json` and place in the directory containing `analytics.py`.
 
 When the `Analytics` class detects that AppRTC is running locally, all data is logged to `analytics` table in the `dev` dataset. You can bootstrap the `dev` dataset by following the instructions in the [Bootstrapping/Updating BigQuery](#bootstrappingupdating-bigquery).
+
+## GCM
+
+Call notifications are sent and received using GCM. In order for the server to send GCM messages, an API key is required. This key should be obtained from the developer console for the app engine project. In order to specify a key for the build, run,
+
+```
+grunt build:<API_KEY>
+```
+
+When building the app engine package only, run,
+
+```
+grunt shell:buildAppEnginePackage:<API_KEY>
+```
+
+This must be given for GCM notifications to work correctly.
+
 
 ## BigQuery
 

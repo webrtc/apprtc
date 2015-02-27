@@ -67,8 +67,13 @@ module.exports = function(grunt) {
                   out_app_engine_dir, 'webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
-        command: ['python', './build/build_app_engine_package.py', 'src',
-                  out_app_engine_dir].join(' ')
+        command: function(apiKey) {
+          var cmd = 'python ./build/build_app_engine_package.py src ' + out_app_engine_dir;
+          if (apiKey) {
+            cmd += ' ' + apiKey;
+          }
+          return cmd;
+        },
       },
       buildAppEnginePackageWithTests: {
         command: ['python', './build/build_app_engine_package.py', 'src',
@@ -188,6 +193,16 @@ module.exports = function(grunt) {
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
   grunt.registerTask('jstests', ['closurecompiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
-  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
-  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'closurecompiler:debug', 'grunt-chrome-build']);
+  // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets the out/app_engine dir.
+  grunt.registerTask('build', function(apiKey) {
+    var appEngineTask = 'shell:buildAppEnginePackage';
+    if (apiKey) {
+      appEngineTask += ':' + apiKey;
+    }
+    // buildAppEnginePackage must be done before closurecompiler since
+    // buildAppEnginePackage resets the out/app_engine dir.
+    grunt.task.run([appEngineTask,
+                    'closurecompiler:debug',
+                    'grunt-chrome-build']);
+  });
 };
