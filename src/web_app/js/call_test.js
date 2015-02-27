@@ -18,12 +18,16 @@
 var FAKE_LEAVE_URL = '/leave/' + FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID;
 var MEDIA_STREAM_OBJECT = {value: 'stream'};
 
+var mockSignalingChannels = [];
+
 var MockSignalingChannel = function() {
+  this.isOpen = null;
+  this.sends = [];
+  mockSignalingChannels.push(this);
 };
 
-MockSignalingChannel.isOpen = null;
 MockSignalingChannel.prototype.open = function() {
-  MockSignalingChannel.isOpen = true;
+  this.isOpen = true;
   return Promise.resolve();
 };
 
@@ -31,13 +35,12 @@ MockSignalingChannel.prototype.getWssPostUrl = function() {
   return FAKE_WSS_POST_URL;
 };
 
-MockSignalingChannel.sends = [];
 MockSignalingChannel.prototype.send = function(data) {
-  MockSignalingChannel.sends.push(data);
+  this.sends.push(data);
 };
 
 MockSignalingChannel.prototype.close = function() {
-  MockSignalingChannel.isOpen = false;
+  this.isOpen = false;
 };
 
 var CallTest = new TestCase('CallTest');
@@ -49,6 +52,7 @@ function mockRequestUserMedia() {
 }
 
 CallTest.prototype.setUp = function() {
+  mockSignalingChannels = [];
   this.signalingChannelBackup_ = SignalingChannel;
   SignalingChannel = MockSignalingChannel;
   this.requestUserMediaBackup_ = requestUserMedia;
@@ -136,8 +140,8 @@ CallTest.prototype.testCallHangupSync = function() {
   call.pcClient_ = {close: function() {closeCalled = true; }};
 
   assertEquals(0, xhrs.length);
-  assertEquals(0, MockSignalingChannel.sends.length);
-  assertTrue(MockSignalingChannel.isOpen !== false);
+  assertEquals(0, mockSignalingChannels[0].sends.length);
+  assertTrue(mockSignalingChannels[0].isOpen !== false);
   var realXMLHttpRequest = XMLHttpRequest;
   XMLHttpRequest = MockXMLHttpRequest;
 
@@ -151,12 +155,14 @@ CallTest.prototype.testCallHangupSync = function() {
   assertEquals(FAKE_LEAVE_URL, xhrs[0].url);
   assertEquals('POST', xhrs[0].method);
 
+  assertEquals(1, mockSignalingChannels.length);
   // Send 'bye' to ws.
-  assertEquals(1, MockSignalingChannel.sends.length);
-  assertEquals(JSON.stringify({type: 'bye'}), MockSignalingChannel.sends[0]);
+  assertEquals(1, mockSignalingChannels[0].sends.length);
+  assertEquals(JSON.stringify({type: 'bye'}),
+      mockSignalingChannels[0].sends[0]);
 
   // Close ws.
-  assertFalse(MockSignalingChannel.isOpen);
+  assertFalse(mockSignalingChannels[0].isOpen);
 
   // Clean up params state.
   assertEquals(null, call.params_.roomId);
