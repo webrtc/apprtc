@@ -5,12 +5,21 @@ import time
 import unittest
 
 import webtest
-from google.appengine.ext import testbed
 
 import analytics
 import apprtc
+import constants
+import probers
 from test_util import CapturingFunction
 from test_util import ReplaceFunction
+
+from google.appengine.api import memcache
+from google.appengine.ext import testbed
+
+
+class MockRequest(object):
+  def get(self, key):
+    return None
 
 
 class AppRtcUnitTest(unittest.TestCase):
@@ -131,6 +140,49 @@ class AppRtcPageHandlerTest(unittest.TestCase):
 
     self.makePostRequest('/leave/' + room_id + '/' + caller_id)
     self.makePostRequest('/leave/' + room_id + '/' + callee_id)
+
+  def setWssHostStatus(self, index1, status1, index2, status2):
+    probing_results = {}
+    probing_results[constants.WSS_HOST_PORT_PAIRS[index1]] = {
+        constants.WSS_HOST_IS_UP_KEY: status1
+    }
+    probing_results[constants.WSS_HOST_PORT_PAIRS[index2]] = {
+        constants.WSS_HOST_IS_UP_KEY: status2
+    }
+    probers.ProbeColliderPage().store_instance_state(probing_results)
+
+  def verifyRequest(self, expectedIndex):
+    request = MockRequest()
+    wss_url, wss_post_url = apprtc.get_wss_parameters(request)
+    self.assertIn(constants.WSS_HOST_PORT_PAIRS[expectedIndex], wss_url)
+    self.assertIn(constants.WSS_HOST_PORT_PAIRS[expectedIndex], wss_post_url)
+
+  def testGetWssHostParameters(self):
+    request = MockRequest()
+    # With no status set, should use fallback.
+    self.verifyRequest(0)
+
+    # With an invalid value in memcache, should use fallback.
+    memcache_client = memcache.Client()
+    memcache_client.set(constants.WSS_HOST_ACTIVE_HOST_KEY, 'abc')
+    self.verifyRequest(0)
+
+    # With an invalid value in memcache, should use fallback.
+    memcache_client = memcache.Client()
+    memcache_client.set(constants.WSS_HOST_ACTIVE_HOST_KEY, ['abc', 'def'])
+    self.verifyRequest(0)
+
+    # With both hosts failing, should use fallback.
+    self.setWssHostStatus(0, False, 1, False)
+    self.verifyRequest(0)
+
+    # Second host passing.
+    self.setWssHostStatus(0, False, 1, True)
+    self.verifyRequest(1)
+
+    # Both hosts passing, but second host for longer.
+    self.setWssHostStatus(1, True, 0, True)
+    self.verifyRequest(1)
 
 
 if __name__ == '__main__':
