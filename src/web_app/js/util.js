@@ -77,7 +77,11 @@ function sendUrlRequest(method, url, async, body) {
 // Returns a list of turn servers after requesting it from CEOD.
 function requestTurnServers(turnRequestUrl, turnTransports) {
   return new Promise(function(resolve, reject) {
-    sendAsyncUrlRequest('GET', turnRequestUrl).then(function(response) {
+    // Chrome apps don't send origin header for GET requests, but
+    // do send it for POST requests. Origin header is required for
+    // access to turn request url.
+    var method = isChromeApp() ? 'POST' : 'GET';
+    sendAsyncUrlRequest(method, turnRequestUrl).then(function(response) {
       var turnServerResponse = parseJSON(response);
       if (!turnServerResponse) {
         reject(Error('Error parsing response JSON: ' + response));
