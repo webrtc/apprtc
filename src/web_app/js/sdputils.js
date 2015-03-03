@@ -9,12 +9,13 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals trace */
-/* exported setCodecParam, iceCandidateType, maybeSetOpusOptions,
-   maybePreferAudioReceiveCodec, maybePreferAudioSendCodec,
-   maybeSetAudioReceiveBitRate, maybeSetAudioSendBitRate,
-   maybePreferVideoReceiveCodec, maybePreferVideoSendCodec,
-   maybeSetVideoReceiveBitRate, maybeSetVideoSendBitRate,
-   maybeSetVideoSendInitialBitRate, mergeConstraints, removeCodecParam */
+/* exported setCodecParam, iceCandidateType, formatTypePreference,
+   maybeSetOpusOptions, maybePreferAudioReceiveCodec,
+   maybePreferAudioSendCodec, maybeSetAudioReceiveBitRate,
+   maybeSetAudioSendBitRate, maybePreferVideoReceiveCodec,
+   maybePreferVideoSendCodec, maybeSetVideoReceiveBitRate,
+   maybeSetVideoSendBitRate, maybeSetVideoSendInitialBitRate,
+   mergeConstraints, removeCodecParam */
 
 'use strict';
 
@@ -32,6 +33,20 @@ function mergeConstraints(cons1, cons2) {
 
 function iceCandidateType(candidateStr) {
   return candidateStr.split(' ')[7];
+}
+
+// Turns the local type preference into a human-readable string.
+// Note that this mapping is browser-specific.
+function formatTypePreference(pref) {
+  switch (pref) {
+    case 0:
+      return 'TURN/TLS';
+    case 1:
+      return 'TURN/TCP';
+    case 2:
+      return 'TURN/UDP';
+  }
+  return '';
 }
 
 function maybeSetOpusOptions(sdp, params) {
