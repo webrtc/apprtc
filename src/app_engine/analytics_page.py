@@ -133,10 +133,9 @@ class AnalyticsPage(webapp2.RequestHandler):
     # sending the request to the server.
     event_time_ms = client_event_time_ms + (receive_time_ms - request_time_ms)
 
-    analytics.report_event(event_type=event_type,
-                           room_id=room_id,
-                           time_ms=event_time_ms,
-                           client_time_ms=client_event_time_ms,
-                           host=self.request.host)
+    analytics.report_event(event_type,
+                           room_id,
+                           event_time_ms,
+                           client_event_time_ms)
 
     return constants.RESPONSE_SUCCESS
