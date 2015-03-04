@@ -1,21 +1,24 @@
-#!/usr/bin/python2.4
-#
 # Copyright 2014 Google Inc. All Rights Reserved.
 
-"""AppRTC Probers
+"""AppRTC Probers.
 
 This module implements CEOD and collider probers.
 """
 
-import constants
-import logging
 import json
+import logging
 import numbers
+
 import webapp2
+
+import constants
 
 from google.appengine.api import mail
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
+
+PROBER_FETCH_DEADLINE = 30
+
 
 def send_alert_email(tag, message):
   receiver = 'apprtc-monitor@google.com'
@@ -29,19 +32,22 @@ def send_alert_email(tag, message):
   Goto go/apprtc-sheriff for how to handle this error.
   """ % message
 
-  logging.info('Sending email to %s: subject=%s, message=%s' \
-      % (receiver, subject, message))
+  logging.info('Sending email to %s: subject=%s, message=%s',
+               receiver, subject, message)
   mail.send_mail(sender_address, receiver, subject, body)
 
-def has_non_empty_string_value(dict, key):
-  return key in dict and \
-         isinstance(dict[key], basestring) and \
-         dict[key] != ''
 
-def has_non_empty_array_value(dict, key):
-  return key in dict and \
-         isinstance(dict[key], list) and \
-         len(dict[key]) > 0
+def has_non_empty_string_value(dictionary, key):
+  return (key in dictionary and
+          isinstance(dictionary[key], basestring) and
+          dictionary[key])
+
+
+def has_non_empty_array_value(dictionary, key):
+  return (key in dictionary and
+          isinstance(dictionary[key], list) and
+          dictionary[key])
+
 
 class ProbeCEODPage(webapp2.RequestHandler):
   def handle_ceod_response(self, error_message, status_code):
@@ -55,34 +61,35 @@ class ProbeCEODPage(webapp2.RequestHandler):
       self.response.out.write('Success!')
 
   def get(self):
-    ceod_url = constants.TURN_URL_TEMPLATE \
-        % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY)
-    sanitized_url = constants.TURN_URL_TEMPLATE % \
-        (constants.TURN_BASE_URL, 'prober', '<obscured>')
+    ceod_url = (constants.TURN_URL_TEMPLATE
+                % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY))
+    sanitized_url = (constants.TURN_URL_TEMPLATE %
+                     (constants.TURN_BASE_URL, 'prober', '<obscured>'))
 
     error_message = None
     result = None
     try:
-      result = urlfetch.fetch(url=ceod_url, method=urlfetch.GET)
+      result = urlfetch.fetch(
+          url=ceod_url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
     except Exception as e:
-      error_message = 'urlfetch throws exception: ' + str(e) + \
-          ', url = ' + sanitized_url
+      error_message = ('urlfetch throws exception: %s, url = %s'
+                       % (str(e), sanitized_url))
       self.handle_ceod_response(error_message, 500)
       return
 
     status_code = result.status_code
     if status_code != 200:
-      error_message = 'Unexpected CEOD response: %d, requested URL: %s' \
-          % (result.status_code, sanitized_url)
+      error_message = ('Unexpected CEOD response: %d, requested URL: %s'
+                       % (result.status_code, sanitized_url))
     else:
       try:
         turn_server = json.loads(result.content)
-        if not has_non_empty_string_value(turn_server, 'username') or \
-           not has_non_empty_string_value(turn_server, 'password') or \
-           not has_non_empty_array_value(turn_server, 'uris'):
-          error_message = 'CEOD response does not contain valid ' + \
-              'username/password/uris: response = ' + result.content + \
-              ', url = ' + sanitized_url
+        if (not has_non_empty_string_value(turn_server, 'username') or
+            not has_non_empty_string_value(turn_server, 'password') or
+            not has_non_empty_array_value(turn_server, 'uris')):
+          error_message = ('CEOD response does not contain valid '
+                           'username/password/uris: response = %s, url = %s'
+                           % (result.content, sanitized_url))
           status_code = 500
       except Exception as e:
         error_message = """
@@ -94,6 +101,7 @@ class ProbeCEODPage(webapp2.RequestHandler):
         status_code = 500
 
     self.handle_ceod_response(error_message, status_code)
+
 
 class ProbeColliderPage(webapp2.RequestHandler):
   def handle_collider_response(
@@ -154,25 +162,28 @@ class ProbeColliderPage(webapp2.RequestHandler):
     self.store_instance_state(results)
 
   def probe_collider_instance(self, collider_instance):
-    url = 'https://' + collider_instance + '/status';
+    url = 'https://' + collider_instance + '/status'
 
     error_message = None
     result = None
     try:
-      result = urlfetch.fetch(url=url, method=urlfetch.GET)
+      result = urlfetch.fetch(
+          url=url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
     except Exception as e:
-      error_message = 'urlfetch throws exception: ' + str(e) + ', url = ' + url
-      return self.handle_collider_response(error_message, 500, collider_instance)
+      error_message = ('urlfetch throws exception: %s, url = %s'
+                       % (str(e), url))
+      return self.handle_collider_response(
+          error_message, 500, collider_instance)
 
     status_code = result.status_code
     if status_code != 200:
-      error_message = 'Unexpected collider response: %d, requested URL: %s' \
-          % (result.status_code, url)
+      error_message = ('Unexpected collider response: %d, requested URL: %s'
+                       % (result.status_code, url))
     else:
       try:
         status_report = json.loads(result.content)
-        if not 'upsec' in status_report or \
-            not isinstance(status_report['upsec'], numbers.Number):
+        if ('upsec' not in status_report or
+            not isinstance(status_report['upsec'], numbers.Number)):
           error_message = """
           Invalid 'upsec' field in Collider status response,
           status = %s
