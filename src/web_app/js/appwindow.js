@@ -45,7 +45,7 @@ var loadingParams = {
         newParams.turnTransports = serverParams.turn_transports;
         newParams.wssUrl = serverParams.wss_url;
         newParams.wssPostUrl = serverParams.wss_post_url;
-        newParams.versionInfo = parseJSON(serverParams.versionInfo);
+        newParams.versionInfo = parseJSON(serverParams.version_info);
         //jscs:enable requireCamelCaseOrUpperCaseIdentifiers
         /* jshint ignore:end */
         newParams.messages = serverParams.messages;

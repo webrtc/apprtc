@@ -26,6 +26,10 @@ handlers:
 - url: /css
   static_dir: css
 
+- url: /compute/.*
+  script: apprtc.app
+  login: admin
+
 - url: /probe.*
   script: probers.app
   secure: always

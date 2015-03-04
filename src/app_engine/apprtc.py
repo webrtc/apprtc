@@ -20,6 +20,8 @@ from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
 import analytics
+import analytics_page
+import compute_page
 import constants
 
 jinja_environment = jinja2.Environment(
@@ -114,18 +116,28 @@ def append_url_arguments(request, link):
   return link
 
 def get_wss_parameters(request):
-  ws_host_port_pair = request.get('wshpp')
-  ws_tls = request.get('wstls')
+  wss_host_port_pair = request.get('wshpp')
+  wss_tls = request.get('wstls')
 
-  if not ws_host_port_pair:
-    ws_host_port_pair = constants.WSS_HOST_PORT_PAIR
+  if not wss_host_port_pair:
+    # Attempt to get a wss server from the status provided by prober,
+    # if that fails, use fallback value.
+    memcache_client = memcache.Client()
+    wss_active_host = memcache_client.get(constants.WSS_HOST_ACTIVE_HOST_KEY)
+    if wss_active_host in constants.WSS_HOST_PORT_PAIRS:
+      wss_host_port_pair = wss_active_host
+    else:
+      logging.warning(
+          'Invalid or no value returned from memcache, using fallback: '
+          + json.dumps(wss_active_host))
+      wss_host_port_pair = constants.WSS_HOST_PORT_PAIRS[0]
 
-  if ws_tls and ws_tls == 'false':
-    wss_url = 'ws://' + ws_host_port_pair + '/ws'
-    wss_post_url = 'http://' + ws_host_port_pair
+  if wss_tls and wss_tls == 'false':
+    wss_url = 'ws://' + wss_host_port_pair + '/ws'
+    wss_post_url = 'http://' + wss_host_port_pair
   else:
-    wss_url = 'wss://' + ws_host_port_pair + '/ws'
-    wss_post_url = 'https://' + ws_host_port_pair
+    wss_url = 'wss://' + wss_host_port_pair + '/ws'
+    wss_post_url = 'https://' + wss_host_port_pair
   return (wss_url, wss_post_url)
 
 def get_version_info():
@@ -550,11 +562,14 @@ class ParamsPage(webapp2.RequestHandler):
     params = get_room_parameters(self.request, None, None, None)
     self.response.write(json.dumps(params))
 
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
+    ('/a/', analytics_page.AnalyticsPage),
+    ('/compute/(\w+)/(\S+)/(\S+)', compute_page.ComputePage),
+    ('/join/(\w+)', JoinPage),
     ('/leave/(\w+)/(\w+)', LeavePage),
     ('/message/(\w+)/(\w+)', MessagePage),
-    ('/join/(\w+)', JoinPage),
-    ('/r/(\w+)', RoomPage),
     ('/params', ParamsPage),
+    ('/r/(\w+)', RoomPage),
 ], debug=True)

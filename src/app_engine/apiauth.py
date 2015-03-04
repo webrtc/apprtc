@@ -6,7 +6,8 @@ import json
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
+# Insert our third-party libraries first to avoid conflicts with appengine.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'third_party'))
 
 from apiclient import discovery
 import httplib2
