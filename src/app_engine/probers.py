@@ -18,7 +18,7 @@ from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
 def send_alert_email(tag, message):
-  receiver = 'tachyon-eng@google.com'
+  receiver = 'apprtc-monitor@google.com'
   sender_address = 'AppRTC Notification <jiayl@google.com>'
   subject = 'AppRTC Prober Alert: ' + tag
   body =  """
@@ -114,7 +114,7 @@ class ProbeColliderPage(webapp2.RequestHandler):
 
   def store_instance_state(self, probing_results):
     # Store an active collider host to memcache to be served to clients.
-    # If the currently active host is still up, keep it. If not, pick a 
+    # If the currently active host is still up, keep it. If not, pick a
     # new active host that is up.
     memcache_client = memcache.Client()
     for retries in xrange(constants.MEMCACHE_RETRY_LIMIT):
