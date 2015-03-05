@@ -25,11 +25,10 @@ class BindPageHandlerTest(test_utilities.BasePageHandlerTest):
     response = self.makePostRequest('/bind/new', json.dumps(body))
     self.assertEqual(constants.RESPONSE_CODE_RESENT, response.body)
 
-    q = gcmrecord.GCMRecord.query(ancestor=gcmrecord.get_ancestor_key())
-    records = q.fetch()
+    record = gcmrecord.GCMRecord.get_by_gcm_id('bar')
     gcmrecord.GCMRecord.verify(body[gcm_register.PARAM_USER_ID],
                                   body[gcm_register.PARAM_GCM_ID],
-                                  records[0].code)
+                                  record.code)
     response = self.makePostRequest('/bind/new', json.dumps(body))
     self.assertEqual(constants.RESPONSE_INVALID_STATE, response.body)
     self.checkInvalidRequests('/bind/new', body.keys())
@@ -40,14 +39,13 @@ class BindPageHandlerTest(test_utilities.BasePageHandlerTest):
       gcm_register.PARAM_GCM_ID: 'bar'
     }
     self.makePostRequest('/bind/new', json.dumps(body))
-    q = gcmrecord.GCMRecord.query(ancestor=gcmrecord.get_ancestor_key())
-    records = q.fetch()
+    record = gcmrecord.GCMRecord.get_by_gcm_id('bar')
 
     body[gcm_register.PARAM_CODE] = 'wrong'
     response = self.makePostRequest('/bind/verify', json.dumps(body))
     self.assertEqual(constants.RESPONSE_INVALID_CODE, response.body)
 
-    body[gcm_register.PARAM_CODE] = records[0].code
+    body[gcm_register.PARAM_CODE] = record.code
     response = self.makePostRequest('/bind/verify', json.dumps(body))
     self.assertEqual(constants.RESPONSE_SUCCESS, response.body)
 
@@ -69,9 +67,8 @@ class BindPageHandlerTest(test_utilities.BasePageHandlerTest):
     response = self.makePostRequest('/bind/update', json.dumps(request_2))
     self.assertEqual(constants.RESPONSE_INVALID_STATE, response.body)
 
-    q = gcmrecord.GCMRecord.query(ancestor=gcmrecord.get_ancestor_key())
-    records = q.fetch()
-    request_1[gcm_register.PARAM_CODE] = records[0].code
+    record = gcmrecord.GCMRecord.get_by_gcm_id('bar')
+    request_1[gcm_register.PARAM_CODE] = record.code
     self.makePostRequest('/bind/verify', json.dumps(request_1))
     response = self.makePostRequest('/bind/update', json.dumps(request_2))
     self.assertEqual(constants.RESPONSE_SUCCESS, response.body)
@@ -93,9 +90,8 @@ class BindPageHandlerTest(test_utilities.BasePageHandlerTest):
     }
     self.makePostRequest('/bind/new', json.dumps(body))
     self.makePostRequest('/bind/del', json.dumps(body))
-    q = gcmrecord.GCMRecord.query(ancestor=gcmrecord.get_ancestor_key())
-    records = q.fetch()
-    self.assertEqual(0, len(records))
+    record = gcmrecord.GCMRecord.get_by_gcm_id('bar')
+    self.assertEqual(None, record)
     self.checkInvalidRequests('/bind/del', body.keys())
 
   def testBindQueryList(self):

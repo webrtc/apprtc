@@ -54,11 +54,11 @@ class JoinPage(webapp2.RequestHandler):
     # Look up and validate caller by gcm id.
     # TODO(chuckhays): Once registration is enabled, turn on restriction
     # to only return verified records.
-    caller_records = gcmrecord.GCMRecord.get_by_gcm_id(caller_gcm_id, False)
-    if len(caller_records) < 1:
+    caller_record = gcmrecord.GCMRecord.get_by_gcm_id(caller_gcm_id, False)
+    if not caller_record:
       self.report_error(constants.RESPONSE_INVALID_CALLER)
       return
-    caller_id = caller_records[0].user_id
+    caller_id = caller_record.user_id
     # Look up callee by id.
     # TODO(chuckhays): Once registration is enabled, turn on restriction
     # to only return verified records.
@@ -161,18 +161,19 @@ class JoinPage(webapp2.RequestHandler):
     """Handle post request for /join."""
 
     # Check request body to determine what action to take.
-    msg = util.get_message_from_json(self.request.body)
-    if util.has_msg_field(msg, constants.PARAM_ACTION, basestring):
-      action = msg[constants.PARAM_ACTION]
-      if action == constants.ACTION_CALL:
-        self.handle_call(msg, room_id)
-        return
-      elif action == constants.ACTION_ACCEPT:
-        self.handle_accept(msg, room_id)
-        return
-      else:
-        self.report_error(constants.RESPONSE_INVALID_ARGUMENT)
-        return
+    if len(self.request.body):
+      msg = util.get_message_from_json(self.request.body)
+      if util.has_msg_field(msg, constants.PARAM_ACTION, basestring):
+        action = msg[constants.PARAM_ACTION]
+        if action == constants.ACTION_CALL:
+          self.handle_call(msg, room_id)
+          return
+        elif action == constants.ACTION_ACCEPT:
+          self.handle_accept(msg, room_id)
+          return
+        else:
+          self.report_error(constants.RESPONSE_INVALID_ARGUMENT)
+          return
 
     # If there is no PARAM_ACTION field, join the room.
     client_id = util.generate_random(8)

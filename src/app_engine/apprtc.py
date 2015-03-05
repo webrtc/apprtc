@@ -58,9 +58,14 @@ class RoomPage(webapp2.RequestHandler):
   def get(self, room_id):
     """Renders index.html or full.html."""
     # Check if room is full.
-    room = memcache.get(
+    encrypted_room = memcache.get(
         room_module.get_memcache_key_for_room(self.request.host_url, room_id))
-    if room is not None:
+    if encrypted_room is not None:
+      room = room_module.Room.parse_encrypted(encrypted_room)
+      if not room:
+        logging.error('Error decrypting room.')
+        self.error(500)
+        return
       logging.info('Room ' + room_id + ' has state ' + str(room))
       if room.get_occupancy() >= 2:
         logging.info('Room ' + room_id + ' is full')

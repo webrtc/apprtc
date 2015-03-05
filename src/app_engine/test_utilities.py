@@ -8,6 +8,7 @@ import webtest
 import analytics
 import apprtc
 import constants
+import encryptor
 import gcm_notify
 import gcmrecord
 from test_util import CapturingFunction
@@ -65,6 +66,10 @@ class BasePageHandlerTest(unittest.TestCase):
     # Override GCM key so that tests will still run even if config file is
     # empty.
     gcm_notify.GCM_API_KEY = 'foo'
+
+    # Override encryptor key and salt so tests will still run.
+    encryptor.AES_KEY = 'a' * 16
+    encryptor.HASH_SALT = 'a' * 16
 
   def tearDown(self):
     self.testbed.deactivate()

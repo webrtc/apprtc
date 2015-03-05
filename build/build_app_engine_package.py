@@ -58,11 +58,6 @@ def build_version_info_file(dest_path):
   except IOError as e:
     print str(e)
 
-def write_gcm_config_json(out_dir, gcm_api_key):
-  path = os.path.join(out_dir, 'gcm_config.json')
-  with open(path, 'w') as f:
-    f.write(json.dumps({'GCM_API_KEY': gcm_api_key}))
-
 def CopyApprtcSource(src_path, dest_path):
   if os.path.exists(dest_path):
     shutil.rmtree(dest_path)
@@ -101,26 +96,19 @@ def CopyApprtcSource(src_path, dest_path):
 
   build_version_info_file(os.path.join(dest_path, 'version_info.json'))
 
-
 def main():
   parser = optparse.OptionParser(USAGE)
   parser.add_option("-t", "--include-tests", action="store_true",
                     help='Also copy python tests to the out dir.')
   options, args = parser.parse_args()
-  if len(args) < 2:
-    parser.error('At least 2 arguments required.')
+  if len(args) != 2:
+    parser.error('Exactly 2 arguments required.')
 
   src_path, dest_path = args[0:2]
   CopyApprtcSource(src_path, dest_path)
   if options.include_tests:
     app_engine_code = os.path.join(src_path, 'app_engine')
     test_file_herder.CopyTests(os.path.join(src_path, 'app_engine'), dest_path)
-
-  gcm_api_key = None
-  if len(args) > 2:
-    gcm_api_key = args[2]
-    write_gcm_config_json(dest_path, gcm_api_key)
-
 
 if __name__ == '__main__':
   sys.exit(main())

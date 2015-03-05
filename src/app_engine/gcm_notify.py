@@ -5,15 +5,16 @@
 
 import json
 import logging
-import os
 import time
 
 import constants
+import util
 
 from google.appengine.api import urlfetch
 
 # Load GCM API key from configuration file.
 GCM_API_KEY = None
+GCM_API_KEY_PATH = 'gcm_api_key'
 GCM_API_URL = 'https://android.googleapis.com/gcm/send'
 
 GCM_MESSAGE_TYPE_BYE = 'BYE'
@@ -32,17 +33,14 @@ def get_gcm_api_key():
   global GCM_API_KEY
   if GCM_API_KEY is not None:
     return GCM_API_KEY
-  try:
-    config_path = os.path.join(os.path.dirname(__file__), 'gcm_config.json')
-    with open(config_path, 'r') as f:
-      gcm_config = json.loads(f.read())
-      gcm_api_key = gcm_config.get('GCM_API_KEY')
-    if not gcm_api_key:
-      logging.error('Failed to load GCM API key from config file.')
-    else:
-      GCM_API_KEY = gcm_api_key
-  except IOError as e:
-    logging.error('Failed to open GCM config file: %s', str(e))
+  if not util.file_exists(GCM_API_KEY_PATH):
+    logging.error('Missing GCM API key file.')
+    return None
+  gcm_api_key = util.read_file_contents(GCM_API_KEY_PATH)
+  if gcm_api_key is None:
+    logging.error('Failed to load GCM API key.')
+  else:
+    GCM_API_KEY = gcm_api_key
   return GCM_API_KEY
 
 
