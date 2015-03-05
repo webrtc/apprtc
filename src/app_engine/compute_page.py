@@ -22,7 +22,8 @@ ACTION_STATUS = 'status'
 # requeued.
 ACTION_START = 'start'
 
-# Stop the compute instance if it is RUNNING. Then queue a task to start it.
+# Stop the compute instance if it is RUNNING. Then queue a task to start it. Do
+# nothing if the instance is not RUNNING.
 ACTION_RESTART = 'restart'
 
 # Constants for the Compute Engine API
@@ -80,6 +81,8 @@ class ComputePage(webapp2.RequestHandler):
     logging.info('GCE VM \'%s (%s)\' status: \'%s\'.',
                  instance, zone, status)
 
+    # Do nothing if the status is not RUNNING to avoid race. This will cover
+    # most of the cases.
     if status == COMPUTE_STATUS_RUNNING:
       logging.info('Stopping GCE VM: %s (%s)', instance, zone)
       self.compute_service.instances().stop(

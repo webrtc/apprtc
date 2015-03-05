@@ -57,7 +57,7 @@ def get_collider_probe_success_key(instance_host):
 
 
 class ProbeCEODPage(webapp2.RequestHandler):
-  """Page to proble CEOD server."""
+  """Page to probe CEOD server."""
 
   def handle_ceod_response(self, error_message, status_code):
     self.response.set_status(status_code)
@@ -80,7 +80,7 @@ class ProbeCEODPage(webapp2.RequestHandler):
     try:
       result = urlfetch.fetch(
           url=ceod_url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
-    except urlfetch.DeadlineExceededError as e:
+    except urlfetch.Error as e:
       error_message = ('urlfetch throws exception: %s' % str(e))
       self.handle_ceod_response(error_message, 500)
       return
@@ -116,6 +116,19 @@ class ProbeColliderPage(webapp2.RequestHandler):
 
   def handle_collider_response(
       self, error_message, status_code, collider_instance):
+
+    """Send an alert email and restart the instance if needed.
+
+    Args:
+      error_message: The error message for the response, or None if no error.
+      status_code: The status code of the HTTP response.
+      collider_instance: One of constants.WSS_INSTANCES representing the
+      instance being handled.
+
+    Returns:
+      A dictionary object containing the result.
+    """
+
     result = {
         constants.WSS_HOST_STATUS_CODE_KEY: status_code
     }
@@ -202,7 +215,7 @@ class ProbeColliderPage(webapp2.RequestHandler):
     try:
       result = urlfetch.fetch(
           url=url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
-    except urlfetch.DeadlineExceededError as e:
+    except urlfetch.Error as e:
       error_message = ('urlfetch throws exception: %s' % str(e))
       return self.handle_collider_response(
           error_message, 500, collider_instance)
