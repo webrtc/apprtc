@@ -172,5 +172,5 @@ class Hasher(object):
       else:
         salt = b''
     hmac = SHA256.new()
-    hmac.update(salt + message)
+    hmac.update(salt + message.encode('utf-8'))
     return hmac.digest()
