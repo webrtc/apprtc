@@ -4,9 +4,9 @@
 
 import logging
 
+import apiauth
 import webapp2
 
-import apiauth
 from google.appengine.api import app_identity
 from google.appengine.api import taskqueue
 
@@ -22,15 +22,28 @@ ACTION_STATUS = 'status'
 # requeued.
 ACTION_START = 'start'
 
+# Stop the compute instance if it is RUNNING. Then queue a task to start it.
+ACTION_RESTART = 'restart'
+
 # Constants for the Compute Engine API
 COMPUTE_STATUS = 'status'
 COMPUTE_STATUS_TERMINATED = 'TERMINATED'
 COMPUTE_STATUS_RUNNING = 'RUNNING'
 
 # Seconds between API retries.
-TASK_RETRY_S = 3
+START_TASK_MIN_WAIT_S = 3
 
 COMPUTE_API_URL = 'https://www.googleapis.com/auth/compute'
+
+
+def enqueue_start_task(instance, zone):
+  taskqueue.add(url='/compute/%s/%s/%s' % (ACTION_START, instance, zone),
+                countdown=START_TASK_MIN_WAIT_S)
+
+
+def enqueue_restart_task(instance, zone):
+  taskqueue.add(url='/compute/%s/%s/%s' % (ACTION_RESTART, instance, zone),
+                countdown=START_TASK_MIN_WAIT_S)
 
 
 class ComputePage(webapp2.RequestHandler):
@@ -50,9 +63,30 @@ class ComputePage(webapp2.RequestHandler):
                          service_name='compute',
                          version='v1')
 
-  def _enqueue_start_task(self, instance, zone):
-    taskqueue.add(url='/compute/start/%s/%s' % (instance, zone),
-                  countdown=TASK_RETRY_S)
+  def _maybe_restart_instance(self, instance, zone):
+    """Implementation for restart action.
+
+    Args:
+      instance: Name of the instance to start.
+      zone: Name of the zone the instance belongs to.
+
+    """
+    if self.compute_service is None:
+      logging.warning('Compute service unavailable.')
+      return
+
+    status = self._compute_status(instance, zone)
+
+    logging.info('GCE VM \'%s (%s)\' status: \'%s\'.',
+                 instance, zone, status)
+
+    if status == COMPUTE_STATUS_RUNNING:
+      logging.info('Stopping GCE VM: %s (%s)', instance, zone)
+      self.compute_service.instances().stop(
+          project=app_identity.get_application_id(),
+          instance=instance,
+          zone=zone).execute()
+      enqueue_start_task(instance, zone)
 
   def _maybe_start_instance(self, instance, zone):
     """Implementation for start action.
@@ -80,7 +114,7 @@ class ComputePage(webapp2.RequestHandler):
     elif status != COMPUTE_STATUS_RUNNING:
       # Instance is in an intermediate state: PROVISIONING, STAGING,
       # STOPPING. Thus, requeue the task.
-      self._enqueue_start_task(instance, zone)
+      enqueue_start_task(instance, zone)
 
   def _compute_status(self, instance, zone):
     """Return the status of the compute instance."""
@@ -102,3 +136,5 @@ class ComputePage(webapp2.RequestHandler):
   def post(self, action, instance, zone):
     if action == ACTION_START:
       self._maybe_start_instance(instance, zone)
+    elif action == ACTION_RESTART:
+      self._maybe_restart_instance(instance, zone)
