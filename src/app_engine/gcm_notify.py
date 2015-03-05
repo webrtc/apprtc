@@ -94,16 +94,31 @@ def create_gcm_payload(gcm_ids, collapse_key, data):
   })
 
 
-def create_invite_message(room_id, caller_id):
+def create_invite_message(room_id, caller_id, metadata):
   return {
       GCM_MESSAGE_TYPE_KEY: GCM_MESSAGE_TYPE_INVITE,
       constants.PARAM_ROOM_ID: room_id,
       constants.PARAM_CALLER_ID: caller_id,
+      constants.PARAM_METADATA: metadata,
   }
 
 
-def send_invites(gcm_ids, room_id, caller_id):
-  message = create_invite_message(room_id, caller_id)
+def send_invites(gcm_ids, room_id, caller_id, metadata):
+  """Create and send the invite message to the callee.
+
+  Args:
+    gcm_ids: ids to send the message to.
+    room_id: id of the room to join.
+    caller_id: the callable public id of the caller.
+    metadata: value passed through from caller to callee. Used for call
+        specific data that the server does not need to know about, such
+        as creating an audio only call.
+
+  Returns:
+    The result of send_gcm_messages.
+
+  """
+  message = create_invite_message(room_id, caller_id, metadata)
   return send_gcm_messages(gcm_ids, message, room_id)
 
 

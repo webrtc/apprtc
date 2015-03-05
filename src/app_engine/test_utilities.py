@@ -121,9 +121,11 @@ class BasePageHandlerTest(unittest.TestCase):
   def makePostRequest(self, path, body=''):
     return self.test_app.post(path, body, headers={'User-Agent': 'Safari'})
 
-  def createGCMInvitePayload(self, gcm_ids, room_id, caller_id):
+  def createGCMInvitePayload(self, gcm_ids, room_id, caller_id, metadata):
     return gcm_notify.create_gcm_payload(
-        gcm_ids, room_id, gcm_notify.create_invite_message(room_id, caller_id))
+        gcm_ids,
+        room_id,
+        gcm_notify.create_invite_message(room_id, caller_id, metadata))
 
   def createGCMAcceptedPayload(self, gcm_ids, room_id):
     message = gcm_notify.create_bye_message(
@@ -155,11 +157,12 @@ class BasePageHandlerTest(unittest.TestCase):
     self.assertEqual(expectedCode, json.loads(response.body)['result'], msg)
 
   def requestCallAndVerify(self, room_id, caller_gcm_id,
-                           callee_id, expected_response):
+                           callee_id, expected_response, metadata=None):
     body = {
         constants.PARAM_ACTION: constants.ACTION_CALL,
         constants.PARAM_CALLER_GCM_ID: caller_gcm_id,
-        constants.PARAM_CALLEE_ID: callee_id
+        constants.PARAM_CALLEE_ID: callee_id,
+        constants.PARAM_METADATA: metadata,
     }
 
     response = self.makePostRequest('/join/' + room_id, json.dumps(body))

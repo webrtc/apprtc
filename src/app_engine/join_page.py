@@ -94,7 +94,10 @@ class JoinPage(webapp2.RequestHandler):
 
     # Send ring notification to all verified GCM endpoints associated with the
     # callee's user id.
-    gcm_notify.send_invites(callee_gcm_ids, room_id, caller_id)
+    # Metadata is passed from caller to callee. Used for call metadata that
+    # the server doesn't need to understand, such as audio only call.
+    metadata = msg.get(constants.PARAM_METADATA)
+    gcm_notify.send_invites(callee_gcm_ids, room_id, caller_id, metadata)
 
     self.write_room_parameters(
         room_id, result['session_id'], result['messages'],
