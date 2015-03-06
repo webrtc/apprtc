@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import urllib2
 
 import test_file_herder
 
@@ -29,13 +30,39 @@ def call_cmd_and_return_output_lines(cmd):
     return []
 
 
-def build_version_info_file(dest_path):
+def build_version_info_file(dest_path, branch, commit):
   """Build the version info JSON file."""
   version_info = {
       'gitHash': None,
       'time': None,
       'branch': None
   }
+
+  # If branch or commit are specified, we likely aren't in a git repo.
+  # We need to fetch the information from the Github API.
+  if branch:
+    if not commit:
+      print 'Fetching information about HEAD of branch: ' + branch
+      branch_info_uri = 'https://api.github.com/repos/webrtc/apprtc/git/refs/heads/' + branch
+      response = urllib2.urlopen(branch_info_uri)
+      json_data = response.read()
+      data = json.loads(json_data)
+      commit = data.get('object', {}).get('sha')
+      print 'HEAD at commit: ' + commit
+
+    if commit:
+      print 'Fetching information about commit: ' + commit
+      commit_info_url = 'https://api.github.com/repos/webrtc/apprtc/git/commits/' + commit
+      response = urllib2.urlopen(commit_info_url)
+      json_data = response.read()
+      data = json.loads(json_data)
+      date = data.get('committer', {}).get('date')
+      print 'Date for commit: ' + date
+      version_info['gitHash'] = commit
+      version_info['time'] = date
+      version_info['branch'] = branch
+      write_version_info_file(dest_path, version_info)
+      return
 
   lines = call_cmd_and_return_output_lines(['git', 'log', '-1'])
   for line in lines:
@@ -51,7 +78,10 @@ def build_version_info_file(dest_path):
     if line.startswith('*'):
       version_info['branch'] = line.partition(' ')[2].strip()
       break
+  write_version_info_file(dest_path, version_info)
 
+
+def write_version_info_file(dest_path, version_info):
   try:
     with open(dest_path, 'w') as f:
       f.write(json.dumps(version_info))
@@ -95,19 +125,25 @@ def CopyApprtcSource(src_path, dest_path):
           shutil.copy(os.path.join(dirpath, name), dest_js_path)
           break
 
-  build_version_info_file(os.path.join(dest_path, 'version_info.json'))
-
 
 def main():
   parser = optparse.OptionParser(USAGE)
   parser.add_option("-t", "--include-tests", action="store_true",
                     help='Also copy python tests to the out dir.')
+  parser.add_option('-b', '--branch', action='store', type='string', dest='branch',
+                    help='The branch to retrieve HEAD version info from.')
+  parser.add_option('-c', '--commit', action='store', type='string', dest='commit',
+                    help='The commit to use version infom from.')
   options, args = parser.parse_args()
   if len(args) != 2:
     parser.error('Error: Exactly 2 arguments required.')
 
+  if not options.branch and options.commit:
+    parser.error("If --commit is specified --branch is required.")
+
   src_path, dest_path = args[0:2]
   CopyApprtcSource(src_path, dest_path)
+  build_version_info_file(os.path.join(dest_path, 'version_info.json'), options.branch, options.commit)
   if options.include_tests:
     app_engine_code = os.path.join(src_path, 'app_engine')
     test_file_herder.CopyTests(os.path.join(src_path, 'app_engine'), dest_path)

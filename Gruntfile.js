@@ -67,8 +67,13 @@ module.exports = function(grunt) {
                   out_app_engine_dir, 'webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
-        command: ['python', './build/build_app_engine_package.py', 'src',
-                  out_app_engine_dir].join(' ')
+        command: ['python',
+                  './build/build_app_engine_package.py',
+                  'src',
+                  out_app_engine_dir,
+                  grunt.option('branch') ? '--branch=' + grunt.option('branch') : '',
+                  grunt.option('commit') ? '--commit=' + grunt.option('commit') : ''
+                 ].join(' ')
       },
       buildAppEnginePackageWithTests: {
         command: ['python', './build/build_app_engine_package.py', 'src',
