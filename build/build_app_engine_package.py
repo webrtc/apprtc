@@ -133,7 +133,7 @@ def main():
   parser.add_option('-b', '--branch', action='store', type='string', dest='branch',
                     help='The branch to retrieve HEAD version info from.')
   parser.add_option('-c', '--commit', action='store', type='string', dest='commit',
-                    help='The commit to use version infom from.')
+                    help='The commit to use version info from.')
   options, args = parser.parse_args()
   if len(args) != 2:
     parser.error('Error: Exactly 2 arguments required.')
