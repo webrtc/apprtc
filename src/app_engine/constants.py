@@ -58,6 +58,7 @@ PARAM_CALLEE_GCM_ID = 'calleeGcmId'
 PARAM_USER_GCM_ID = 'userGcmId'
 PARAM_MESSAGE = 'message'
 PARAM_ROOM_ID = 'roomId'
+PARAM_METADATA = 'metadata'
 
 BIGQUERY_URL = 'https://www.googleapis.com/auth/bigquery'
 

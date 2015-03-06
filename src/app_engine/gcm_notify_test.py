@@ -3,6 +3,8 @@
 import constants
 import test_utilities
 
+TEST_METADATA = 'foobar'
+
 
 class GCMNotifyTest(test_utilities.BasePageHandlerTest):
   def testJoin(self):
@@ -11,10 +13,37 @@ class GCMNotifyTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
 
     self.requestCallAndVerify(
-        room_id, 'caller1gcm1', 'callee1', constants.RESPONSE_SUCCESS)
+        room_id,
+        'caller1gcm1',
+        'callee1',
+        constants.RESPONSE_SUCCESS,
+        TEST_METADATA)
     expected_payloads = [
         self.createGCMInvitePayload(
-            ['callee1gcm1', 'callee1gcm2', 'callee1gcm3'], room_id, 'caller1'),
+            ['callee1gcm1', 'callee1gcm2', 'callee1gcm3'],
+            room_id,
+            'caller1',
+            TEST_METADATA),
+    ]
+    self.verifyGCMPayloads(expected_payloads)
+
+  def testJoinNoMetadata(self):
+    self.addTestData()
+
+    room_id = 'callercallee'
+
+    self.requestCallAndVerify(
+        room_id,
+        'caller1gcm1',
+        'callee1',
+        constants.RESPONSE_SUCCESS,
+        None)
+    expected_payloads = [
+        self.createGCMInvitePayload(
+            ['callee1gcm1', 'callee1gcm2', 'callee1gcm3'],
+            room_id,
+            'caller1',
+            None),
     ]
     self.verifyGCMPayloads(expected_payloads)
 
