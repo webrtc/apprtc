@@ -114,10 +114,9 @@ class ComputePageHandlerTest(unittest.TestCase):
     # makePostRequest will check for 200 success.
     self.makePostRequest(start_url)
 
-    # If the state is TERMINATED then we should not have a new start
-    # task.
+    # If the state is TERMINATED then we should have a new start task.
     tasks = self.testbed.get_stub('taskqueue').GetTasks('default')
-    self.assertEqual(0, len(tasks))
+    self.assertEqual(1, len(tasks))
 
     # Verify start() API called only once.
     self.assertEqual(1, self.compute_service.instances.start.num_calls)

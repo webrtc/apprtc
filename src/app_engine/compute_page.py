@@ -68,7 +68,7 @@ class ComputePage(webapp2.RequestHandler):
     """Implementation for restart action.
 
     Args:
-      instance: Name of the instance to start.
+      instance: Name of the instance to restart.
       zone: Name of the zone the instance belongs to.
 
     """
@@ -114,9 +114,11 @@ class ComputePage(webapp2.RequestHandler):
           project=app_identity.get_application_id(),
           instance=instance,
           zone=zone).execute()
-    elif status != COMPUTE_STATUS_RUNNING:
-      # Instance is in an intermediate state: PROVISIONING, STAGING,
-      # STOPPING. Thus, requeue the task.
+
+    if status != COMPUTE_STATUS_RUNNING:
+      # If in an intermediate state: PROVISIONING, STAGING, STOPPING, requeue
+      # the task to check back later. If in TERMINATED state, also requeue the
+      # task since the start attempt may fail and we should retry.
       enqueue_start_task(instance, zone)
 
   def _compute_status(self, instance, zone):
