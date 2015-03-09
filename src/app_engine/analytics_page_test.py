@@ -63,6 +63,9 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
     # should be one second ahead of the actual event time recorded by
     # the client.
     event_time_server_ms = 9.0 * 1000
+    # Default host for the test server.
+    host = 'localhost:80'
+
 
     room_id = 'foo'
     event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED
@@ -83,9 +86,12 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     self.assertEqual(constants.RESPONSE_SUCCESS, response_body['result'])
 
-    expected_args = (event_type, room_id, event_time_server_ms, event_time_ms)
-
-    self.assertEqual(expected_args, analytics.report_event.last_args)
+    expected_kwargs = dict(event_type=event_type,
+                           room_id=room_id,
+                           time_ms=event_time_server_ms,
+                           client_time_ms=event_time_ms,
+                           host=host)
+    self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
     # Test without optional attributes.
     request = {
@@ -102,9 +108,13 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     self.assertEqual(constants.RESPONSE_SUCCESS, response_body['result'])
 
-    expected_args = (event_type, None, event_time_server_ms, event_time_ms)
+    expected_kwargs = dict(event_type=event_type,
+                           room_id=None,
+                           time_ms=event_time_server_ms,
+                           client_time_ms=event_time_ms,
+                           host=host)
 
-    self.assertEqual(expected_args, analytics.report_event.last_args)
+    self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
   def testAnalyticsPageFail(self):
     # Test empty body.

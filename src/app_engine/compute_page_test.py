@@ -23,6 +23,9 @@ class FakeComputeService(object):
     self.instances.start = CapturingFunction(lambda: self.instances.start)
     self.instances.start.execute = CapturingFunction()
 
+    self.instances.stop = CapturingFunction(lambda: self.instances.stop)
+    self.instances.stop.execute = CapturingFunction()
+
     # Change the status of an instance by setting the return value.
     self.get_return_value = None
     self.instances.get = CapturingFunction(lambda: self.instances.get)
@@ -111,10 +114,9 @@ class ComputePageHandlerTest(unittest.TestCase):
     # makePostRequest will check for 200 success.
     self.makePostRequest(start_url)
 
-    # If the state is TERMINATED then we should not have a new start
-    # task.
+    # If the state is TERMINATED then we should have a new start task.
     tasks = self.testbed.get_stub('taskqueue').GetTasks('default')
-    self.assertEqual(0, len(tasks))
+    self.assertEqual(1, len(tasks))
 
     # Verify start() API called only once.
     self.assertEqual(1, self.compute_service.instances.start.num_calls)
@@ -177,3 +179,50 @@ class ComputePageHandlerTest(unittest.TestCase):
 
       # Simulate the start task running AGAIN but instance is RUNNING.
       taskqueue.FlushQueue('default')
+
+  def testPostRestartWhenRunning(self):
+    """Test restart action in a running state."""
+    compute_instances = self.compute_service.instances
+    taskqueue = self.testbed.get_stub('taskqueue')
+    instance = 'test-instance'
+    zone = 'test-zone'
+    restart_url = '/compute/%s/%s/%s' % (compute_page.ACTION_RESTART,
+                                       instance, zone)
+
+    self.compute_service.get_return_value = {
+        compute_page.COMPUTE_STATUS: 'RUNNING'
+    }
+    self.makePostRequest(restart_url)
+
+    # A new task should be queued.
+    tasks = taskqueue.GetTasks('default')
+    self.assertEqual(1, len(tasks))
+    task = tasks[-1]
+    start_url = '/compute/%s/%s/%s' % (compute_page.ACTION_START,
+                                       instance, zone)
+    self.assertEqual(start_url, task['url'])
+
+    # Verify stop() API called.
+    self.assertEqual(1, self.compute_service.instances.stop.num_calls)
+
+  def testPostRestartWhenNotRunning(self):
+    """Test restart action in a non-running state."""
+    compute_instances = self.compute_service.instances
+    taskqueue = self.testbed.get_stub('taskqueue')
+    instance = 'test-instance'
+    zone = 'test-zone'
+    restart_url = '/compute/%s/%s/%s' % (compute_page.ACTION_RESTART,
+                                         instance, zone)
+
+    for status in ['PROVISIONING', 'STAGING', 'STOPPING', 'TERMINATED']:
+      self.compute_service.get_return_value = {
+          compute_page.COMPUTE_STATUS: status
+      }
+      self.makePostRequest(restart_url)
+
+      # No task should be queued.
+      tasks = taskqueue.GetTasks('default')
+      self.assertEqual(0, len(tasks))
+
+      # Verify stop() API not called.
+      self.assertEqual(0, self.compute_service.instances.stop.num_calls)
