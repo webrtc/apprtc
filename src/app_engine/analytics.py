@@ -16,11 +16,19 @@ import constants
 
 from google.appengine.api import app_identity
 
+
 class EventType(object):
   # Event signifying that a room enters the state of having exactly
   # two participants.
-  ROOM_SIZE_2 = 'room_size_2'
-  ICE_CONNECTION_STATE_CONNECTED = 'ice_connection_state_connected'
+  ROOM_SIZE_2 = 2
+  ICE_CONNECTION_STATE_CONNECTED = 3
+
+  # Reverse map from value to enum name. Used to determine the logged value.
+  Name = {
+      ROOM_SIZE_2: 'ROOM_SIZE_2',
+      ICE_CONNECTION_STATE_CONNECTED: 'ICE_CONNECTION_STATE_CONNECTED',
+  }
+
 
 class LogField(object):
   pass
@@ -63,8 +71,21 @@ class Analytics(object):
 
   def report_event(self, event_type, room_id=None, time_ms=None,
                    client_time_ms=None, host=None):
-    """Report an event to BigQuery."""
-    event = {LogField.EVENT_TYPE: event_type}
+    """Report an event to BigQuery.
+
+    Args:
+      event_type: One of analytics.EventType.
+      room_id: Room ID related to the given event type.
+      time_ms: Time that the event occurred on the server. Will be automatically
+               populated if not given explicitly.
+      client_time_ms: Time that an event occurred on the client, if the event
+                      originated on the client.
+      host: Hostname this is being logged on.
+    """
+    # Be forgiving. If an event is a string or is an unknown number we
+    # still log it but log it as the string value.
+    event_type_name = EventType.Name.get(event_type, str(event_type))
+    event = {LogField.EVENT_TYPE: event_type_name}
 
     if room_id is not None:
       event[LogField.ROOM_ID] = room_id
