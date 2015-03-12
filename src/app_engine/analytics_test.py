@@ -1,17 +1,14 @@
 # Copyright 2014 Google Inc. All Rights Reserved.
 
 import datetime
-import json
 import time
 import unittest
-import webtest
-
-from google.appengine.api import memcache
-from google.appengine.ext import testbed
 
 import analytics
 from test_util import CapturingFunction
 from test_util import ReplaceFunction
+
+from google.appengine.ext import testbed
 
 
 class FakeBigQuery(object):
@@ -27,7 +24,7 @@ class FakeBigQuery(object):
 class AnalyticsTest(unittest.TestCase):
   """Test the Analytics class in the analytics module."""
 
-  def fake_build_bigquery_object(self, *args):
+  def fake_build_bigquery_object(self, *_):
     self.bigquery = FakeBigQuery()
     return self.bigquery
 
@@ -65,41 +62,91 @@ class AnalyticsTest(unittest.TestCase):
     del self.time_replacement
     del self.build_big_query_replacement
 
-  def testOnlyEvent(self):
-    event_type = 'an_event'
-    log_dict = self.create_log_dict(
-        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         analytics.LogField.EVENT_TYPE: event_type})
-
-    self.tics.report_event(event_type)
-    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
-
-  def testEventRoom(self):
-    event_type = 'an_event_with_room'
-    room_id = 'my_room_that_is_the_best'
-    log_dict = self.create_log_dict(
-        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         analytics.LogField.EVENT_TYPE: event_type,
-         analytics.LogField.ROOM_ID: room_id})
-
-    self.tics.report_event(event_type, room_id=room_id)
-    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
-
-  def testEventAll(self):
+  def testEventAsString(self):
     event_type = 'an_event_with_everything'
     room_id = 'my_room_that_is_the_best'
     time_s = self.now + 50
     client_time_s = self.now + 60
     host = 'super_host.domain.org:8112'
 
+    log_dict = self.create_log_dict({
+        analytics.LogField.TIMESTAMP: '{0}'.format(
+            datetime.datetime.fromtimestamp(time_s).isoformat()),
+        analytics.LogField.EVENT_TYPE: event_type,
+        analytics.LogField.ROOM_ID: room_id,
+        analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
+            datetime.datetime.fromtimestamp(client_time_s).isoformat()),
+        analytics.LogField.HOST: host
+    })
+
+    self.tics.report_event(event_type,
+                           room_id=room_id,
+                           time_ms=time_s*1000.,
+                           client_time_ms=client_time_s*1000.,
+                           host=host)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
+
+  def testUnknowEventNumber(self):
+    event_type = -1  # Numbers for events should never be negative.
+    room_id = 'my_room_that_is_the_best'
+    time_s = self.now + 50
+    client_time_s = self.now + 60
+    host = 'super_host.domain.org:8112'
+
+    log_dict = self.create_log_dict({
+        analytics.LogField.TIMESTAMP: '{0}'.format(
+            datetime.datetime.fromtimestamp(time_s).isoformat()),
+        analytics.LogField.EVENT_TYPE: '-1',
+        analytics.LogField.ROOM_ID: room_id,
+        analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
+            datetime.datetime.fromtimestamp(client_time_s).isoformat()),
+        analytics.LogField.HOST: host
+    })
+
+    self.tics.report_event(event_type,
+                           room_id=room_id,
+                           time_ms=time_s*1000.,
+                           client_time_ms=client_time_s*1000.,
+                           host=host)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
+
+  def testOnlyEvent(self):
+    event_type = analytics.EventType.ROOM_SIZE_2
     log_dict = self.create_log_dict(
-        {analytics.LogField.TIMESTAMP: '{0}'.format(
-             datetime.datetime.fromtimestamp(time_s).isoformat()),
-         analytics.LogField.EVENT_TYPE: event_type,
-         analytics.LogField.ROOM_ID: room_id,
-         analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
-             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-         analytics.LogField.HOST: host})
+        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+         analytics.LogField.EVENT_TYPE: analytics.EventType.Name[event_type]})
+
+    self.tics.report_event(event_type)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
+
+  def testEventRoom(self):
+    event_type = analytics.EventType.ROOM_SIZE_2
+    room_id = 'my_room_that_is_the_best'
+    log_dict = self.create_log_dict({
+        analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+        analytics.LogField.EVENT_TYPE: analytics.EventType.Name[event_type],
+        analytics.LogField.ROOM_ID: room_id
+    })
+
+    self.tics.report_event(event_type, room_id=room_id)
+    self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
+
+  def testEventAll(self):
+    event_type = analytics.EventType.ROOM_SIZE_2
+    room_id = 'my_room_that_is_the_best'
+    time_s = self.now + 50
+    client_time_s = self.now + 60
+    host = 'super_host.domain.org:8112'
+
+    log_dict = self.create_log_dict({
+        analytics.LogField.TIMESTAMP: '{0}'.format(
+            datetime.datetime.fromtimestamp(time_s).isoformat()),
+        analytics.LogField.EVENT_TYPE: analytics.EventType.Name[event_type],
+        analytics.LogField.ROOM_ID: room_id,
+        analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
+            datetime.datetime.fromtimestamp(client_time_s).isoformat()),
+        analytics.LogField.HOST: host
+    })
 
     self.tics.report_event(event_type,
                            room_id=room_id,
