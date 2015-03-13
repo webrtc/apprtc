@@ -1,17 +1,17 @@
 import json
 import time
 import unittest
+
+import analytics
+from analytics_enums import RequestField
+import analytics_page
+import apprtc
+import constants
+from test_util import CapturingFunction
+from test_util import ReplaceFunction
 import webtest
 
 from google.appengine.ext import testbed
-
-import apprtc
-import analytics
-import analytics_page
-import constants
-from analytics_page import RequestField
-from test_util import CapturingFunction
-from test_util import ReplaceFunction
 
 
 class AnalyticsPageHandlerTest(unittest.TestCase):
@@ -65,7 +65,6 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
     event_time_server_ms = 9.0 * 1000
     # Default host for the test server.
     host = 'localhost:80'
-
 
     room_id = 'foo'
     event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED

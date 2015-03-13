@@ -5,23 +5,10 @@
 import json
 import time
 
-import webapp2
-
 import analytics
+from analytics_enums import RequestField
 import constants
-
-class RequestField(object):
-  TYPE = 'type'
-  REQUEST_TIME_MS = 'request_time_ms'
-  EVENT = 'event'
-
-  class MessageType(object):
-    EVENT = 'event'
-
-  class EventField(object):
-    EVENT_TYPE = 'event_type'
-    ROOM_ID = 'room_id'
-    EVENT_TIME_MS = 'event_time_ms'
+import webapp2
 
 
 class AnalyticsPage(webapp2.RequestHandler):
@@ -65,7 +52,6 @@ class AnalyticsPage(webapp2.RequestHandler):
   """
 
   def _write_response(self, result):
-    response = {'result': result}
     self.response.write(json.dumps({
         'result': result
         }))
@@ -85,7 +71,7 @@ class AnalyticsPage(webapp2.RequestHandler):
     # Verify required fields.
     request_type = msg.get(RequestField.TYPE)
     request_time_ms = msg.get(RequestField.REQUEST_TIME_MS)
-    if (request_time_ms is None or request_type is None):
+    if request_time_ms is None or request_type is None:
       self._write_response(constants.RESPONSE_INVALID_REQUEST)
       return
 
