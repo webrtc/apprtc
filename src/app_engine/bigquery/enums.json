@@ -1,0 +1,22 @@
+{
+  "EventType": {
+    "ROOM_SIZE_2": 2,
+    "ICE_CONNECTION_STATE_CONNECTED": 3
+  },
+
+  "RequestField":{
+    "TYPE": "type",
+    "REQUEST_TIME_MS": "request_time_ms",
+    "EVENT": "event",
+
+    "MessageType": {
+      "EVENT": "event"
+    },
+
+    "EventField": {
+      "EVENT_TYPE": "event_type",
+      "ROOM_ID": "room_id",
+      "EVENT_TIME_MS": "event_time_ms"
+    }
+  }
+}
