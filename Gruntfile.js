@@ -38,7 +38,7 @@ module.exports = function(grunt) {
     },
 
     jscs: {
-      src: 'src/**/*.js',
+      src: ['src/**/*.js', '!src/**/enums.js'],
       options: {
         preset: 'google', // as per Google style guide – could use '.jscsrc' instead
         requireCurlyBraces: ['if']
@@ -52,7 +52,7 @@ module.exports = function(grunt) {
       // files to validate
       // can choose more than one name + array of paths
       // usage with this name: grunt jshint:files
-      files: ['src/**/*.js']
+      files: ['src/**/*.js', '!src/**/enums.js']
     },
 
     shell: {
@@ -79,8 +79,8 @@ module.exports = function(grunt) {
                   out_app_engine_dir].join(' ')
       },
       genJsEnums: {
-	command: ['python', './build/gen_js_enums.py', 'src',
-		  'src/web_app/js'].join(' ')
+        command: ['python', './build/gen_js_enums.py', 'src',
+                  'src/web_app/js'].join(' ')
       },
     },
 
@@ -146,7 +146,7 @@ module.exports = function(grunt) {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
-	    'src/web_app/js/enums.js',
+            'src/web_app/js/enums.js',
             'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',
             'src/web_app/js/call.js',
