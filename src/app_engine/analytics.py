@@ -3,7 +3,6 @@
 """Module for pushing analytics data to BigQuery."""
 
 import datetime
-import json
 import logging
 import os
 import sys
@@ -11,33 +10,11 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
 
+from analytics_enums import EventType, LogField
 import apiauth
 import constants
 
 from google.appengine.api import app_identity
-
-
-class EventType(object):
-  # Event signifying that a room enters the state of having exactly
-  # two participants.
-  ROOM_SIZE_2 = 2
-  ICE_CONNECTION_STATE_CONNECTED = 3
-
-  # Reverse map from value to enum name. Used to determine the logged value.
-  Name = {
-      ROOM_SIZE_2: 'ROOM_SIZE_2',
-      ICE_CONNECTION_STATE_CONNECTED: 'ICE_CONNECTION_STATE_CONNECTED',
-  }
-
-
-class LogField(object):
-  pass
-
-with open(os.path.join(os.path.dirname(__file__),
-                       'bigquery', 'analytics_schema.json')) as f:
-  schema = json.load(f)
-  for field in schema:
-    setattr(LogField, field['name'].upper(), field['name'])
 
 
 class Analytics(object):
