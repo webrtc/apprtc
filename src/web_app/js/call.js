@@ -10,7 +10,7 @@
 
 /* globals trace, requestTurnServers, sendUrlRequest, sendAsyncUrlRequest,
    requestUserMedia, SignalingChannel, PeerConnectionClient, setupLoopback,
-   parseJSON, isChromeApp, apprtc, Constants */
+   parseJSON, isChromeApp, apprtc, Constants, stringifyDOMObject */
 
 /* exported Call */
 
@@ -487,7 +487,7 @@ Call.prototype.onRecvSignalingChannelMessage_ = function(msg) {
 };
 
 Call.prototype.sendSignalingMessage_ = function(message) {
-  var msgString = JSON.stringify(message);
+  var msgString = stringifyDOMObject(message);
   if (this.params_.isInitiator) {
     // Initiator posts all messages to GAE. GAE will either store the messages
     // until the other client connects, or forward the message to Collider if
