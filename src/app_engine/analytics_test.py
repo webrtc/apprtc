@@ -5,6 +5,7 @@ import time
 import unittest
 
 import analytics
+from analytics_enums import EventType, LogField
 from test_util import CapturingFunction
 from test_util import ReplaceFunction
 
@@ -70,13 +71,13 @@ class AnalyticsTest(unittest.TestCase):
     host = 'super_host.domain.org:8112'
 
     log_dict = self.create_log_dict({
-        analytics.LogField.TIMESTAMP: '{0}'.format(
+        LogField.TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(time_s).isoformat()),
-        analytics.LogField.EVENT_TYPE: event_type,
-        analytics.LogField.ROOM_ID: room_id,
-        analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
+        LogField.EVENT_TYPE: event_type,
+        LogField.ROOM_ID: room_id,
+        LogField.CLIENT_TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-        analytics.LogField.HOST: host
+        LogField.HOST: host
     })
 
     self.tics.report_event(event_type,
@@ -94,13 +95,13 @@ class AnalyticsTest(unittest.TestCase):
     host = 'super_host.domain.org:8112'
 
     log_dict = self.create_log_dict({
-        analytics.LogField.TIMESTAMP: '{0}'.format(
+        LogField.TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(time_s).isoformat()),
-        analytics.LogField.EVENT_TYPE: '-1',
-        analytics.LogField.ROOM_ID: room_id,
-        analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
+        LogField.EVENT_TYPE: '-1',
+        LogField.ROOM_ID: room_id,
+        LogField.CLIENT_TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-        analytics.LogField.HOST: host
+        LogField.HOST: host
     })
 
     self.tics.report_event(event_type,
@@ -111,41 +112,41 @@ class AnalyticsTest(unittest.TestCase):
     self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
   def testOnlyEvent(self):
-    event_type = analytics.EventType.ROOM_SIZE_2
+    event_type = EventType.ROOM_SIZE_2
     log_dict = self.create_log_dict(
-        {analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-         analytics.LogField.EVENT_TYPE: analytics.EventType.Name[event_type]})
+        {LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+         LogField.EVENT_TYPE: EventType.Name[event_type]})
 
     self.tics.report_event(event_type)
     self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
   def testEventRoom(self):
-    event_type = analytics.EventType.ROOM_SIZE_2
+    event_type = EventType.ROOM_SIZE_2
     room_id = 'my_room_that_is_the_best'
     log_dict = self.create_log_dict({
-        analytics.LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
-        analytics.LogField.EVENT_TYPE: analytics.EventType.Name[event_type],
-        analytics.LogField.ROOM_ID: room_id
+        LogField.TIMESTAMP: '{0}'.format(self.now_isoformat()),
+        LogField.EVENT_TYPE: EventType.Name[event_type],
+        LogField.ROOM_ID: room_id
     })
 
     self.tics.report_event(event_type, room_id=room_id)
     self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
   def testEventAll(self):
-    event_type = analytics.EventType.ROOM_SIZE_2
+    event_type = EventType.ROOM_SIZE_2
     room_id = 'my_room_that_is_the_best'
     time_s = self.now + 50
     client_time_s = self.now + 60
     host = 'super_host.domain.org:8112'
 
     log_dict = self.create_log_dict({
-        analytics.LogField.TIMESTAMP: '{0}'.format(
+        LogField.TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(time_s).isoformat()),
-        analytics.LogField.EVENT_TYPE: analytics.EventType.Name[event_type],
-        analytics.LogField.ROOM_ID: room_id,
-        analytics.LogField.CLIENT_TIMESTAMP: '{0}'.format(
+        LogField.EVENT_TYPE: EventType.Name[event_type],
+        LogField.ROOM_ID: room_id,
+        LogField.CLIENT_TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-        analytics.LogField.HOST: host
+        LogField.HOST: host
     })
 
     self.tics.report_event(event_type,
