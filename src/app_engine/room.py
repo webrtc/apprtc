@@ -314,15 +314,11 @@ def add_client_to_room(request, room_id, client_id,
         room.add_client(constants.LOOPBACK_CLIENT_ID,
                         client_module.Client(False))
       if allowed_clients is not None:
+        logging.info('Room ' + room_id +
+                     ' allows these clients: '.join(allowed_clients));
         for allowed_client in allowed_clients:
           room.add_allowed_client(allowed_client)
     else:
-      is_initiator = False
-      other_client = room.get_other_client(client_id)
-      messages = other_client.messages
-      client = client_module.Client(is_initiator)
-      room.add_client(client_id, client)
-      other_client.clear_messages()
       # Check if the callee was the callee intended by the caller.
       if not room.is_client_allowed(client_id):
         logging.warning('Client ' + client_id + ' not allowed in room ' +
@@ -330,6 +326,13 @@ def add_client_to_room(request, room_id, client_id,
                         ','.join(room.allowed_clients))
         error = constants.RESPONSE_INVALID_ROOM
         break
+      other_client = room.get_other_client(client_id)
+      messages = other_client.messages
+      other_client.clear_messages()
+
+      is_initiator = False
+      client = client_module.Client(is_initiator)
+      room.add_client(client_id, client)
 
     if memcache_client.cas(
         key, room.get_encrypted(), constants.ROOM_MEMCACHE_EXPIRATION_SEC):
