@@ -10,7 +10,7 @@
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
    requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString, $,
-   queryStringToDictionary, stringifyObject */
+   queryStringToDictionary, stringifyDOMObject */
 /* globals chrome */
 
 'use strict';
@@ -118,11 +118,10 @@ function parseJSON(json) {
   return null;
 }
 
-// Stringifies an object.  This function stringifies not only own properties
-// but also attributes which are on a prototype chain.  Note that
+// Stringifies a DOM object.  This function stringifies not only own properties
+// but also DOM attributes which are on a prototype chain.  Note that
 // JSON.stringify only stringifies own properties.
-// This is needed to stringify RTCSessionDescription objects for SDP.
-function stringifyObject(object) {
+function stringifyDOMObject(object) {
   function deepCopy(src) {
     if (typeof src !== 'object') {
       return src;
