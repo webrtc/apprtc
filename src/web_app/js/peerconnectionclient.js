@@ -198,7 +198,14 @@ PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
       this.onError_.bind(this, 'setLocalDescription'));
 
   if (this.onsignalingmessage) {
-    this.onsignalingmessage(sessionDescription);
+    // Chrome version of RTCSessionDescription can't be serialized directly
+    // because it JSON.stringify won't include attributes which are on the
+    // object's prototype chain. By creating the message to serialize explicitly
+    // we can avoid the issue.
+    this.onsignalingmessage({
+      sdp: sessionDescription.sdp,
+      type: sessionDescription.type
+    });
   }
 };
 
