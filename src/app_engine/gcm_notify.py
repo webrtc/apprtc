@@ -72,9 +72,11 @@ def send_gcm_messages(gcm_ids, message, collapse_key):
                           method=urlfetch.POST,
                           headers=headers)
   end_time = time.time()
-  logging.info('Took %.3fs to send GCM message request with %d endpoints.',
+  logging.info('Took %.3fs to send GCM message request with %d endpoints. ' +
+               'Payload = %s',
                end_time - start_time,
-               len(gcm_ids))
+               len(gcm_ids),
+               payload)
   status_code = result.status_code
   if status_code != 200:
     logging.error('Failed to send GCM message. Result:%d', status_code)
