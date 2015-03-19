@@ -315,7 +315,7 @@ def add_client_to_room(request, room_id, client_id,
                         client_module.Client(False))
       if allowed_clients is not None:
         logging.info('Room ' + room_id +
-                     ' allows these clients: '.join(allowed_clients));
+                     ' allows these clients: ' + str(allowed_clients));
         for allowed_client in allowed_clients:
           room.add_allowed_client(allowed_client)
     else:

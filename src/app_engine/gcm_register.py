@@ -91,6 +91,7 @@ class BindPage(webapp2.RequestHandler):
         # added.
         if len(gcmrecord.GCMRecord.get_by_user_id(id)) > 0:
           result.append(id)
+      logging.info('Returned list: %s', str(result))
       self.response.out.write(json.dumps(result))
     else:
       self.response.out.write(constants.RESPONSE_INVALID_ARGUMENT)

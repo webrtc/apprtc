@@ -229,7 +229,9 @@ class GCMRecord(object):
     encrypted_records = GCMEncryptedRecord.get_by_gcm_key(gcm_key)
     assert len(encrypted_records) < 2
     if not encrypted_records:
+      logging.error('GCM binding not found, user_id=%s', user_id)
       return constants.RESPONSE_NOT_FOUND
+
     encrypted_record = encrypted_records[0]
     record = GCMRecord.parse_encrypted(encrypted_record.content)
     if not record:
@@ -258,6 +260,7 @@ class GCMRecord(object):
     encrypted_records = GCMEncryptedRecord.get_by_gcm_key(gcm_key)
     assert len(encrypted_records) < 2
     if not encrypted_records:
+      logging.warning('GCM binding not found, user_id=%s', user_id)
       return
     encrypted_record = encrypted_records[0]
     encrypted_record.key.delete()
@@ -271,7 +274,9 @@ class GCMRecord(object):
     encrypted_records = GCMEncryptedRecord.get_by_gcm_key(old_gcm_key)
     assert len(encrypted_records) < 2
     if not encrypted_records:
+      logging.error('GCM binding not found, user_id=%s', user_id)
       return constants.RESPONSE_NOT_FOUND
+
     encrypted_record = encrypted_records[0]
     record = GCMRecord.parse_encrypted(encrypted_record.content)
     if not record:
