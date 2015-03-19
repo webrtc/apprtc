@@ -211,6 +211,10 @@ class GCMRecord(object):
       logging.warning('Cannot update GCM binding code since already verified, '
                       'user_id=%s, gcm_id=%s', user_id, gcm_id)
       return constants.RESPONSE_INVALID_STATE
+    if record.user_id != user_id:
+      logging.error('Mismatching user id, found %s, expected %s',
+                    record.user_id, user_id)
+      return constants.RESPONSE_INVALID_USER
 
     record.code = code
     record.code_sent_time = now
@@ -282,6 +286,12 @@ class GCMRecord(object):
     if not record:
       logging.error('Error parsing encrypted record for gcm_id:%s', old_gcm_id)
       return constants.RESPONSE_INTERNAL_ERROR
+
+    if record.user_id != user_id:
+      logging.error('Mismatching user id, found %s, expected %s',
+                    record.user_id, user_id)
+      return constants.RESPONSE_INVALID_USER
+
     if record.verified:
       record.gcm_id = new_gcm_id
       record.last_modified_time = time.time()

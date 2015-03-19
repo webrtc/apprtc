@@ -108,5 +108,37 @@ class BindPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.assertEqual(['foo'], result)
     self.checkInvalidRequests('/bind/query', body.keys())
 
+  def testUpdateWithInvalidUserId(self):
+    request_1 = {
+      gcm_register.PARAM_USER_ID: 'foo',
+      gcm_register.PARAM_GCM_ID: 'bar'
+    }
+    self.makePostRequest('/bind/new', json.dumps(request_1))
+    record = gcmrecord.GCMRecord.get_by_gcm_id('bar')
+    request_1[gcm_register.PARAM_CODE] = record.code
+    self.makePostRequest('/bind/verify', json.dumps(request_1))
+
+    request_2 = {
+      gcm_register.PARAM_USER_ID: 'foo1',
+      gcm_register.PARAM_OLD_GCM_ID: 'bar',
+      gcm_register.PARAM_NEW_GCM_ID: 'bar2'
+    }
+    response = self.makePostRequest('/bind/update', json.dumps(request_2))
+    self.assertEqual(constants.RESPONSE_INVALID_USER, response.body)
+
+  def testNewWithInvalidUserId(self):
+    request_1 = {
+      gcm_register.PARAM_USER_ID: 'foo',
+      gcm_register.PARAM_GCM_ID: 'bar'
+    }
+    self.makePostRequest('/bind/new', json.dumps(request_1))
+
+    request_2 = {
+      gcm_register.PARAM_USER_ID: 'foo1',
+      gcm_register.PARAM_GCM_ID: 'bar'
+    }
+    response = self.makePostRequest('/bind/new', json.dumps(request_2))
+    self.assertEqual(constants.RESPONSE_INVALID_USER, response.body)
+
 if __name__ == '__main__':
   unittest.main()
