@@ -30,6 +30,8 @@ class BindPage(webapp2.RequestHandler):
     The gcm id is associated with the user id in the datastore together with a
     newly generated verification code.
     """
+    logging.info('Request body: %s', self.request.body)
+
     msg = util.get_message_from_json(self.request.body)
     if util.has_msg_fields(msg, ((PARAM_USER_ID, basestring),
         (PARAM_GCM_ID, basestring))):
@@ -47,6 +49,8 @@ class BindPage(webapp2.RequestHandler):
     The gcm id previously associated with the user id is replaced with the new
     gcm id in the datastore.
     """
+    logging.info('Request body: %s', self.request.body)
+
     msg = util.get_message_from_json(self.request.body)
     if util.has_msg_fields(msg, ((PARAM_USER_ID, basestring),
         (PARAM_OLD_GCM_ID, basestring), (PARAM_NEW_GCM_ID, basestring))):
@@ -61,6 +65,8 @@ class BindPage(webapp2.RequestHandler):
     Marks a registration as verified if the supplied code matches the previously
     generated code stored in the datastore.
     """
+    logging.info('Request body: %s', self.request.body)
+
     msg = util.get_message_from_json(self.request.body)
     if util.has_msg_fields(msg, ((PARAM_USER_ID, basestring),
         (PARAM_GCM_ID, basestring), (PARAM_CODE, basestring))):
@@ -75,6 +81,8 @@ class BindPage(webapp2.RequestHandler):
     Responds with a list containing the subset of the user ids in the query
     that have at least one verified gcm id associated with it.
     """
+    logging.info('Request body: %s', self.request.body)
+
     msg = util.get_message_from_json(self.request.body)
     if util.has_msg_field(msg, PARAM_USER_ID_LIST, list):
       result = []
@@ -92,6 +100,8 @@ class BindPage(webapp2.RequestHandler):
 
     Removes the supplied registration from the datastore.
     """
+    logging.info('Request body: %s', self.request.body)
+
     msg = util.get_message_from_json(self.request.body)
     if util.has_msg_fields(msg, ((PARAM_USER_ID, basestring),
         (PARAM_GCM_ID, basestring))):

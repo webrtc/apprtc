@@ -162,6 +162,7 @@ class JoinPage(webapp2.RequestHandler):
 
   def post(self, room_id):
     """Handle post request for /join."""
+    logging.info('Request body: %s', self.request.body)
 
     # Check request body to determine what action to take.
     if len(self.request.body):
