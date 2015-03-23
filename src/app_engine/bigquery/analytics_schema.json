@@ -23,5 +23,10 @@
     "name": "host",
     "type": "string",
     "mode": "nullable"
+  },
+  {
+    "name": "flow_id",
+    "type": "integer",
+    "mode": "nullable"
   }
 ]

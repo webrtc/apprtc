@@ -47,7 +47,7 @@ class Analytics(object):
     return datetime.datetime.fromtimestamp(float(time_ms)/1000.).isoformat()
 
   def report_event(self, event_type, room_id=None, time_ms=None,
-                   client_time_ms=None, host=None):
+                   client_time_ms=None, host=None, flow_id=None):
     """Report an event to BigQuery.
 
     Args:
@@ -66,6 +66,9 @@ class Analytics(object):
 
     if room_id is not None:
       event[LogField.ROOM_ID] = room_id
+
+    if flow_id is not None:
+      event[LogField.FLOW_ID] = flow_id
 
     if client_time_ms is not None:
       event[LogField.CLIENT_TIMESTAMP] = self._timestamp_from_millis(

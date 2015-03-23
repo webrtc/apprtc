@@ -16,7 +16,8 @@
     "EventField": {
       "EVENT_TYPE": "event_type",
       "ROOM_ID": "room_id",
-      "EVENT_TIME_MS": "event_time_ms"
+      "EVENT_TIME_MS": "event_time_ms",
+      "FLOW_ID": "flow_id"
     }
   }
 }

@@ -138,6 +138,7 @@ class AnalyticsTest(unittest.TestCase):
     time_s = self.now + 50
     client_time_s = self.now + 60
     host = 'super_host.domain.org:8112'
+    flow_id = 31337
 
     log_dict = self.create_log_dict({
         LogField.TIMESTAMP: '{0}'.format(
@@ -146,14 +147,16 @@ class AnalyticsTest(unittest.TestCase):
         LogField.ROOM_ID: room_id,
         LogField.CLIENT_TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-        LogField.HOST: host
+        LogField.HOST: host,
+        LogField.FLOW_ID: flow_id,
     })
 
     self.tics.report_event(event_type,
                            room_id=room_id,
                            time_ms=time_s*1000.,
                            client_time_ms=client_time_s*1000.,
-                           host=host)
+                           host=host,
+                           flow_id=flow_id)
     self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
 

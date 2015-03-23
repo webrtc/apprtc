@@ -95,6 +95,7 @@ class AnalyticsPage(webapp2.RequestHandler):
       return constants.RESPONSE_INVALID_REQUEST
 
     room_id = event.get(RequestField.EventField.ROOM_ID)
+    flow_id = event.get(RequestField.EventField.FLOW_ID)
 
     # Time that the event occurred according to the client clock.
     try:
@@ -123,6 +124,7 @@ class AnalyticsPage(webapp2.RequestHandler):
                            room_id=room_id,
                            time_ms=event_time_ms,
                            client_time_ms=client_event_time_ms,
-                           host=self.request.host)
+                           host=self.request.host,
+                           flow_id=flow_id)
 
     return constants.RESPONSE_SUCCESS

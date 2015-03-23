@@ -67,6 +67,7 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
     host = 'localhost:80'
 
     room_id = 'foo'
+    flow_id = 1337
     event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED
 
     # Test with all optional attributes.
@@ -77,6 +78,7 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
             RequestField.EventField.EVENT_TYPE: event_type,
             RequestField.EventField.EVENT_TIME_MS: event_time_ms,
             RequestField.EventField.ROOM_ID: room_id,
+            RequestField.EventField.FLOW_ID: flow_id,
             }
         }
 
@@ -89,7 +91,8 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
                            room_id=room_id,
                            time_ms=event_time_server_ms,
                            client_time_ms=event_time_ms,
-                           host=host)
+                           host=host,
+                           flow_id=flow_id,)
     self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
     # Test without optional attributes.
@@ -111,7 +114,8 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
                            room_id=None,
                            time_ms=event_time_server_ms,
                            client_time_ms=event_time_ms,
-                           host=host)
+                           host=host,
+                           flow_id=None)
 
     self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
