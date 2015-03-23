@@ -85,6 +85,7 @@ class AnalyticsPage(webapp2.RequestHandler):
 
   def _handle_event(self, msg):
     request_time_ms = msg.get(RequestField.REQUEST_TIME_MS)
+    client_type = msg.get(RequestField.CLIENT_TYPE)
 
     event = msg.get(RequestField.EVENT)
     if event is None:
@@ -125,6 +126,6 @@ class AnalyticsPage(webapp2.RequestHandler):
                            time_ms=event_time_ms,
                            client_time_ms=client_event_time_ms,
                            host=self.request.host,
-                           flow_id=flow_id)
+                           flow_id=flow_id, client_type=client_type)
 
     return constants.RESPONSE_SUCCESS
