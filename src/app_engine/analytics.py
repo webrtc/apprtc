@@ -47,7 +47,7 @@ class Analytics(object):
     return datetime.datetime.fromtimestamp(float(time_ms)/1000.).isoformat()
 
   def report_event(self, event_type, room_id=None, time_ms=None,
-                   client_time_ms=None, host=None):
+                   client_time_ms=None, host=None, flow_id=None):
     """Report an event to BigQuery.
 
     Args:
@@ -58,6 +58,7 @@ class Analytics(object):
       client_time_ms: Time that an event occurred on the client, if the event
                       originated on the client.
       host: Hostname this is being logged on.
+      flow_id: ID to group a set of events together.
     """
     # Be forgiving. If an event is a string or is an unknown number we
     # still log it but log it as the string value.
@@ -66,6 +67,9 @@ class Analytics(object):
 
     if room_id is not None:
       event[LogField.ROOM_ID] = room_id
+
+    if flow_id is not None:
+      event[LogField.FLOW_ID] = flow_id
 
     if client_time_ms is not None:
       event[LogField.CLIENT_TIMESTAMP] = self._timestamp_from_millis(
