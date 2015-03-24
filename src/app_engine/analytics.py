@@ -58,6 +58,7 @@ class Analytics(object):
       client_time_ms: Time that an event occurred on the client, if the event
                       originated on the client.
       host: Hostname this is being logged on.
+      flow_id: ID to group a set of events together.
     """
     # Be forgiving. If an event is a string or is an unknown number we
     # still log it but log it as the string value.
