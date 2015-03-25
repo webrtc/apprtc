@@ -77,7 +77,7 @@ class AnalyticsTest(unittest.TestCase):
         LogField.ROOM_ID: room_id,
         LogField.CLIENT_TIMESTAMP: '{0}'.format(
             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
-        LogField.HOST: host
+        LogField.HOST: host,
     })
 
     self.tics.report_event(event_type,
@@ -139,6 +139,7 @@ class AnalyticsTest(unittest.TestCase):
     client_time_s = self.now + 60
     host = 'super_host.domain.org:8112'
     flow_id = 31337
+    client_type = 'android_on_ios'
 
     log_dict = self.create_log_dict({
         LogField.TIMESTAMP: '{0}'.format(
@@ -149,6 +150,7 @@ class AnalyticsTest(unittest.TestCase):
             datetime.datetime.fromtimestamp(client_time_s).isoformat()),
         LogField.HOST: host,
         LogField.FLOW_ID: flow_id,
+        LogField.CLIENT_TYPE: client_type,
     })
 
     self.tics.report_event(event_type,
@@ -156,7 +158,8 @@ class AnalyticsTest(unittest.TestCase):
                            time_ms=time_s*1000.,
                            client_time_ms=client_time_s*1000.,
                            host=host,
-                           flow_id=flow_id)
+                           flow_id=flow_id,
+                           client_type=client_type)
     self.assertEqual(log_dict, self.bigquery.insertAll.last_kwargs)
 
 

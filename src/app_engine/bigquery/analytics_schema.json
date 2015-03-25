@@ -28,5 +28,10 @@
     "name": "flow_id",
     "type": "integer",
     "mode": "nullable"
+  },
+  {
+    "name": "client_type",
+    "type": "string",
+    "mode": "nullable"
   }
 ]

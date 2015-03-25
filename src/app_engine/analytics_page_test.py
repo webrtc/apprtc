@@ -3,7 +3,7 @@ import time
 import unittest
 
 import analytics
-from analytics_enums import RequestField
+from analytics_enums import RequestField, EventType, ClientType
 import analytics_page
 import apprtc
 import constants
@@ -68,12 +68,14 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     room_id = 'foo'
     flow_id = 1337
-    event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED
+    event_type = EventType.ICE_CONNECTION_STATE_CONNECTED
+    client_type = ClientType.ANDROID
 
     # Test with all optional attributes.
     request = {
         RequestField.TYPE: RequestField.MessageType.EVENT,
         RequestField.REQUEST_TIME_MS: request_time_ms,
+        RequestField.CLIENT_TYPE: client_type,
         RequestField.EVENT: {
             RequestField.EventField.EVENT_TYPE: event_type,
             RequestField.EventField.EVENT_TIME_MS: event_time_ms,
@@ -92,7 +94,8 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
                            time_ms=event_time_server_ms,
                            client_time_ms=event_time_ms,
                            host=host,
-                           flow_id=flow_id,)
+                           flow_id=flow_id,
+                           client_type=client_type,)
     self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
     # Test without optional attributes.
@@ -115,7 +118,8 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
                            time_ms=event_time_server_ms,
                            client_time_ms=event_time_ms,
                            host=host,
-                           flow_id=None)
+                           flow_id=None,
+                           client_type=None)
 
     self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
@@ -128,7 +132,7 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     # Test missing individual required attributes.
     room_id = 'foo'
-    event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED
+    event_type = EventType.ICE_CONNECTION_STATE_CONNECTED
     time_ms = 1337
 
     # Fully populated event and request.
