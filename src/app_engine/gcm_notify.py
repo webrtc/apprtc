@@ -17,6 +17,7 @@ GCM_API_KEY = None
 GCM_API_KEY_PATH = 'gcm_api_key'
 GCM_API_URL = 'https://android.googleapis.com/gcm/send'
 
+GCM_MESSAGE_REGISTRATION_ID_KEY = 'registrationId'
 GCM_MESSAGE_TYPE_BYE = 'BYE'
 GCM_MESSAGE_TYPE_INVITE = constants.ACK_TYPE_INVITE
 GCM_MESSAGE_TYPE_RINGING = 'RINGING'
@@ -45,107 +46,138 @@ def get_gcm_api_key():
   return GCM_API_KEY
 
 
-def send_gcm_messages(gcm_ids, message, collapse_key):
-  """Sends the message to each endpoint specified in gcm_ids.
+class GCMMessage(object):
+  def __init__(self, gcm_id, registration_id):
+    self.gcm_id = gcm_id
+    self.registration_id = registration_id
 
-  Makes a synchronous post to the GCM server with the appropriate payload
-  format.
+  def get_gcm_payload(self):
+    # Payload for GCM server. Endpoints will only see data field.
+    payload_dict = {
+        'data': self.get_data(),
+        'registration_ids': [self.gcm_id],
+        'time_to_live': GCM_TIME_TO_LIVE_IN_SECONDS
+    }
+    collapse_key = self.get_collapse_key()
+    if collapse_key:
+      payload_dict['collapse_key'] = collapse_key
+    return json.dumps(payload_dict)
+
+  def get_data(self):
+    return {GCM_MESSAGE_REGISTRATION_ID_KEY: self.registration_id}
+
+  def get_collapse_key(self):
+    return None
+
+
+class GCMInviteMessage(GCMMessage):
+  def __init__(self, gcm_id, registration_id, room_id, caller_id, metadata):
+    super(GCMInviteMessage, self).__init__(gcm_id, registration_id)
+    self.room_id = room_id
+    self.caller_id = caller_id
+    self.metadata = metadata
+
+  def get_data(self):
+    data = super(GCMInviteMessage, self).get_data()
+    data[GCM_MESSAGE_TYPE_KEY] = GCM_MESSAGE_TYPE_INVITE
+    data[constants.PARAM_ROOM_ID] = self.room_id,
+    data[constants.PARAM_CALLER_ID] = self.caller_id,
+    data[constants.PARAM_METADATA] = self.metadata,
+    return data
+
+  def get_collapse_key(self):
+    return self.room_id
+
+
+class GCMByeMessage(GCMMessage):
+  def __init__(self, gcm_id, registration_id, room_id, reason, metadata=None):
+    super(GCMByeMessage, self).__init__(gcm_id, registration_id)
+    self.room_id = room_id
+    self.reason = reason
+    self.metadata = metadata
+
+  def get_data(self):
+    data = super(GCMByeMessage, self).get_data()
+    data[GCM_MESSAGE_TYPE_KEY] = GCM_MESSAGE_TYPE_BYE
+    data[constants.PARAM_ROOM_ID] = self.room_id
+    data[GCM_MESSAGE_REASON_KEY] = self.reason
+    data[constants.PARAM_METADATA] = self.metadata
+    return data
+
+  def get_collapse_key(self):
+    return self.room_id
+
+
+class GCMRingingMessage(GCMMessage):
+  def __init__(self, gcm_id, registration_id, room_id):
+    super(GCMRingingMessage, self).__init__(gcm_id, registration_id)
+    self.room_id = room_id
+
+  def get_data(self):
+    data = super(GCMRingingMessage, self).get_data()
+    data[GCM_MESSAGE_TYPE_KEY] = GCM_MESSAGE_TYPE_RINGING
+    data[constants.PARAM_ROOM_ID] = self.room_id
+    return data
+
+  def get_collapse_key(self):
+    return self.room_id
+
+
+def send_gcm_messages(messages):
+  """Sends each GCMMessage to its endpoint.
+
+  Makes an asynchronous post to the GCM server for each message. GCM server will
+  then deliver the messages the each endpoint. Will block until all posts
+  complete or fail.
 
   Args:
-    gcm_ids: List of verified GCM ids.
-    message: Dictionary containing custom data.
-    collapse_key: String used for GCM collapse key.
+    messages: List of GCMMessage.
   """
+  if not messages:
+    return
+
   gcm_api_key = get_gcm_api_key()
   if gcm_api_key is None:
     logging.warning('Did not send GCM message due to missing API key.')
     return
 
+  def handle_rpc_result(rpc, payload):
+    result = rpc.get_result()
+    status_code = result.status_code
+    if status_code != 200:
+      logging.error('Failed to send GCM message.')
+      logging.error('Result: %d\nPayload: %s\nResponse: %s',
+                    status_code, payload, result.content)
+      return
+    # It's possible to get a 200 but receive an error from GCM server. This will
+    # be recorded in the response.
+    logging.info('GCM request result:\n%s', result.content)
+
+  # Create async requests.
   headers = {
       'Content-Type': 'application/json',
       'Authorization': ('key=%s' % gcm_api_key)
   }
-  payload = create_gcm_payload(gcm_ids, collapse_key, message)
+  rpcs = []
   start_time = time.time()
-  # TODO(tkchin): investigate setting follow_redirects=False.
-  result = urlfetch.fetch(url=GCM_API_URL,
-                          payload=payload,
-                          method=urlfetch.POST,
-                          headers=headers)
-  end_time = time.time()
-  logging.info('Took %.3fs to send GCM message request with %d endpoints. '
-               'Payload = %s',
-               end_time - start_time,
-               len(gcm_ids),
-               payload)
-  status_code = result.status_code
-  if status_code != 200:
-    logging.error('Failed to send GCM message. Result:%d', status_code)
-    logging.error('Response: %s', result.content)
-    return
-  # It's possible to get a 200 but receive an error from GCM server. This will
-  # be recorded in the response.
-  logging.info('GCM request result:\n%s', result.content)
+  for message in messages:
+    payload = message.get_gcm_payload()
+    rpc = urlfetch.create_rpc()
+    rpc.callback = lambda: handle_rpc_result(rpc, payload)
+    # TODO(tkchin): investigate setting follow_redirects=False.
+    urlfetch.make_fetch_call(
+        rpc, GCM_API_URL, payload=payload, method=urlfetch.POST,
+        headers=headers)
+    logging.info('Sending message with payload: %s', payload)
+    rpcs.append(rpc)
 
-
-def create_gcm_payload(gcm_ids, collapse_key, data):
-  return json.dumps({
-      'data': data,
-      'registration_ids': gcm_ids,
-      'collapse_key': collapse_key,
-      'time_to_live': GCM_TIME_TO_LIVE_IN_SECONDS
-  })
-
-
-def create_invite_message(room_id, caller_id, metadata):
-  return {
-      GCM_MESSAGE_TYPE_KEY: GCM_MESSAGE_TYPE_INVITE,
-      constants.PARAM_ROOM_ID: room_id,
-      constants.PARAM_CALLER_ID: caller_id,
-      constants.PARAM_METADATA: metadata,
-  }
-
-
-def send_invites(gcm_ids, room_id, caller_id, metadata):
-  """Create and send the invite message to the callee.
-
-  Args:
-    gcm_ids: ids to send the message to.
-    room_id: id of the room to join.
-    caller_id: the callable public id of the caller.
-    metadata: value passed through from caller to callee. Used for call
-        specific data that the server does not need to know about, such
-        as creating an audio only call.
-
-  Returns:
-    The result of send_gcm_messages.
-
-  """
-  message = create_invite_message(room_id, caller_id, metadata)
-  return send_gcm_messages(gcm_ids, message, room_id)
-
-
-def create_bye_message(room_id, reason, metadata=None):
-  return {
-      GCM_MESSAGE_TYPE_KEY: GCM_MESSAGE_TYPE_BYE,
-      constants.PARAM_ROOM_ID: room_id,
-      GCM_MESSAGE_REASON_KEY: reason,
-      constants.PARAM_METADATA: metadata,
-  }
-
-
-def send_byes(gcm_ids, room_id, reason, metadata=None):
-  message = create_bye_message(room_id, reason, metadata)
-  return send_gcm_messages(gcm_ids, message, room_id)
-
-
-def create_ringing_message(room_id):
-  return {
-      GCM_MESSAGE_TYPE_KEY: GCM_MESSAGE_TYPE_RINGING,
-      constants.PARAM_ROOM_ID: room_id
-  }
-
-
-def send_ringing(gcm_ids, room_id):
-  message = create_ringing_message(room_id)
-  return send_gcm_messages(gcm_ids, message, room_id)
+  # Wait for all the requests to finish.
+  rpc_wait_start_time = time.time()
+  for rpc in rpcs:
+    rpc.wait()
+  rpc_wait_end_time = time.time()
+  logging.info('Took %.3fs to send %d GCM messages, spent %.3fs waiting for '
+               'rpcs to complete.',
+               rpc_wait_end_time - start_time,
+               len(rpcs),
+               rpc_wait_end_time - rpc_wait_start_time)

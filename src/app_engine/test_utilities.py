@@ -76,18 +76,12 @@ class BasePageHandlerTest(unittest.TestCase):
     self.testbed.deactivate()
     del self.report_event_replacement
 
-  def checkInvalidRequests(self, path, params, jsonResult=False):
+  def checkInvalidRequests(self, path, params):
     body = {x: '' for x in params}
     while body:
       response = self.makePostRequest(path, json.dumps(body))
-      if jsonResult:
-        self.verifyResultCode(response, constants.RESPONSE_INVALID_ARGUMENT)
-      else:
-        self.assertEqual(constants.RESPONSE_INVALID_ARGUMENT, response.body)
+      self.verifyResultCode(response, constants.RESPONSE_INVALID_ARGUMENT)
       body.popitem()
-
-  def checkInvalidRequestsJsonResult(self, path, params):
-    self.checkInvalidRequests(path, params, jsonResult=True)
 
   def addTestData(self):
     records = [
@@ -122,30 +116,11 @@ class BasePageHandlerTest(unittest.TestCase):
   def makePostRequest(self, path, body=''):
     return self.test_app.post(path, body, headers={'User-Agent': 'Safari'})
 
-  def createGCMInvitePayload(self, gcm_ids, room_id, caller_id, metadata):
-    return gcm_notify.create_gcm_payload(
-        gcm_ids,
-        room_id,
-        gcm_notify.create_invite_message(room_id, caller_id, metadata))
-
-  def createGCMAcceptedPayload(self, gcm_ids, room_id):
-    message = gcm_notify.create_bye_message(
-        room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_ACCEPTED)
-    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
-
-  def createGCMDeclinedPayload(self, gcm_ids, room_id, metadata=None):
-    message = gcm_notify.create_bye_message(
-        room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED, metadata)
-    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
-
-  def createGCMHangupPayload(self, gcm_ids, room_id):
-    message = gcm_notify.create_bye_message(
-        room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_HANGUP)
-    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
-
-  def createGCMRingingPayload(self, gcm_ids, room_id):
-    message = gcm_notify.create_ringing_message(room_id)
-    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
+  def getRegistrationId(self, gcm_id):
+    record = gcmrecord.GCMRecord.get_by_gcm_id(gcm_id)
+    if not record:
+      return None
+    return record.registration_id
 
   def clearGCMPayloads(self):
     self.urlfetch_stub.gcm_payloads = []

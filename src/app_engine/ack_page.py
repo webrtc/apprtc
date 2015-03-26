@@ -13,6 +13,7 @@ import webapp2
 
 import constants
 import gcm_notify
+from gcm_notify import GCMRingingMessage
 import gcmrecord
 import room
 import util
@@ -74,7 +75,6 @@ class AckPage(webapp2.RequestHandler):
       self.report_error(constants.RESPONSE_INVALID_CALLEE)
       return
 
-    # Notify caller that callee has acknowledged the call and is ringing.
     caller_gcm_id = call_room.get_other_client_id(callee_gcm_id)
     if not caller_gcm_id:
       logging.error('Could not find caller gcm id when trying to'
@@ -83,9 +83,18 @@ class AckPage(webapp2.RequestHandler):
       self.report_error(constants.RESPONSE_INVALID_ROOM)
       return
 
-    gcm_ids_to_notify = [caller_gcm_id]
-
-    gcm_notify.send_ringing(gcm_ids_to_notify, room_id)
+    # Get caller record.
+    caller_record = gcmrecord.GCMRecord.get_by_gcm_id(caller_gcm_id, False)
+    if not caller_record:
+      logging.error('Could not find caller record for gcm_id: %s',
+                    caller_gcm_id)
+      self.report_error(constants.RESPONSE_INTERNAL_ERROR)
+      return
+    # Notify caller that callee has acknowledged the call and is ringing.
+    gcm_message = GCMRingingMessage(caller_gcm_id,
+                                    caller_record.registration_id,
+                                    room_id)
+    gcm_notify.send_gcm_messages([gcm_message])
 
     logging.info('User ' + callee_id + ' acknowledged call ' +
                  'from gcmId ' + callee_gcm_id)

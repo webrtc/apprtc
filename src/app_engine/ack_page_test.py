@@ -4,6 +4,7 @@ import json
 import unittest
 
 import constants
+from gcm_notify import GCMRingingMessage
 import test_utilities
 
 
@@ -42,12 +43,13 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.clearGCMPayloads()
     self.requestAckInviteAndVerify('callee1gcm1', room_id,
                                    constants.RESPONSE_SUCCESS)
-
-    expected_payloads = [
-        self.createGCMRingingPayload(
-            ['caller1gcm1'],
-            room_id),
-    ]
+    expected_payloads = []
+    for gcm_id in ['caller1gcm1']:
+      registration_id = self.getRegistrationId(gcm_id)
+      message = GCMRingingMessage(gcm_id,
+                                  registration_id,
+                                  room_id)
+      expected_payloads.append(message.get_gcm_payload())
     self.verifyGCMPayloads(expected_payloads)
 
     self.requestAckInviteAndVerify('callee1gcm2', room_id,
@@ -81,7 +83,7 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
         constants.PARAM_CALLEE_GCM_ID: 'callee1gcm1',
         constants.PARAM_ROOM_ID: 'room',
     }
-    self.checkInvalidRequestsJsonResult('/ack', body.keys())
+    self.checkInvalidRequests('/ack', body.keys())
 
   def requestAckInviteAndVerify(self, calleeGcmId, roomId, expectedCode):
     body = {

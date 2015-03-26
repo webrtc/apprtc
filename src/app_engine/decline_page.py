@@ -1,5 +1,3 @@
-#!/usr/bin/python2.7
-#
 # Copyright 2015 Google Inc. All Rights Reserved.
 
 """AppRTC Decline Call Handler.
@@ -8,11 +6,12 @@ This module implements declining a call.
 """
 
 import json
-
+import logging
 import webapp2
 
 import constants
 import gcm_notify
+from gcm_notify import GCMByeMessage
 from gcmrecord import GCMRecord
 import room
 import util
@@ -52,19 +51,34 @@ class DeclinePage(webapp2.RequestHandler):
       self.write_response(constants.RESPONSE_INVALID_CALLEE)
       return
 
-    # Notify caller and other callee endpoints about the call decline.
+    # Retrieve caller record and send notifications.
+    caller_record = GCMRecord.get_by_gcm_id(caller_gcm_id, False)
+    gcm_messages = []
+    reason = gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED
     # Metadata is passed from callee to caller and other endpoints. Used to
     # indicate why the call was declined, such as being in another call.
     metadata = msg.get(constants.PARAM_METADATA)
-    gcm_ids_to_notify = [caller_gcm_id]
+    if not caller_record:
+      logging.error('Unable to find caller record for gcm_id: %s',
+                    caller_gcm_id)
+      # We still want to attempt to notify callees despite bad state.
+      result = constants.RESPONSE_INTERNAL_ERROR
+    else:
+      # Notify caller about the call decline.
+      gcm_messages.append(GCMByeMessage(caller_gcm_id,
+                                        caller_record.registration_id,
+                                        room_id,
+                                        reason,
+                                        metadata))
+    # Notify other callee endpoints about the call decline.
     for record in callee_records:
       if record.gcm_id != callee_gcm_id:
-        gcm_ids_to_notify.append(record.gcm_id)
-    gcm_notify.send_byes(
-        gcm_ids_to_notify,
-        room_id,
-        gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED,
-        metadata)
+        gcm_messages.append(GCMByeMessage(record.gcm_id,
+                                          record.registration_id,
+                                          room_id,
+                                          reason,
+                                          metadata))
+    gcm_notify.send_gcm_messages(gcm_messages)
 
     self.write_response(result)
 

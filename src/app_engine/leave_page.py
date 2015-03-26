@@ -14,6 +14,8 @@ import webapp2
 
 import constants
 import gcm_notify
+from gcm_notify import GCMByeMessage
+import gcmrecord
 import room as room_module
 import util
 
@@ -51,7 +53,18 @@ class LeaveDirectCallPage(webapp2.RequestHandler):
       # This is the caller hanging up. Send notification to all other endpoints.
       gcm_ids_to_notify = [gcm_id for gcm_id in room.allowed_clients
                            if gcm_id != client_gcm_id]
-      gcm_notify.send_byes(
-          gcm_ids_to_notify, room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_HANGUP)
+      gcm_messages = []
+      for gcm_id in gcm_ids_to_notify:
+        record = gcmrecord.GCMRecord.get_by_gcm_id(gcm_id)
+        if not record:
+          logging.error('Failed to find record for gcm id: %s', gcm_id)
+          self.write_response(constants.RESPONSE_INTERNAL_ERROR)
+          return
+        gcm_message = GCMByeMessage(gcm_id,
+                                    record.registration_id,
+                                    room_id,
+                                    gcm_notify.GCM_MESSAGE_REASON_TYPE_HANGUP)
+        gcm_messages.append(gcm_message)
+      gcm_notify.send_gcm_messages(gcm_messages)
 
     self.write_response(result)

@@ -33,7 +33,7 @@ class DeclinePageHandlerTest(test_utilities.BasePageHandlerTest):
     body = {
         constants.PARAM_CALLEE_GCM_ID: 'callee1gcm1'
     }
-    self.checkInvalidRequestsJsonResult('/decline/room1', body.keys())
+    self.checkInvalidRequests('/decline/room1', body.keys())
 
   def testDeclineRoomNotFound(self):
     self.addTestData()

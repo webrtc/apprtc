@@ -26,6 +26,7 @@ Some notes:
 import json
 import logging
 import time
+import uuid
 
 import constants
 from encryptor import Encryptor
@@ -68,6 +69,7 @@ class GCMRecord(object):
   CODE_SENT_TIME_KEY = 'code_sent_time'
   VERIFIED_KEY = 'verified'
   LAST_MODIFIED_TIME_KEY = 'last_modified_time'
+  REGISTRATION_ID_KEY = 'registration_id'
 
   def __init__(self, user_id='', gcm_id='', code='', code_sent_time=0,
                verified=False, last_modified_time=0):
@@ -77,6 +79,8 @@ class GCMRecord(object):
     self.code_sent_time = code_sent_time
     self.verified = verified
     self.last_modified_time = last_modified_time
+    # Used to uniquely identify a verified registration.
+    self.registration_id = None
 
   def get_json(self):
     """Returns the JSON representation of this record."""
@@ -86,7 +90,8 @@ class GCMRecord(object):
         GCMRecord.CODE_KEY: self.code,
         GCMRecord.CODE_SENT_TIME_KEY: self.code_sent_time,
         GCMRecord.VERIFIED_KEY: self.verified,
-        GCMRecord.LAST_MODIFIED_TIME_KEY: self.last_modified_time
+        GCMRecord.LAST_MODIFIED_TIME_KEY: self.last_modified_time,
+        GCMRecord.REGISTRATION_ID_KEY: self.registration_id
     }
     return json.dumps(content_dictionary)
 
@@ -97,7 +102,9 @@ class GCMRecord(object):
       content_dictionary = json.loads(json_string)
       required_keys = [
           cls.USER_ID_KEY, cls.GCM_ID_KEY, cls.CODE_KEY, cls.CODE_SENT_TIME_KEY,
-          cls.VERIFIED_KEY, cls.LAST_MODIFIED_TIME_KEY
+          cls.VERIFIED_KEY, cls.LAST_MODIFIED_TIME_KEY,
+          # TODO(tkchin): add registration id once we clear the store.
+          # cls.REGISTRATION_ID_KEY,
       ]
       if not all([key in content_dictionary for key in required_keys]):
         logging.error('GCMRecord JSON missing required fields.')
@@ -112,6 +119,7 @@ class GCMRecord(object):
     record.code_sent_time = content_dictionary[cls.CODE_SENT_TIME_KEY]
     record.verified = content_dictionary[cls.VERIFIED_KEY]
     record.last_modified_time = content_dictionary[cls.LAST_MODIFIED_TIME_KEY]
+    record.registration_id = content_dictionary.get(cls.REGISTRATION_ID_KEY)
     return record
 
   def get_encrypted(self):
@@ -234,27 +242,31 @@ class GCMRecord(object):
     assert len(encrypted_records) < 2
     if not encrypted_records:
       logging.error('GCM binding not found, user_id=%s', user_id)
-      return constants.RESPONSE_NOT_FOUND
+      return (constants.RESPONSE_NOT_FOUND, None)
 
     encrypted_record = encrypted_records[0]
     record = GCMRecord.parse_encrypted(encrypted_record.content)
     if not record:
       logging.error('Error parsing encrypted record for gcm_id:%s', gcm_id)
-      return constants.RESPONSE_INTERNAL_ERROR
+      return (constants.RESPONSE_INTERNAL_ERROR, None)
     if record.verified:
       logging.warning('GCM binding already verified, user_id=%s, gcm_id=%s',
                       user_id, gcm_id)
-      return constants.RESPONSE_INVALID_STATE
+      return (constants.RESPONSE_INVALID_STATE, None)
     if record.code == code:
+      # On successful verification, assign a unique identifier for this
+      # registration. This will not change even if gcm id changes and is
+      # meant to uniquely identify app installations.
+      record.registration_id = str(uuid.uuid1())
       record.verified = True
       record.last_modified_time = time.time()
       encrypted_record.content = record.get_encrypted()
       encrypted_record.put()
       logging.info(
           'GCM binding verified, user_id=%s, gcm_id=%s', user_id, gcm_id)
-      return constants.RESPONSE_SUCCESS
+      return (constants.RESPONSE_SUCCESS, record.registration_id)
     else:
-      return constants.RESPONSE_INVALID_CODE
+      return (constants.RESPONSE_INVALID_CODE, None)
 
   @classmethod
   @ndb.transactional(retries=100)

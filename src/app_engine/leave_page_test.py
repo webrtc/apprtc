@@ -12,7 +12,7 @@ class LeavePageHandlerTest(test_utilities.BasePageHandlerTest):
     body = {
         constants.PARAM_USER_GCM_ID: 'callee1gcm1'
     }
-    self.checkInvalidRequestsJsonResult('/leave/room1', body.keys())
+    self.checkInvalidRequests('/leave/room1', body.keys())
 
   def testLeaveNoRoom(self):
     self.addTestData()

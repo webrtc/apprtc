@@ -9,10 +9,13 @@ This module implements the call join page.
 
 import json
 import logging
+
 import webapp2
 
 import constants
 import gcm_notify
+from gcm_notify import GCMByeMessage
+from gcm_notify import GCMInviteMessage
 import gcmrecord
 import parameter_handling
 import room
@@ -97,7 +100,13 @@ class JoinPage(webapp2.RequestHandler):
     # Metadata is passed from caller to callee. Used for call metadata that
     # the server doesn't need to understand, such as audio only call.
     metadata = msg.get(constants.PARAM_METADATA)
-    gcm_notify.send_invites(callee_gcm_ids, room_id, caller_id, metadata)
+    gcm_messages = [GCMInviteMessage(record.gcm_id,
+                                     record.registration_id,
+                                     room_id,
+                                     caller_id,
+                                     metadata)
+                    for record in callee_records]
+    gcm_notify.send_gcm_messages(gcm_messages)
 
     self.write_room_parameters(
         room_id, result['session_id'], result['messages'],
@@ -146,10 +155,13 @@ class JoinPage(webapp2.RequestHandler):
       return
 
     # Notify callee's other endpoints that an accept has been received.
-    gcm_ids_to_notify = [record.gcm_id for record in callee_records
-                         if record.gcm_id != callee_gcm_id]
-    gcm_notify.send_byes(
-        gcm_ids_to_notify, room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_ACCEPTED)
+    gcm_messages = [GCMByeMessage(record.gcm_id,
+                                  record.registration_id,
+                                  room_id,
+                                  gcm_notify.GCM_MESSAGE_REASON_TYPE_ACCEPTED)
+                    for record in callee_records
+                    if record.gcm_id != callee_gcm_id]
+    gcm_notify.send_gcm_messages(gcm_messages)
 
     self.write_room_parameters(
         room_id, result['session_id'], result['messages'],
