@@ -50,7 +50,6 @@ Analytics.prototype.reportEvent = function(eventType, roomId, flowId) {
   if (flowId) {
     eventObj[enums.RequestField.EventField.FLOW_ID] = flowId;
   }
-  trace('Reporting event: ' + eventObj);
   this.sendEventRequest_(eventObj);
 };
 
@@ -67,7 +66,6 @@ Analytics.prototype.sendEventRequest_ = function(eventObj) {
 
   sendAsyncUrlRequest('POST', this.analyticsPath_,
       JSON.stringify(request)).then(function() {
-        trace('Successfully sent event.');
       }.bind(this), function(error) {
         trace('Failed to send event request: ' + error.message);
       }.bind(this));
