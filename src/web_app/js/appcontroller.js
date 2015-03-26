@@ -322,7 +322,7 @@ AppController.prototype.transitionToActive_ = function() {
 };
 
 AppController.prototype.transitionToWaiting_ = function() {
-   // Stop waiting for remote video.
+  // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
 
   this.hide_(this.hangupSvg_);
@@ -349,7 +349,7 @@ AppController.prototype.transitionToWaiting_ = function() {
 };
 
 AppController.prototype.transitionToDone_ = function() {
-   // Stop waiting for remote video.
+  // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
   this.deactivate_(this.localVideo_);
   this.deactivate_(this.remoteVideo_);
