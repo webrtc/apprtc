@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.7
 #
 # Copyright 2015 Google Inc. All Rights Reserved.
 
@@ -8,17 +8,18 @@ This module implements declining a call.
 """
 
 import json
-import logging
+
 import webapp2
 
 import constants
 import gcm_notify
+from gcmrecord import GCMRecord
 import room
 import util
 
-from gcmrecord import GCMRecord
 
 class DeclinePage(webapp2.RequestHandler):
+
   def write_response(self, result):
     self.response.write(json.dumps({
         'result': result
@@ -52,12 +53,18 @@ class DeclinePage(webapp2.RequestHandler):
       return
 
     # Notify caller and other callee endpoints about the call decline.
+    # Metadata is passed from callee to caller and other endpoints. Used to
+    # indicate why the call was declined, such as being in another call.
+    metadata = msg.get(constants.PARAM_METADATA)
     gcm_ids_to_notify = [caller_gcm_id]
     for record in callee_records:
       if record.gcm_id != callee_gcm_id:
         gcm_ids_to_notify.append(record.gcm_id)
     gcm_notify.send_byes(
-        gcm_ids_to_notify, room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED)
+        gcm_ids_to_notify,
+        room_id,
+        gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED,
+        metadata)
 
     self.write_response(result)
 

@@ -19,6 +19,7 @@ GCM_API_URL = 'https://android.googleapis.com/gcm/send'
 
 GCM_MESSAGE_TYPE_BYE = 'BYE'
 GCM_MESSAGE_TYPE_INVITE = 'INVITE'
+GCM_MESSAGE_TYPE_RINGING = 'RINGING'
 GCM_MESSAGE_TYPE_KEY = 'type'
 GCM_MESSAGE_REASON_KEY = 'reason'
 GCM_MESSAGE_REASON_TYPE_DECLINED = 'calleeDeclined'
@@ -72,7 +73,7 @@ def send_gcm_messages(gcm_ids, message, collapse_key):
                           method=urlfetch.POST,
                           headers=headers)
   end_time = time.time()
-  logging.info('Took %.3fs to send GCM message request with %d endpoints. ' +
+  logging.info('Took %.3fs to send GCM message request with %d endpoints. '
                'Payload = %s',
                end_time - start_time,
                len(gcm_ids),
@@ -124,14 +125,27 @@ def send_invites(gcm_ids, room_id, caller_id, metadata):
   return send_gcm_messages(gcm_ids, message, room_id)
 
 
-def create_bye_message(room_id, reason):
+def create_bye_message(room_id, reason, metadata=None):
   return {
       GCM_MESSAGE_TYPE_KEY: GCM_MESSAGE_TYPE_BYE,
       constants.PARAM_ROOM_ID: room_id,
-      GCM_MESSAGE_REASON_KEY: reason
+      GCM_MESSAGE_REASON_KEY: reason,
+      constants.PARAM_METADATA: metadata,
   }
 
 
-def send_byes(gcm_ids, room_id, reason):
-  message = create_bye_message(room_id, reason)
+def send_byes(gcm_ids, room_id, reason, metadata=None):
+  message = create_bye_message(room_id, reason, metadata)
+  return send_gcm_messages(gcm_ids, message, room_id)
+
+
+def create_ringing_message(room_id):
+  return {
+      GCM_MESSAGE_TYPE_KEY: GCM_MESSAGE_TYPE_RINGING,
+      constants.PARAM_ROOM_ID: room_id
+  }
+
+
+def send_ringing(gcm_ids, room_id):
+  message = create_ringing_message(room_id)
   return send_gcm_messages(gcm_ids, message, room_id)

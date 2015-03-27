@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.7
 #
 # Copyright 2011 Google Inc. All Rights Reserved.
 
@@ -32,6 +32,7 @@ jinja_environment = jinja2.Environment(
 
 
 class MainPage(webapp2.RequestHandler):
+
   def write_response(self, target_page, params):
     template = jinja_environment.get_template(target_page)
     content = template.render(params)
@@ -48,6 +49,7 @@ class MainPage(webapp2.RequestHandler):
 
 
 class RoomPage(webapp2.RequestHandler):
+
   def write_response(self, target_page, params=None):
     if params is None:
       params = {}
@@ -80,6 +82,7 @@ class RoomPage(webapp2.RequestHandler):
 
 
 class ParamsPage(webapp2.RequestHandler):
+
   def get(self):
     # Return room independent room parameters.
     params = parameter_handling.get_room_parameters(self.request,
@@ -90,6 +93,7 @@ class ParamsPage(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     (r'/a/', analytics_page.AnalyticsPage),
+    (r'/ack', join_page.AckPage),
     (r'/compute/(\w+)/(\S+)/(\S+)', compute_page.ComputePage),
     (r'/decline/(\w+)', decline_page.DeclinePage),
     (r'/join/(\w+)', join_page.JoinPage),
