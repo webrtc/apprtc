@@ -51,6 +51,14 @@ function maybeSetOpusOptions(sdp, params) {
     sdp = removeCodecParam(sdp, 'opus/48000', 'useinbandfec');
   }
 
+  // Set Opus DTX, if opusdtx is true, unset it, if opusdtx is false, and
+  // do nothing if otherwise.
+  if (params.opusDtx === 'true') {
+    sdp = setCodecParam(sdp, 'opus/48000', 'usedtx', '1');
+  } else if (params.opusDtx === 'false') {
+    sdp = removeCodecParam(sdp, 'opus/48000', 'usedtx');
+  }
+
   // Set Opus maxplaybackrate, if requested.
   if (params.opusMaxPbr) {
     sdp = setCodecParam(
