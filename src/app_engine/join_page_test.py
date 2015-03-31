@@ -9,6 +9,7 @@ import test_utilities
 
 
 class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
+
   def verifyJoinSuccessResponse(self, response, is_initiator, room_id):
     self.assertEqual(response.status_int, 200)
     response_json = json.loads(response.body)
@@ -223,6 +224,7 @@ class JoinPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.verifyResultCode(response, constants.RESPONSE_SUCCESS)
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
                               constants.RESPONSE_INVALID_ROOM)
+
 
 if __name__ == '__main__':
   unittest.main()

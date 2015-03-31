@@ -74,6 +74,9 @@ PARAM_USER_GCM_ID = 'userGcmId'
 PARAM_MESSAGE = 'message'
 PARAM_ROOM_ID = 'roomId'
 PARAM_METADATA = 'metadata'
+PARAM_TYPE = 'type'
+
+ACK_TYPE_INVITE = 'INVITE'
 
 BIGQUERY_URL = 'https://www.googleapis.com/auth/bigquery'
 

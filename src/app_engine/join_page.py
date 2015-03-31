@@ -165,7 +165,7 @@ class JoinPage(webapp2.RequestHandler):
     logging.info('Request body: %s', self.request.body)
 
     # Check request body to determine what action to take.
-    if len(self.request.body):
+    if self.request.body:
       msg = util.get_message_from_json(self.request.body)
       if util.has_msg_field(msg, constants.PARAM_ACTION, basestring):
         action = msg[constants.PARAM_ACTION]

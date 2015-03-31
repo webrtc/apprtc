@@ -20,6 +20,7 @@ from google.appengine.ext import testbed
 
 
 class GCMURLFetchServiceStub(apiproxy_stub.APIProxyStub):
+
   def __init__(self, service_name='urlfetch'):
     super(GCMURLFetchServiceStub, self).__init__(service_name)
     self.gcm_payloads = []
@@ -132,14 +133,18 @@ class BasePageHandlerTest(unittest.TestCase):
         room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_ACCEPTED)
     return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
 
-  def createGCMDeclinedPayload(self, gcm_ids, room_id):
+  def createGCMDeclinedPayload(self, gcm_ids, room_id, metadata=None):
     message = gcm_notify.create_bye_message(
-        room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED)
+        room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_DECLINED, metadata)
     return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
 
   def createGCMHangupPayload(self, gcm_ids, room_id):
     message = gcm_notify.create_bye_message(
         room_id, gcm_notify.GCM_MESSAGE_REASON_TYPE_HANGUP)
+    return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
+
+  def createGCMRingingPayload(self, gcm_ids, room_id):
+    message = gcm_notify.create_ringing_message(room_id)
     return gcm_notify.create_gcm_payload(gcm_ids, room_id, message)
 
   def clearGCMPayloads(self):
@@ -177,10 +182,13 @@ class BasePageHandlerTest(unittest.TestCase):
     response = self.makePostRequest('/join/' + room_id, json.dumps(body))
     self.verifyResultCode(response, expected_response)
 
-  def requestDeclineAndVerify(self, room_id, callee_gcm_id, expected_response):
+  def requestDeclineAndVerify(self, room_id, callee_gcm_id,
+                              expected_response, metadata=None):
     body = {
         constants.PARAM_CALLEE_GCM_ID: callee_gcm_id
     }
+    if metadata:
+      body[constants.PARAM_METADATA] = metadata
 
     response = self.makePostRequest('/decline/' + room_id, json.dumps(body))
     self.verifyResultCode(response, expected_response)

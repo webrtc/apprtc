@@ -7,6 +7,7 @@ TEST_METADATA = 'foobar'
 
 
 class GCMNotifyTest(test_utilities.BasePageHandlerTest):
+
   def testJoin(self):
     self.addTestData()
 
@@ -75,6 +76,23 @@ class GCMNotifyTest(test_utilities.BasePageHandlerTest):
     expected_payloads = [
         self.createGCMDeclinedPayload(
             ['caller1gcm1', 'callee1gcm2', 'callee1gcm3'], room_id),
+    ]
+    self.verifyGCMPayloads(expected_payloads)
+
+  def testJoinAndDeclineWithMetadata(self):
+    self.addTestData()
+
+    room_id = 'callercallee'
+
+    self.requestCallAndVerify(
+        room_id, 'caller1gcm1', 'callee1', constants.RESPONSE_SUCCESS)
+    self.clearGCMPayloads()
+    metadata = {'reason': 'busy'}
+    self.requestDeclineAndVerify(
+        room_id, 'callee1gcm1', constants.RESPONSE_SUCCESS, metadata)
+    expected_payloads = [
+        self.createGCMDeclinedPayload(
+            ['caller1gcm1', 'callee1gcm2', 'callee1gcm3'], room_id, metadata),
     ]
     self.verifyGCMPayloads(expected_payloads)
 
