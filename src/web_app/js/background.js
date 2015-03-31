@@ -25,9 +25,9 @@
   // Send event notification from background to window.
   var sendWSEventMessageToWindow = function(port, wsEvent, data) {
     var message = {
-        action: Constants.WS_ACTION,
-        wsAction: Constants.EVENT_ACTION,
-        wsEvent: wsEvent
+      action: Constants.WS_ACTION,
+      wsAction: Constants.EVENT_ACTION,
+      wsEvent: wsEvent
     };
     if (data) {
       message.data = data;
