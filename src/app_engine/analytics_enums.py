@@ -53,6 +53,7 @@ ENUMS = json.load(open(os.path.join(os.path.dirname(__file__),
                                                   'enums.json')))
 EventType = EnumClass(ENUMS['EventType'])
 RequestField = EnumClass(ENUMS['RequestField'])
+ClientType = EnumClass(ENUMS['ClientType'])
 
 
 class BigquerySchemaClass(object):
