@@ -11,15 +11,9 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
 
   def testAckRingingInvalidRoom(self):
     self.addTestData()
-
     # Room doesn't exist.
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'invalidCallee',
-        constants.PARAM_ROOM_ID: 'newRoom',
-    }
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_INVALID_ROOM)
+    self.requestAckInviteAndVerify('invalidCallee', 'newRoom',
+                                   constants.RESPONSE_INVALID_ROOM)
 
   def testAckRingingInvalidCallee(self):
     self.addTestData()
@@ -27,31 +21,17 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
     room_id = 'callercallee'
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
                               constants.RESPONSE_SUCCESS)
-
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'invalidCallee',
-        constants.PARAM_ROOM_ID: room_id,
-    }
-
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_INVALID_CALLEE)
+    self.requestAckInviteAndVerify('invalidCallee', room_id,
+                                   constants.RESPONSE_INVALID_CALLEE)
 
   def testAckRingingWrongRoom(self):
     self.addTestData()
     room_id = 'callercallee'
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
                               constants.RESPONSE_SUCCESS)
-
     # Callee not allowed in this room.
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'callee2gcm1',
-        constants.PARAM_ROOM_ID: room_id,
-    }
-
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_INVALID_CALLEE)
+    self.requestAckInviteAndVerify('callee2gcm1', room_id,
+                                   constants.RESPONSE_INVALID_CALLEE)
 
   def testAckRinging(self):
     self.addTestData()
@@ -59,15 +39,9 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
     self.requestCallAndVerify(room_id, 'caller1gcm1', 'callee1',
                               constants.RESPONSE_SUCCESS)
 
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'callee1gcm1',
-        constants.PARAM_ROOM_ID: room_id,
-    }
-
     self.clearGCMPayloads()
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_SUCCESS)
+    self.requestAckInviteAndVerify('callee1gcm1', room_id,
+                                   constants.RESPONSE_SUCCESS)
 
     expected_payloads = [
         self.createGCMRingingPayload(
@@ -76,14 +50,8 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
     ]
     self.verifyGCMPayloads(expected_payloads)
 
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'callee1gcm2',
-        constants.PARAM_ROOM_ID: room_id,
-    }
-
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_SUCCESS)
+    self.requestAckInviteAndVerify('callee1gcm2', room_id,
+                                   constants.RESPONSE_SUCCESS)
     self.verifyGCMPayloads(expected_payloads)
 
   def testAckRingingRoomFull(self):
@@ -93,16 +61,9 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
                               constants.RESPONSE_SUCCESS)
     self.requestAcceptAndVerify(room_id, 'callee1gcm1',
                                 constants.RESPONSE_SUCCESS)
-
     # Room already full.
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'callee1gcm1',
-        constants.PARAM_ROOM_ID: room_id,
-    }
-
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_INVALID_ROOM)
+    self.requestAckInviteAndVerify('callee1gcm1', room_id,
+                                   constants.RESPONSE_INVALID_ROOM)
 
   def testAckRingingEmptyRoom(self):
     self.addTestData()
@@ -111,14 +72,8 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
                               constants.RESPONSE_SUCCESS)
     self.requestLeaveAndVerify(room_id, 'caller1gcm1',
                                constants.RESPONSE_SUCCESS)
-    body = {
-        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
-        constants.PARAM_CALLEE_GCM_ID: 'callee1gcm1',
-        constants.PARAM_ROOM_ID: room_id,
-    }
-
-    response = self.makePostRequest('/ack', json.dumps(body))
-    self.verifyResultCode(response, constants.RESPONSE_INVALID_ROOM)
+    self.requestAckInviteAndVerify('callee1gcm1', room_id,
+                                   constants.RESPONSE_INVALID_ROOM)
 
   def testAckInvalidInput(self):
     body = {
@@ -127,6 +82,15 @@ class AckPageHandlerTest(test_utilities.BasePageHandlerTest):
         constants.PARAM_ROOM_ID: 'room',
     }
     self.checkInvalidRequestsJsonResult('/ack', body.keys())
+
+  def requestAckInviteAndVerify(self, calleeGcmId, roomId, expectedCode):
+    body = {
+        constants.PARAM_TYPE: constants.ACK_TYPE_INVITE,
+        constants.PARAM_CALLEE_GCM_ID: calleeGcmId,
+        constants.PARAM_ROOM_ID: roomId,
+    }
+    response = self.makePostRequest('/ack', json.dumps(body))
+    self.verifyResultCode(response, expectedCode)
 
 if __name__ == '__main__':
   unittest.main()
