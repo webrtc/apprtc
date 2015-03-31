@@ -14,6 +14,7 @@ import os
 import jinja2
 import webapp2
 
+import ack_page
 import analytics_page
 import compute_page
 import decline_page
@@ -93,7 +94,7 @@ class ParamsPage(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     (r'/a/', analytics_page.AnalyticsPage),
-    (r'/ack', join_page.AckPage),
+    (r'/ack', ack_page.AckPage),
     (r'/compute/(\w+)/(\S+)/(\S+)', compute_page.ComputePage),
     (r'/decline/(\w+)', decline_page.DeclinePage),
     (r'/join/(\w+)', join_page.JoinPage),

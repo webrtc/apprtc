@@ -76,7 +76,7 @@ PARAM_ROOM_ID = 'roomId'
 PARAM_METADATA = 'metadata'
 PARAM_TYPE = 'type'
 
-TYPE_RINGING = 'ringing'
+ACK_TYPE_INVITE = 'INVITE'
 
 BIGQUERY_URL = 'https://www.googleapis.com/auth/bigquery'
 
