@@ -494,6 +494,7 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.audioRecvCodec = urlParams['arc'];
   this.loadingParams_.opusMaxPbr = urlParams['opusmaxpbr'];
   this.loadingParams_.opusFec = urlParams['opusfec'];
+  this.loadingParams_.opusDtx = urlParams['opusdtx'];
   this.loadingParams_.opusStereo = urlParams['stereo'];
   this.loadingParams_.videoSendBitrate = urlParams['vsbr'];
   this.loadingParams_.videoSendInitialBitrate = urlParams['vsibr'];
