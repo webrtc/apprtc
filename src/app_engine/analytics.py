@@ -10,7 +10,7 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
 
-from analytics_enums import EventType, LogField
+from analytics_enums import EventType, LogField, ClientType
 import apiauth
 import constants
 
@@ -75,7 +75,8 @@ class Analytics(object):
       event[LogField.FLOW_ID] = flow_id
 
     if client_type is not None:
-      event[LogField.CLIENT_TYPE] = client_type
+      client_type_name = ClientType.Name.get(client_type, str(client_type))
+      event[LogField.CLIENT_TYPE] = client_type_name
 
     if client_time_ms is not None:
       event[LogField.CLIENT_TIMESTAMP] = self._timestamp_from_millis(
