@@ -21,8 +21,9 @@ var loopbackWebSocket = null;
 var LOOPBACK_CLIENT_ID = 'loopback_client_id';
 function setupLoopback(wssUrl, roomId) {
   if (loopbackWebSocket) {
-    return;
+    loopbackWebSocket.close();
   }
+  trace('Setting up loopback WebSocket.');
   // TODO(tkchin): merge duplicate code once SignalingChannel abstraction
   // exists.
   loopbackWebSocket = new WebSocket(wssUrl);
@@ -36,6 +37,7 @@ function setupLoopback(wssUrl, roomId) {
   };
 
   loopbackWebSocket.onopen = function() {
+    trace('Loopback WebSocket opened.');
     var registerMessage = {
       cmd: 'register',
       roomid: roomId,
@@ -70,9 +72,7 @@ function setupLoopback(wssUrl, roomId) {
   };
 
   loopbackWebSocket.onclose = function(event) {
-    trace('Loopback closed with code:' + event.code + ' reason:' +
+    trace('Loopback WebSocket closed with code:' + event.code + ' reason:' +
           event.reason);
-    // TODO(tkchin): try to reconnect.
-    loopbackWebSocket = null;
   };
 }

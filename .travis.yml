@@ -7,3 +7,5 @@ install:
 
 script:
   - grunt travis
+
+sudo: required

@@ -177,12 +177,14 @@ AppController.prototype.createCall_ = function() {
 AppController.prototype.showRoomSelection_ = function() {
   var roomSelectionDiv = $(UI_CONSTANTS.roomSelectionDiv);
   this.roomSelection_ = new RoomSelection(roomSelectionDiv, UI_CONSTANTS);
+
   this.show_(roomSelectionDiv);
   this.roomSelection_.onRoomSelected = function(roomName) {
     this.hide_(roomSelectionDiv);
     this.createCall_();
     this.finishCallSetup_(roomName);
 
+    this.roomSelection_.removeEventListeners();
     this.roomSelection_ = null;
     if (this.localStream_) {
       this.attachLocalStream_();
@@ -288,6 +290,8 @@ AppController.prototype.onLocalStreamAdded_ = function(stream) {
 };
 
 AppController.prototype.attachLocalStream_ = function() {
+  trace('Attaching local stream.');
+
   // Call the polyfill wrapper to attach the media stream to this element.
   attachMediaStream(this.localVideo_, this.localStream_);
 
