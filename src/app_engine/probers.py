@@ -13,6 +13,7 @@ import compute_page
 import constants
 import webapp2
 
+from google.appengine.api import app_identity
 from google.appengine.api import mail
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
@@ -20,6 +21,10 @@ from google.appengine.api import urlfetch
 
 PROBER_FETCH_DEADLINE = 30
 
+def is_prober_enabled():
+  """Check the application ID so that other projects hosting AppRTC code does
+  not hit CEOD/Collider unnecessarily."""
+  return app_identity.get_application_id() == 'apprtc'
 
 def send_alert_email(tag, message):
   """Send an alert email to apprtc-monitor@google.com."""
@@ -70,6 +75,9 @@ class ProbeCEODPage(webapp2.RequestHandler):
       self.response.out.write('Success!')
 
   def get(self):
+    if not is_prober_enabled():
+      return
+
     ceod_url = (constants.TURN_URL_TEMPLATE
                 % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY))
     sanitized_url = (constants.TURN_URL_TEMPLATE %
@@ -199,6 +207,9 @@ class ProbeColliderPage(webapp2.RequestHandler):
     return None
 
   def get(self):
+    if not is_prober_enabled():
+      return
+
     results = {}
     for instance in constants.WSS_INSTANCES:
       host = instance[constants.WSS_INSTANCE_HOST_KEY]
