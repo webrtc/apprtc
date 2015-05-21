@@ -36,7 +36,7 @@ sudo npm -g install grunt-cli
 
 *Omitting the `-g` flag will install `grunt-cli` to the current directory under the `node_modules` directory.*
 
-Finally, you will want to install grunt and required grunt dependencies. *This can be done from any directory under your checkout of the [webrtc/adapter](https://github.com/webrtc/adapter) repository.*
+Finally, you will want to install grunt and required grunt dependencies. *This can be done from any directory under your checkout of the [webrtc/apprtc](https://github.com/webrtc/apprtc) repository.*
 
 ```
 npm install
