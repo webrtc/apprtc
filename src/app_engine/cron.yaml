@@ -1,8 +1,8 @@
 cron:
 - description: CEOD probing job on 5 min interval
-  url: /probe/ceod
+  url: /prober/ceod
   schedule: every 5 minutes synchronized
 
 - description: collider probing job on 5 min interval
-  url: /probe/collider
+  url: /prober/collider
   schedule: every 5 minutes synchronized

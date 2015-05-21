@@ -258,6 +258,6 @@ class ProbeColliderPage(webapp2.RequestHandler):
         error_message, status_code, collider_instance)
 
 app = webapp2.WSGIApplication([
-    ('/probe/ceod', ProbeCEODPage),
-    ('/probe/collider', ProbeColliderPage),
+    ('/prober/ceod', ProbeCEODPage),
+    ('/prober/collider', ProbeColliderPage),
 ], debug=True)
