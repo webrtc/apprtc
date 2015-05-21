@@ -14,13 +14,15 @@ Detailed instructions for running on Ubuntu Linux are provided below.
 
 ### Running on Ubuntu Linux
 
-Install grunt by first installing [npm](https://www.npmjs.com/),
+Install grunt by first installing [npm](https://www.npmjs.com/). npm is
+distributed as part of nodejs.
 
 ```
-sudo apt-get install npm
+sudo apt-get install nodejs
+sudo npm install -g npm
 ```
 
-On Ubuntu 14.04 the default packages installs `/usr/bin/nodejs` but the `/usr/bin/node` executable is required for grunt. You can add this by installing the `nodejs-legacy` package,
+On Ubuntu 14.04 the default packages installs `/usr/bin/nodejs` but the `/usr/bin/node` executable is required for grunt. This is installed on some Ubuntu package sets; if it is missing, you can add this by installing the `nodejs-legacy` package,
 
 ```
 sudo apt-get install nodejs-legacy
@@ -34,11 +36,17 @@ sudo npm -g install grunt-cli
 
 *Omitting the `-g` flag will install `grunt-cli` to the current directory under the `node_modules` directory.*
 
-Finally, you will want to install grunt and required grunt dependencies. *This can be done from any directory under your checkout of the [GoogleChrome/webrtc](https://github.com/GoogleChrome/webrtc) repository.*
+Finally, you will want to install grunt and required grunt dependencies. *This can be done from any directory under your checkout of the [webrtc/apprtc](https://github.com/webrtc/apprtc) repository.*
 
 ```
 npm install
 ```
+
+On Ubuntu, you will also need to install the webtest package:
+```
+sudo apt-get install python-webtest
+```
+
 
 Before you start the AppRTC dev server and *everytime you update the source code you need to recompile the App Engine package by running,
 
