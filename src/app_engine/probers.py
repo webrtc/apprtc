@@ -27,8 +27,8 @@ def is_prober_enabled():
   return app_identity.get_application_id() == 'apprtc'
 
 def send_alert_email(tag, message):
-  """Send an alert email to apprtc-monitor@google.com."""
-  receiver = 'apprtc-monitor@google.com'
+  """Send an alert email to apprtc-alert@google.com."""
+  receiver = 'apprtc-alert@google.com'
   sender_address = 'AppRTC Notification <jiayl@google.com>'
   subject = 'AppRTC Prober Alert: ' + tag
   body = """

@@ -145,7 +145,7 @@ class ProbersTest(unittest.TestCase):
     self.assertEqual(restart_url, tasks[0]['url'])
 
     # A mail should be sent.
-    messages = self.mail_stub.get_sent_messages(to='apprtc-monitor@google.com')
+    messages = self.mail_stub.get_sent_messages(to='apprtc-alert@google.com')
     self.assertEqual(1, len(messages))
 
     # Last probe success flag should be false.
@@ -165,7 +165,7 @@ class ProbersTest(unittest.TestCase):
     self.assertEqual(1, len(tasks))
 
     # Another mail should be sent.
-    messages = self.mail_stub.get_sent_messages(to='apprtc-monitor@google.com')
+    messages = self.mail_stub.get_sent_messages(to='apprtc-alert@google.com')
     self.assertEqual(2, len(messages))
 
     self.testbed.get_stub('taskqueue').FlushQueue('default')
