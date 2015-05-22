@@ -74,10 +74,7 @@ class ProbeCEODPage(webapp2.RequestHandler):
     else:
       self.response.out.write('Success!')
 
-  def get(self):
-    if not is_prober_enabled():
-      return
-
+  def probe_ceod(self):
     ceod_url = (constants.TURN_URL_TEMPLATE
                 % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY))
     sanitized_url = (constants.TURN_URL_TEMPLATE %
@@ -90,8 +87,7 @@ class ProbeCEODPage(webapp2.RequestHandler):
           url=ceod_url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
     except urlfetch.Error as e:
       error_message = ('urlfetch throws exception: %s' % str(e))
-      self.handle_ceod_response(error_message, 500)
-      return
+      return (error_message, 500)
 
     status_code = result.status_code
     if status_code != 200:
@@ -115,6 +111,16 @@ class ProbeCEODPage(webapp2.RequestHandler):
         url = %s
         """ % (str(e), result.content, sanitized_url)
         status_code = 500
+    return (error_message, status_code)
+
+  def get(self):
+    if not is_prober_enabled():
+      return
+
+    error_message, status_code = self.probe_ceod()
+    if error_message is not None:
+      logging.info("Retry probing CEOD.")
+      error_message, status_code = self.probe_ceod()
 
     self.handle_ceod_response(error_message, status_code)
 
