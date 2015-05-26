@@ -1,27 +1,37 @@
-#!/usr/bin/python2.4
-#
 # Copyright 2014 Google Inc. All Rights Reserved.
 
-"""AppRTC Probers
+"""AppRTC Probers.
 
 This module implements CEOD and collider probers.
 """
 
-import constants
-import logging
 import json
+import logging
 import numbers
+
+import compute_page
+import constants
 import webapp2
 
+from google.appengine.api import app_identity
 from google.appengine.api import mail
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
+
+PROBER_FETCH_DEADLINE = 30
+
+def is_prober_enabled():
+  """Check the application ID so that other projects hosting AppRTC code does
+  not hit CEOD/Collider unnecessarily."""
+  return app_identity.get_application_id() == 'apprtc'
+
 def send_alert_email(tag, message):
-  receiver = 'apprtc-monitor@google.com'
+  """Send an alert email to apprtc-alert@google.com."""
+  receiver = 'apprtc-alert@google.com'
   sender_address = 'AppRTC Notification <jiayl@google.com>'
   subject = 'AppRTC Prober Alert: ' + tag
-  body =  """
+  body = """
   AppRTC Prober detected an error:
 
   %s
@@ -29,21 +39,31 @@ def send_alert_email(tag, message):
   Goto go/apprtc-sheriff for how to handle this error.
   """ % message
 
-  logging.info('Sending email to %s: subject=%s, message=%s' \
-      % (receiver, subject, message))
+  logging.info('Sending email to %s: subject=%s, message=%s',
+               receiver, subject, message)
   mail.send_mail(sender_address, receiver, subject, body)
 
-def has_non_empty_string_value(dict, key):
-  return key in dict and \
-         isinstance(dict[key], basestring) and \
-         dict[key] != ''
 
-def has_non_empty_array_value(dict, key):
-  return key in dict and \
-         isinstance(dict[key], list) and \
-         len(dict[key]) > 0
+def has_non_empty_string_value(dictionary, key):
+  return (key in dictionary and
+          isinstance(dictionary[key], basestring) and
+          dictionary[key])
+
+
+def has_non_empty_array_value(dictionary, key):
+  return (key in dictionary and
+          isinstance(dictionary[key], list) and
+          dictionary[key])
+
+
+def get_collider_probe_success_key(instance_host):
+  """Returns the memcache key for the last collider instance probing result."""
+  return 'last_collider_probe_success_' + instance_host
+
 
 class ProbeCEODPage(webapp2.RequestHandler):
+  """Page to probe CEOD server."""
+
   def handle_ceod_response(self, error_message, status_code):
     self.response.set_status(status_code)
     if error_message is not None:
@@ -54,37 +74,36 @@ class ProbeCEODPage(webapp2.RequestHandler):
     else:
       self.response.out.write('Success!')
 
-  def get(self):
-    ceod_url = constants.TURN_URL_TEMPLATE \
-        % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY)
-    sanitized_url = constants.TURN_URL_TEMPLATE % \
-        (constants.TURN_BASE_URL, 'prober', '<obscured>')
+  def probe_ceod(self):
+    ceod_url = (constants.TURN_URL_TEMPLATE
+                % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY))
+    sanitized_url = (constants.TURN_URL_TEMPLATE %
+                     (constants.TURN_BASE_URL, 'prober', '<obscured>'))
 
     error_message = None
     result = None
     try:
-      result = urlfetch.fetch(url=ceod_url, method=urlfetch.GET)
-    except Exception as e:
-      error_message = 'urlfetch throws exception: ' + str(e) + \
-          ', url = ' + sanitized_url
-      self.handle_ceod_response(error_message, 500)
-      return
+      result = urlfetch.fetch(
+          url=ceod_url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
+    except urlfetch.Error as e:
+      error_message = ('urlfetch throws exception: %s' % str(e))
+      return (error_message, 500)
 
     status_code = result.status_code
     if status_code != 200:
-      error_message = 'Unexpected CEOD response: %d, requested URL: %s' \
-          % (result.status_code, sanitized_url)
+      error_message = ('Unexpected CEOD response: %d, requested URL: %s'
+                       % (result.status_code, sanitized_url))
     else:
       try:
         turn_server = json.loads(result.content)
-        if not has_non_empty_string_value(turn_server, 'username') or \
-           not has_non_empty_string_value(turn_server, 'password') or \
-           not has_non_empty_array_value(turn_server, 'uris'):
-          error_message = 'CEOD response does not contain valid ' + \
-              'username/password/uris: response = ' + result.content + \
-              ', url = ' + sanitized_url
+        if (not has_non_empty_string_value(turn_server, 'username') or
+            not has_non_empty_string_value(turn_server, 'password') or
+            not has_non_empty_array_value(turn_server, 'uris')):
+          error_message = ('CEOD response does not contain valid '
+                           'username/password/uris: response = %s, url = %s'
+                           % (result.content, sanitized_url))
           status_code = 500
-      except Exception as e:
+      except ValueError as e:
         error_message = """
         CEOD response cannot be decoded as JSON:
         exception = %s,
@@ -92,24 +111,72 @@ class ProbeCEODPage(webapp2.RequestHandler):
         url = %s
         """ % (str(e), result.content, sanitized_url)
         status_code = 500
+    return (error_message, status_code)
+
+  def get(self):
+    if not is_prober_enabled():
+      return
+
+    error_message, status_code = self.probe_ceod()
+    if error_message is not None:
+      logging.info("Retry probing CEOD.")
+      error_message, status_code = self.probe_ceod()
 
     self.handle_ceod_response(error_message, status_code)
 
+
 class ProbeColliderPage(webapp2.RequestHandler):
+  """Page to probe Collider instances."""
+
   def handle_collider_response(
       self, error_message, status_code, collider_instance):
+
+    """Send an alert email and restart the instance if needed.
+
+    Args:
+      error_message: The error message for the response, or None if no error.
+      status_code: The status code of the HTTP response.
+      collider_instance: One of constants.WSS_INSTANCES representing the
+      instance being handled.
+
+    Returns:
+      A dictionary object containing the result.
+    """
+
     result = {
         constants.WSS_HOST_STATUS_CODE_KEY: status_code
     }
-    if error_message is not None:
-      send_alert_email('Collider Error (' + collider_instance + ')',
-                       error_message)
+    memcache_key = get_collider_probe_success_key(
+        collider_instance[constants.WSS_INSTANCE_NAME_KEY])
 
-      logging.warning('Collider prober error: ' + error_message)
+    host = collider_instance[constants.WSS_INSTANCE_HOST_KEY]
+
+    if error_message is not None:
+      logging.warning(
+          'Collider prober error: ' + error_message + ' for ' + host)
       result[constants.WSS_HOST_ERROR_MESSAGE_KEY] = error_message
       result[constants.WSS_HOST_IS_UP_KEY] = False
+
+      last_probe_success = memcache.get(memcache_key)
+
+      # Restart the collider instance if the last probing was successful.
+      if last_probe_success is None or last_probe_success is True:
+        logging.info('Restarting the collider instance')
+        compute_page.enqueue_restart_task(
+            collider_instance[constants.WSS_INSTANCE_NAME_KEY],
+            collider_instance[constants.WSS_INSTANCE_ZONE_KEY])
+        error_message += """
+
+        Restarting the collider instance automatically.
+
+        """
+
+      send_alert_email('Collider %s error' % host, error_message)
     else:
       result[constants.WSS_HOST_IS_UP_KEY] = True
+
+    memcache.set(memcache_key, result[constants.WSS_HOST_IS_UP_KEY])
+
     return result
 
   def store_instance_state(self, probing_results):
@@ -146,39 +213,45 @@ class ProbeColliderPage(webapp2.RequestHandler):
     return None
 
   def get(self):
+    if not is_prober_enabled():
+      return
+
     results = {}
-    for collider_instance in constants.WSS_HOST_PORT_PAIRS:
-      results[collider_instance] = self.probe_collider_instance(
-          collider_instance)
+    for instance in constants.WSS_INSTANCES:
+      host = instance[constants.WSS_INSTANCE_HOST_KEY]
+      results[host] = self.probe_collider_instance(instance)
     self.response.write(json.dumps(results, indent=2, sort_keys=True))
     self.store_instance_state(results)
 
   def probe_collider_instance(self, collider_instance):
-    url = 'https://' + collider_instance + '/status';
+    collider_host = collider_instance[constants.WSS_INSTANCE_HOST_KEY]
+    url = 'https://' + collider_host + '/status'
 
     error_message = None
     result = None
     try:
-      result = urlfetch.fetch(url=url, method=urlfetch.GET)
-    except Exception as e:
-      error_message = 'urlfetch throws exception: ' + str(e) + ', url = ' + url
-      return self.handle_collider_response(error_message, 500, collider_instance)
+      result = urlfetch.fetch(
+          url=url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
+    except urlfetch.Error as e:
+      error_message = ('urlfetch throws exception: %s' % str(e))
+      return self.handle_collider_response(
+          error_message, 500, collider_instance)
 
     status_code = result.status_code
     if status_code != 200:
-      error_message = 'Unexpected collider response: %d, requested URL: %s' \
-          % (result.status_code, url)
+      error_message = ('Unexpected collider response: %d, requested URL: %s'
+                       % (result.status_code, url))
     else:
       try:
         status_report = json.loads(result.content)
-        if not 'upsec' in status_report or \
-            not isinstance(status_report['upsec'], numbers.Number):
+        if ('upsec' not in status_report or
+            not isinstance(status_report['upsec'], numbers.Number)):
           error_message = """
           Invalid 'upsec' field in Collider status response,
           status = %s
           """ % result.content
           status_code = 500
-      except Exception as e:
+      except ValueError as e:
         error_message = """
         Collider status response cannot be decoded as JSON:
         exception = %s,

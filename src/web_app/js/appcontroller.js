@@ -177,12 +177,14 @@ AppController.prototype.createCall_ = function() {
 AppController.prototype.showRoomSelection_ = function() {
   var roomSelectionDiv = $(UI_CONSTANTS.roomSelectionDiv);
   this.roomSelection_ = new RoomSelection(roomSelectionDiv, UI_CONSTANTS);
+
   this.show_(roomSelectionDiv);
   this.roomSelection_.onRoomSelected = function(roomName) {
     this.hide_(roomSelectionDiv);
     this.createCall_();
     this.finishCallSetup_(roomName);
 
+    this.roomSelection_.removeEventListeners();
     this.roomSelection_ = null;
     if (this.localStream_) {
       this.attachLocalStream_();
@@ -288,6 +290,8 @@ AppController.prototype.onLocalStreamAdded_ = function(stream) {
 };
 
 AppController.prototype.attachLocalStream_ = function() {
+  trace('Attaching local stream.');
+
   // Call the polyfill wrapper to attach the media stream to this element.
   attachMediaStream(this.localVideo_, this.localStream_);
 
@@ -322,7 +326,7 @@ AppController.prototype.transitionToActive_ = function() {
 };
 
 AppController.prototype.transitionToWaiting_ = function() {
-   // Stop waiting for remote video.
+  // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
 
   this.hide_(this.hangupSvg_);
@@ -349,7 +353,7 @@ AppController.prototype.transitionToWaiting_ = function() {
 };
 
 AppController.prototype.transitionToDone_ = function() {
-   // Stop waiting for remote video.
+  // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
   this.deactivate_(this.localVideo_);
   this.deactivate_(this.remoteVideo_);
@@ -494,6 +498,7 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.audioRecvCodec = urlParams['arc'];
   this.loadingParams_.opusMaxPbr = urlParams['opusmaxpbr'];
   this.loadingParams_.opusFec = urlParams['opusfec'];
+  this.loadingParams_.opusDtx = urlParams['opusdtx'];
   this.loadingParams_.opusStereo = urlParams['stereo'];
   this.loadingParams_.videoSendBitrate = urlParams['vsbr'];
   this.loadingParams_.videoSendInitialBitrate = urlParams['vsibr'];

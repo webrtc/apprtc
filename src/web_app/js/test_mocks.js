@@ -11,7 +11,7 @@
 /* globals assertEquals */
 /* exported FAKE_WSS_POST_URL, FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
    FAKE_CLIENT_ID, MockWebSocket, MockXMLHttpRequest, webSockets, xhrs,
-   MockWindowPort, FAKE_SEND_EXCEPTION */
+   MockWindowPort, FAKE_SEND_EXCEPTION, Mock */
 
 'use strict';
 
@@ -69,6 +69,21 @@ MockWebSocket.prototype.send = function(msg) {
 
 MockWebSocket.prototype.close = function() {
   this.readyState = WebSocket.CLOSED;
+};
+
+var Mock = {};
+
+Mock.createSendAsyncUrlRequestMock = function() {
+  var calls = [];
+  var fn = function(method, url, body) {
+    calls.push({method: method, url: url, body: body});
+    return new Promise(function() {});
+
+  };
+  fn.calls = function() {
+    return calls;
+  };
+  return fn;
 };
 
 var xhrs = [];

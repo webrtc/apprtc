@@ -25,6 +25,9 @@ def _GetLatestAppEngineSdkVersion():
   if gae_sdk_version == '1.9.15':
     # TODO(phoglund): remove when updatecheck returns the right thing.
     gae_sdk_version = '1.9.17'
+  if gae_sdk_version == '1.9.19':
+    # TODO(phoglund): remove when updatecheck returns the right thing.
+    gae_sdk_version = '1.9.21'
   return gae_sdk_version
 
 

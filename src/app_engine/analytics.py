@@ -3,7 +3,6 @@
 """Module for pushing analytics data to BigQuery."""
 
 import datetime
-import json
 import logging
 import os
 import sys
@@ -11,25 +10,11 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'third_party'))
 
+from analytics_enums import EventType, LogField, ClientType
 import apiauth
 import constants
 
 from google.appengine.api import app_identity
-
-class EventType(object):
-  # Event signifying that a room enters the state of having exactly
-  # two participants.
-  ROOM_SIZE_2 = 'room_size_2'
-  ICE_CONNECTION_STATE_CONNECTED = 'ice_connection_state_connected'
-
-class LogField(object):
-  pass
-
-with open(os.path.join(os.path.dirname(__file__),
-                       'bigquery', 'analytics_schema.json')) as f:
-  schema = json.load(f)
-  for field in schema:
-    setattr(LogField, field['name'].upper(), field['name'])
 
 
 class Analytics(object):
@@ -62,12 +47,36 @@ class Analytics(object):
     return datetime.datetime.fromtimestamp(float(time_ms)/1000.).isoformat()
 
   def report_event(self, event_type, room_id=None, time_ms=None,
-                   client_time_ms=None, host=None):
-    """Report an event to BigQuery."""
-    event = {LogField.EVENT_TYPE: event_type}
+                   client_time_ms=None, host=None, flow_id=None,
+                   client_type=None):
+    """Report an event to BigQuery.
+
+    Args:
+      event_type: Event to report. One of analytics.EventType.
+      room_id: Room ID related to the given event type.
+      time_ms: Time that the event occurred on the server. Will be automatically
+               populated if not given explicitly.
+      client_time_ms: Time that an event occurred on the client, if the event
+                      originated on the client.
+      host: Hostname this is being logged on.
+      flow_id: ID to group a set of events together.
+      client_type: Type of client logging the event.
+                   One of analytics.ClientType.
+    """
+    # Be forgiving. If an event is a string or is an unknown number we
+    # still log it but log it as the string value.
+    event_type_name = EventType.Name.get(event_type, str(event_type))
+    event = {LogField.EVENT_TYPE: event_type_name}
 
     if room_id is not None:
       event[LogField.ROOM_ID] = room_id
+
+    if flow_id is not None:
+      event[LogField.FLOW_ID] = flow_id
+
+    if client_type is not None:
+      client_type_name = ClientType.Name.get(client_type, str(client_type))
+      event[LogField.CLIENT_TYPE] = client_type_name
 
     if client_time_ms is not None:
       event[LogField.CLIENT_TIMESTAMP] = self._timestamp_from_millis(

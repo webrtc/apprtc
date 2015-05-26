@@ -1,17 +1,17 @@
 import json
 import time
 import unittest
+
+import analytics
+from analytics_enums import RequestField, EventType, ClientType
+import analytics_page
+import apprtc
+import constants
+from test_util import CapturingFunction
+from test_util import ReplaceFunction
 import webtest
 
 from google.appengine.ext import testbed
-
-import apprtc
-import analytics
-import analytics_page
-import constants
-from analytics_page import RequestField
-from test_util import CapturingFunction
-from test_util import ReplaceFunction
 
 
 class AnalyticsPageHandlerTest(unittest.TestCase):
@@ -63,18 +63,24 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
     # should be one second ahead of the actual event time recorded by
     # the client.
     event_time_server_ms = 9.0 * 1000
+    # Default host for the test server.
+    host = 'localhost:80'
 
     room_id = 'foo'
-    event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED
+    flow_id = 1337
+    event_type = EventType.ICE_CONNECTION_STATE_CONNECTED
+    client_type = ClientType.ANDROID
 
     # Test with all optional attributes.
     request = {
         RequestField.TYPE: RequestField.MessageType.EVENT,
         RequestField.REQUEST_TIME_MS: request_time_ms,
+        RequestField.CLIENT_TYPE: client_type,
         RequestField.EVENT: {
             RequestField.EventField.EVENT_TYPE: event_type,
             RequestField.EventField.EVENT_TIME_MS: event_time_ms,
             RequestField.EventField.ROOM_ID: room_id,
+            RequestField.EventField.FLOW_ID: flow_id,
             }
         }
 
@@ -83,9 +89,14 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     self.assertEqual(constants.RESPONSE_SUCCESS, response_body['result'])
 
-    expected_args = (event_type, room_id, event_time_server_ms, event_time_ms)
-
-    self.assertEqual(expected_args, analytics.report_event.last_args)
+    expected_kwargs = dict(event_type=event_type,
+                           room_id=room_id,
+                           time_ms=event_time_server_ms,
+                           client_time_ms=event_time_ms,
+                           host=host,
+                           flow_id=flow_id,
+                           client_type=client_type,)
+    self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
     # Test without optional attributes.
     request = {
@@ -102,9 +113,15 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     self.assertEqual(constants.RESPONSE_SUCCESS, response_body['result'])
 
-    expected_args = (event_type, None, event_time_server_ms, event_time_ms)
+    expected_kwargs = dict(event_type=event_type,
+                           room_id=None,
+                           time_ms=event_time_server_ms,
+                           client_time_ms=event_time_ms,
+                           host=host,
+                           flow_id=None,
+                           client_type=None)
 
-    self.assertEqual(expected_args, analytics.report_event.last_args)
+    self.assertEqual(expected_kwargs, analytics.report_event.last_kwargs)
 
   def testAnalyticsPageFail(self):
     # Test empty body.
@@ -115,7 +132,7 @@ class AnalyticsPageHandlerTest(unittest.TestCase):
 
     # Test missing individual required attributes.
     room_id = 'foo'
-    event_type = analytics.EventType.ICE_CONNECTION_STATE_CONNECTED
+    event_type = EventType.ICE_CONNECTION_STATE_CONNECTED
     time_ms = 1337
 
     # Fully populated event and request.

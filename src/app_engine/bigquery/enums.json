@@ -1,0 +1,32 @@
+{
+  "EventType": {
+    "ROOM_SIZE_2": 2,
+    "ICE_CONNECTION_STATE_CONNECTED": 3
+  },
+
+  "RequestField": {
+    "TYPE": "type",
+    "REQUEST_TIME_MS": "request_time_ms",
+    "EVENT": "event",
+    "CLIENT_TYPE": "client_type",
+
+    "MessageType": {
+      "EVENT": "event"
+    },
+
+    "EventField": {
+      "EVENT_TYPE": "event_type",
+      "ROOM_ID": "room_id",
+      "EVENT_TIME_MS": "event_time_ms",
+      "FLOW_ID": "flow_id"
+    }
+  },
+
+  "ClientType": {
+    "UNKNOWN": 0,
+    "JS": 1,
+    "DESKTOP": 2,
+    "IOS": 3,
+    "ANDROID": 4
+  }
+}

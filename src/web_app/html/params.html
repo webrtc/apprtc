@@ -13,7 +13,7 @@
 
   <link rel="icon" sizes="192x192" href="images/webrtc-icon-192x192.png">
   <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" href="http://webrtc.github.io/samples/src/css/main.css" />
+  <link rel="stylesheet" href="//webrtc.github.io/samples/src/css/main.css" />
 
   <style>
   div#container {
@@ -56,7 +56,7 @@
 
       <p>For example: <a href="https://apprtc.appspot.com/?hd=true&amp;stereo=true&amp;debug=loopback">https://apprtc.appspot.com/?hd=true&amp;stereo=true&amp;debug=loopback</a></p>
 
-      <p>The file using the parameters is <a href="https://github.com/GoogleChrome/webrtc/blob/master/samples/web/content/apprtc/apprtc.py" title="apprtc.py file in AppRTC repo">apprtc.py</a>. More Google-specific parameters are available from the <a href="//code.google.com/p/webrtc/source/browse/trunk/talk/app/webrtc/mediaconstraintsinterface.h" title="mediaconstraintsinterface.h">MediaConstraints interface</a>.</p>
+      <p>The file using the parameters is <a href="https://github.com/webrtc/apprtc/blob/master/src/app_engine/apprtc.py" title="apprtc.py file in AppRTC repo">apprtc.py</a>. More Google-specific parameters are available from the <a href="https://chromium.googlesource.com/external/webrtc/+/master/talk/app/webrtc/mediaconstraintsinterface.h" title="mediaconstraintsinterface.h">MediaConstraints interface</a>.</p>
 
       <p>For more information see <a href="http://gingertech.net/2014/03/19/apprtc-googles-webrtc-test-app-and-its-parameters/">AppRTC : Google's WebRTC test app and its parameters</a>.</p>
 
@@ -82,6 +82,9 @@
         <tr><td><a href="https://apprtc.appspot.com?asbr=16000">asbr=[bitrate]</a></td><td>Set audio send bitrate</td></tr>
         <tr><td><a href="https://apprtc.appspot.com?vsbr=1000">vsbr=[bitrate]</a></td><td>Set video receive bitrate</td></tr>
         <tr><td><a href="https://apprtc.appspot.com?vrbr=8000">vrbr=[bitrate]</a></td><td>Set video send bitrate</td></tr>
+        <tr><td><a href="https://apprtc.appspot.com?opusfec=false">opusfec=false</a></td><td>Turn off Opus FEC</td></tr>
+        <tr><td><a href="https://apprtc.appspot.com?opusdtx=true">opusdtx=true</a></td><td>Turn on Opus DTX</td></tr>
+        <tr><td><a href="https://apprtc.appspot.com?opusmaxpbr=8000">opusmaxpbr=8000</a></td><td>Set the maximum sample rate that the receiver can operate, for optimal Opus encoding performance</td></tr>
       </table>
 
     </section>

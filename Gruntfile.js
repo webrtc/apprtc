@@ -38,7 +38,7 @@ module.exports = function(grunt) {
     },
 
     jscs: {
-      src: 'src/**/*.js',
+      src: ['src/**/*.js', '!src/**/enums.js'],
       options: {
         preset: 'google', // as per Google style guide – could use '.jscsrc' instead
         requireCurlyBraces: ['if']
@@ -52,7 +52,7 @@ module.exports = function(grunt) {
       // files to validate
       // can choose more than one name + array of paths
       // usage with this name: grunt jshint:files
-      files: ['src/**/*.js']
+      files: ['src/**/*.js', '!src/**/enums.js']
     },
 
     shell: {
@@ -77,7 +77,11 @@ module.exports = function(grunt) {
       removePythonTestsFromOutAppEngineDir: {
         command: ['python', './build/remove_python_tests.py',
                   out_app_engine_dir].join(' ')
-      }
+      },
+      genJsEnums: {
+        command: ['python', './build/gen_js_enums.py', 'src',
+                  'src/web_app/js'].join(' ')
+      },
     },
 
     'grunt-chrome-build' : {
@@ -142,14 +146,16 @@ module.exports = function(grunt) {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
+	    'src/web_app/js/analytics.js',
+            'src/web_app/js/enums.js',
             'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',
             'src/web_app/js/call.js',
             'src/web_app/js/constants.js',
             'src/web_app/js/infobox.js',
             'src/web_app/js/peerconnectionclient.js',
-            'src/web_app/js/roomselection.js',
             'src/web_app/js/remotewebsocket.js',
+            'src/web_app/js/roomselection.js',
             'src/web_app/js/sdputils.js',
             'src/web_app/js/signalingchannel.js',
             'src/web_app/js/stats.js',
@@ -179,7 +185,7 @@ module.exports = function(grunt) {
 
   // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['csslint', 'htmlhint', 'jscs', 'jshint',
-                                 'runPythonTests', 'jstests']);
+                                 'runPythonTests', 'shell:genJsEnums', 'jstests']);
   grunt.registerTask('travis', ['shell:getPythonTestDeps',
                                 'shell:installPythonTestDepsOnLinux',
                                 'default']);
@@ -187,7 +193,7 @@ module.exports = function(grunt) {
                                         'shell:getPythonTestDeps',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
-  grunt.registerTask('jstests', ['closurecompiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
+  grunt.registerTask('jstests', ['shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
   // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
-  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'closurecompiler:debug', 'grunt-chrome-build']);
+  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build']);
 };
