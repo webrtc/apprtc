@@ -388,11 +388,13 @@ AppController.prototype.onKeyPress_ = function(event) {
     case 'm':
       if (this.call_) {
         this.call_.toggleAudioMute();
+        this.muteAudioIconSet_.toggle();
       }
       return false;
     case 'c':
       if (this.call_) {
         this.call_.toggleVideoMute();
+        this.muteVideoIconSet_.toggle();
       }
       return false;
     case 'f':
