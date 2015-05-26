@@ -524,6 +524,8 @@ class MainPage(webapp2.RequestHandler):
 
   def get(self):
     """Renders index.html."""
+    if self.request.headers['Host'] == 'apprtc.net':
+      webapp2.redirect('https://www.apprtc.net', permanent=True)
     # Parse out parameters from request.
     params = get_room_parameters(self.request, None, None, None)
     # room_id/room_link will not be included in the returned parameters
