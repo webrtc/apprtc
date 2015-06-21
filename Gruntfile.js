@@ -81,7 +81,7 @@ module.exports = function(grunt) {
       genJsEnums: {
         command: ['python', './build/gen_js_enums.py', 'src',
                   'src/web_app/js'].join(' ')
-      },
+      }
     },
 
     'grunt-chrome-build' : {
@@ -128,25 +128,27 @@ module.exports = function(grunt) {
             ],
             dest: 'out/chrome_app/'
           }
-        ],
+        ]
       }
     },
 
     jstdPhantom: {
       options: {
+        verbose: true,
         useLatest : true,
-        port: 9876,
+        port: 9876
       },
       files: [
-        'build/js_test_driver.conf',
-      ]},
+        'build/js_test_driver.conf'
+      ]
+    },
 
     closurecompiler: {
       debug: {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
-	    'src/web_app/js/analytics.js',
+            'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
             'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',
@@ -161,16 +163,16 @@ module.exports = function(grunt) {
             'src/web_app/js/stats.js',
             'src/web_app/js/storage.js',
             'src/web_app/js/util.js',
-            'src/web_app/js/windowport.js',
+            'src/web_app/js/windowport.js'
           ]
         },
         options: {
           'compilation_level': 'WHITESPACE_ONLY',
           'language_in': 'ECMASCRIPT5',
           'formatting': 'PRETTY_PRINT'
-        },
-      },
-    },
+        }
+      }
+    }
   });
 
   // Enable plugins.
