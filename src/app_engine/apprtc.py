@@ -248,6 +248,8 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   if len(turn_base_url) > 0:
     turn_url = constants.TURN_URL_TEMPLATE % \
         (turn_base_url, username, constants.CEOD_KEY)
+  else:
+    turn_url = ''
 
   pc_config = make_pc_config(ice_transports)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
