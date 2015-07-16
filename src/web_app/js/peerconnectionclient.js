@@ -174,8 +174,15 @@ PeerConnectionClient.prototype.getPeerConnectionStats = function(callback) {
 
 PeerConnectionClient.prototype.doAnswer_ = function() {
   trace('Sending answer to peer.');
-  this.pc_.createAnswer()
-  .then(this.setLocalSdpAndNotify_.bind(this))
+  var p;
+  if (webrtcDetectedBrowser === 'firefox') {
+    // Firefox does not support this yet, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1098015
+    p = this.pc_.createAnswer();
+  } else {
+    p = this.pc_.createAnswer(PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_);
+  }
+  p.then(this.setLocalSdpAndNotify_.bind(this))
   .catch(this.onError_.bind(this, 'createAnswer'));
 };
 
