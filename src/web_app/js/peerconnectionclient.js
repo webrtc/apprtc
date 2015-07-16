@@ -90,9 +90,9 @@ PeerConnectionClient.prototype.startAsCaller = function(offerConstraints) {
       offerConstraints, PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_);
   trace('Sending offer to peer, with constraints: \n\'' +
       JSON.stringify(constraints) + '\'.');
-  this.pc_.createOffer(this.setLocalSdpAndNotify_.bind(this),
-      this.onError_.bind(this, 'createOffer'),
-      constraints);
+  this.pc_.createOffer(constraints)
+  .then(this.setLocalSdpAndNotify_.bind(this))
+  .catch(this.onError_.bind(this, 'createOffer'));
 
   return true;
 };
@@ -174,9 +174,16 @@ PeerConnectionClient.prototype.getPeerConnectionStats = function(callback) {
 
 PeerConnectionClient.prototype.doAnswer_ = function() {
   trace('Sending answer to peer.');
-  this.pc_.createAnswer(this.setLocalSdpAndNotify_.bind(this),
-      this.onError_.bind(this, 'createAnswer'),
-      PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_);
+  var p;
+  if (webrtcDetectedBrowser === 'firefox') {
+    // Firefox does not support this yet, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1098015
+    p = this.pc_.createAnswer();
+  } else {
+    p = this.pc_.createAnswer(PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_);
+  }
+  p.then(this.setLocalSdpAndNotify_.bind(this))
+  .catch(this.onError_.bind(this, 'createAnswer'));
 };
 
 PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
@@ -193,9 +200,9 @@ PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
   sessionDescription.sdp = maybeSetVideoReceiveBitRate(
     sessionDescription.sdp,
     this.params_);
-  this.pc_.setLocalDescription(sessionDescription,
-      trace.bind(null, 'Set session description success.'),
-      this.onError_.bind(this, 'setLocalDescription'));
+  this.pc_.setLocalDescription(sessionDescription)
+  .then(trace.bind(null, 'Set session description success.'))
+  .catch(this.onError_.bind(this, 'setLocalDescription'));
 
   if (this.onsignalingmessage) {
     // Chrome version of RTCSessionDescription can't be serialized directly
@@ -216,9 +223,9 @@ PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetAudioSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendInitialBitRate(message.sdp, this.params_);
-  this.pc_.setRemoteDescription(new RTCSessionDescription(message),
-      this.onSetRemoteDescriptionSuccess_.bind(this),
-      this.onError_.bind(this, 'setRemoteDescription'));
+  this.pc_.setRemoteDescription(new RTCSessionDescription(message))
+  .then(this.onSetRemoteDescriptionSuccess_.bind(this))
+  .catch(this.onError_.bind(this, 'setRemoteDescription'));
 };
 
 PeerConnectionClient.prototype.onSetRemoteDescriptionSuccess_ = function() {
@@ -255,9 +262,9 @@ PeerConnectionClient.prototype.processSignalingMessage_ = function(message) {
       candidate: message.candidate
     });
     this.recordIceCandidate_('Remote', candidate);
-    this.pc_.addIceCandidate(candidate,
-        trace.bind(null, 'Remote candidate added successfully.'),
-        this.onError_.bind(this, 'addIceCandidate'));
+    this.pc_.addIceCandidate(candidate)
+    .then(trace.bind(null, 'Remote candidate added successfully.'))
+    .catch(this.onError_.bind(this, 'addIceCandidate'));
   } else {
     trace('WARNING: unexpected message: ' + JSON.stringify(message));
   }

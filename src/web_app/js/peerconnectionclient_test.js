@@ -37,21 +37,27 @@ MockRTCPeerConnection.prototype.addStream = function(stream) {
   this.streams.push(stream);
 };
 MockRTCPeerConnection.prototype.createOffer =
-    function(callback, errback, constraints) {
-  this.createSdpRequests.push({
-    type: 'offer',
-    callback: callback,
-    errback: errback,
-    constraints: constraints
+    function(constraints) {
+  var self = this;
+  return new Promise(function(resolve, reject) {
+    self.createSdpRequests.push({
+      type: 'offer',
+      callback: resolve,
+      errback: reject,
+      constraints: constraints
+    });
   });
 };
 MockRTCPeerConnection.prototype.createAnswer =
-    function(callback, errback, constraints) {
-  this.createSdpRequests.push({
-    type: 'answer',
-    callback: callback,
-    errback: errback,
-    constraints: constraints
+    function(constraints) {
+  var self = this;
+  return new Promise(function(resolve, reject) {
+    self.createSdpRequests.push({
+      type: 'answer',
+      callback: resolve,
+      errback: reject,
+      constraints: constraints
+    });
   });
 };
 MockRTCPeerConnection.prototype.resolveLastCreateSdpRequest = function(sdp) {
@@ -68,33 +74,42 @@ MockRTCPeerConnection.prototype.resolveLastCreateSdpRequest = function(sdp) {
   }
 };
 MockRTCPeerConnection.prototype.setLocalDescription =
-    function(localDescription, callback, errback) {
+    function(localDescription) {
+  var self = this;
   if (localDescription.type === 'offer') {
     this.signalingState = 'have-local-offer';
   } else {
     this.signalingState = 'stable';
   }
-  this.localDescriptions.push({
-    description: localDescription,
-    callback: callback,
-    errback: errback
+  return new Promise(function(resolve, reject) {
+    self.localDescriptions.push({
+      description: localDescription,
+      callback: resolve,
+      errback: reject
+    });
   });
 };
 MockRTCPeerConnection.prototype.setRemoteDescription =
-    function(remoteDescription, callback, errback) {
+    function(remoteDescription) {
+  var self = this;
   if (remoteDescription.type === 'offer') {
     this.signalingState = 'have-remote-offer';
   } else {
     this.signalingState = 'stable';
   }
-  this.remoteDescriptions.push({
-    description: remoteDescription,
-    callback: callback,
-    errback: errback
+  return new Promise(function(resolve, reject) {
+    self.remoteDescriptions.push({
+      description: remoteDescription,
+      callback: resolve,
+      errback: reject
+    });
   });
 };
 MockRTCPeerConnection.prototype.addIceCandidate = function(candidate) {
   this.remoteIceCandidates.push(candidate);
+  return new Promise(function(resolve) {
+    resolve();
+  });
 };
 MockRTCPeerConnection.prototype.close = function() {
   this.signalingState = 'closed';
@@ -117,8 +132,8 @@ var PeerConnectionClientTest = new TestCase('PeerConnectionClientTest');
 PeerConnectionClientTest.prototype.setUp = function() {
   window.params = {};
 
-  this.readlRTCPeerConnection = RTCPeerConnection;
-  RTCPeerConnection = MockRTCPeerConnection;
+  this.readlRTCPeerConnection = window.RTCPeerConnection;
+  window.RTCPeerConnection = MockRTCPeerConnection;
 
   peerConnections.length = 0;
   this.pcClient = new PeerConnectionClient(
@@ -126,7 +141,7 @@ PeerConnectionClientTest.prototype.setUp = function() {
 };
 
 PeerConnectionClientTest.prototype.tearDown = function() {
-  RTCPeerConnection = this.readlRTCPeerConnection;
+  window.RTCPeerConnection = this.readlRTCPeerConnection;
 };
 
 PeerConnectionClientTest.prototype.testConstructor = function() {
