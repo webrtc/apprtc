@@ -16,10 +16,12 @@
  * @constructor
  */
 var Analytics = function(roomServer) {
-  /* @private {string} Room server URL. */
+  /* @private {String} Room server URL. */
   this.analyticsPath_ = roomServer + '/a/';
 };
 
+// Disable check here due to jscs not recognizing the types below.
+/* jscs: disable */
 /**
  * Defines a type for our event objects.
  * @typedef {
@@ -27,17 +29,18 @@ var Analytics = function(roomServer) {
  *   enums.RequestField.EventField.ROOM_ID: ?string,
  *   enums.RequestField.EventField.FLOWN_ID: ?number,
  *   enums.RequestField.EventField.EVENT_TIME_MS: number
- * }
+ * } 
  * @private
  */
+/* jscs: enable */
 Analytics.EventObject_ = {};
 
 /**
  * Report an event.
  *
  * @param {enums.EventType} eventType The event string to record.
- * @param {string=} roomId The current room ID.
- * @param {number=} flowId The current room ID.
+ * @param {String=} roomId The current room ID.
+ * @param {Number=} flowId The current room ID.
  */
 Analytics.prototype.reportEvent = function(eventType, roomId, flowId) {
   var eventObj = {};
@@ -55,6 +58,7 @@ Analytics.prototype.reportEvent = function(eventType, roomId, flowId) {
 
 /**
  * Send an event object to the server.
+ *
  * @param {Analytics.EventObject_} eventObj Event object to send.
  * @private
  */

@@ -23,6 +23,7 @@
     "createIceServers": true,
     "createIceServer": true,
     "createLineChart": true,
+    "define": true,
     "doGetUserMedia": true,
     "expectEquals": true,
     "getUserMedia": true,

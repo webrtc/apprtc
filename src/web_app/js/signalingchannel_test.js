@@ -40,7 +40,7 @@ SignalingChannelTest.prototype.testOpenSuccess = function() {
   var rejected = false;
   promise.then(function() {
     resolved = true;
-  }).catch (function() {
+  }).catch(function() {
     rejected = true;
   });
 
@@ -79,7 +79,7 @@ SignalingChannelTest.prototype.testOpenFailure = function() {
   var rejected = false;
   promise.then(function() {
     resolved = true;
-  }).catch (function() {
+  }).catch(function() {
     rejected = true;
   });
 
