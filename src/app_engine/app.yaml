@@ -9,6 +9,14 @@ handlers:
   static_files: html/\1
   upload: html/(.*\.html)
 
+- url: /manifest.json
+  static_files: html/manifest.json
+  upload: html/manifest.json
+
+- url: /robots.txt
+  static_files: html/robot.txt
+  upload: html/robots.txt
+
 - url: /images
   static_dir: images
 
