@@ -29,7 +29,7 @@ var Analytics = function(roomServer) {
  *   enums.RequestField.EventField.ROOM_ID: ?string,
  *   enums.RequestField.EventField.FLOWN_ID: ?number,
  *   enums.RequestField.EventField.EVENT_TIME_MS: number
- * } 
+ * }
  * @private
  */
 /* jscs: enable */
