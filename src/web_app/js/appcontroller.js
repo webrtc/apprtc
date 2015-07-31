@@ -488,12 +488,12 @@ AppController.prototype.showIcons_ = function() {
 };
 
 AppController.prototype.loadUrlParams_ = function() {
+  /* jscs: disable */
   /* jshint ignore:start */
   // Suppressing jshint warns about using urlParams['KEY'] instead of
   // urlParams.KEY, since we'd like to use string literals to avoid the Closure
   // compiler renaming the properties.
-  var urlParams = queryStringToDictionary(window.location.search)
-
+  var urlParams = queryStringToDictionary(window.location.search);
   this.loadingParams_.audioSendBitrate = urlParams['asbr'];
   this.loadingParams_.audioSendCodec = urlParams['asc'];
   this.loadingParams_.audioRecvBitrate = urlParams['arbr'];
@@ -508,6 +508,7 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
   this.loadingParams_.videoRecvCodec = urlParams['vrc'];
   /* jshint ignore:end */
+  /* jscs: enable */
 };
 
 AppController.IconSet_ = function(iconSelector) {
