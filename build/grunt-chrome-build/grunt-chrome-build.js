@@ -13,12 +13,11 @@ module.exports = function (grunt) {
     // Steps:
     // 1. Delete existing build dir if it exists.
     var buildDir = options.buildDir;
-    if (!buildDir) {
-      throw grunt.util.error('Missing required buildDir option.');
+    if (grunt.file.isDir(buildDir)) {
+      grunt.log.writeln('Deleting buildDir: ' + buildDir);
+      grunt.file.delete(buildDir);
     }
-    grunt.log.writeln('Deleting buildDir: ' + buildDir);
-    grunt.file.delete(buildDir);
-
+    
     // 2. Create build dir.
     grunt.log.writeln('Creating empty buildDir: ' + buildDir);
     grunt.file.mkdir(buildDir);

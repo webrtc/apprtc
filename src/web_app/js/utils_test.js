@@ -73,7 +73,7 @@ UtilsTest.prototype.testQueryStringToDictionary = function() {
     'foo': 'a',
     'baz': '',
     'bar': 'b',
-    'tee': '',
+    'tee': ''
   };
 
   var buildQuery = function(data, includeEqualsOnEmpty) {
