@@ -118,7 +118,7 @@ Call.prototype.hangup = function(async) {
   }
 
   if (this.localStream_) {
-    this.localStream_.stop();
+    this.localStream_.getTracks().forEach(function(track) { track.stop(); });
     this.localStream_ = null;
   }
 
