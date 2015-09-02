@@ -19,6 +19,6 @@
     "grunt-shell": "^1.1.1",
     "grunt-jstestdriver-phantomjs": ">=0.0.7",
     "grunt-closurecompiler": ">=0.0.21",
-    "webrtc-adapter-test": "^0.1.0"
+    "webrtc-adapter-test": "^0.2.0"
   }
 }

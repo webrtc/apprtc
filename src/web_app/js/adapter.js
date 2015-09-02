@@ -25,10 +25,11 @@ var webrtcMinimumVersion = null;
 var webrtcUtils = {
   log: function() {
     // suppress console.log output when being included as a module.
-    if (!(typeof module !== 'undefined' ||
-        typeof require === 'function') && (typeof define === 'function')) {
-      console.log.apply(console, arguments);
+    if (typeof module !== 'undefined' ||
+        typeof require === 'function' && typeof define === 'function') {
+      return;
     }
+    console.log.apply(console, arguments);
   }
 };
 
@@ -45,10 +46,45 @@ function trace(text) {
   }
 }
 
+if (typeof window === 'object') {
+  if (window.HTMLMediaElement &&
+    !('srcObject' in window.HTMLMediaElement.prototype)) {
+    // Shim the srcObject property, once, when HTMLMediaElement is found.
+    Object.defineProperty(window.HTMLMediaElement.prototype, 'srcObject', {
+      get: function() {
+        // If prefixed srcObject property exists, return it.
+        // Otherwise use the shimmed property, _srcObject
+        return 'mozSrcObject' in this ? this.mozSrcObject : this._srcObject;
+      },
+      set: function(stream) {
+        if ('mozSrcObject' in this) {
+          this.mozSrcObject = stream;
+        } else {
+          // Use _srcObject as a private property for this shim
+          this._srcObject = stream;
+          // TODO: revokeObjectUrl(this.src) when !stream to release resources?
+          this.src = URL.createObjectURL(stream);
+        }
+      }
+    });
+  }
+  // Proxy existing globals
+  getUserMedia = window.navigator && window.navigator.getUserMedia;
+}
+
+// Attach a media stream to an element.
+attachMediaStream = function(element, stream) {
+  element.srcObject = stream;
+};
+
+reattachMediaStream = function(to, from) {
+  to.srcObject = from.srcObject;
+};
+
 if (typeof window === 'undefined' || !window.navigator) {
   webrtcUtils.log('This does not appear to be a browser');
   webrtcDetectedBrowser = 'not a browser';
-} else if (navigator.mozGetUserMedia) {
+} else if (navigator.mozGetUserMedia && window.mozRTCPeerConnection) {
   webrtcUtils.log('This appears to be Firefox');
 
   webrtcDetectedBrowser = 'firefox';
@@ -187,16 +223,7 @@ if (typeof window === 'undefined' || !window.navigator) {
       });
     };
   }
-  // Attach a media stream to an element.
-  attachMediaStream = function(element, stream) {
-    element.mozSrcObject = stream;
-  };
-
-  reattachMediaStream = function(to, from) {
-    to.mozSrcObject = from.mozSrcObject;
-  };
-
-} else if (navigator.webkitGetUserMedia) {
+} else if (navigator.webkitGetUserMedia && !!window.chrome) {
   webrtcUtils.log('This appears to be Chrome');
 
   webrtcDetectedBrowser = 'chrome';
@@ -256,7 +283,14 @@ if (typeof window === 'undefined' || !window.navigator) {
 
       // promise-support
       return new Promise(function(resolve, reject) {
-        origGetStats.apply(self, [resolve, reject]);
+        if (args.length === 1 && selector === null) {
+          origGetStats.apply(self, [
+              function(response) {
+                resolve.apply(null, [fixChromeStats(response)]);
+              }, reject]);
+        } else {
+          origGetStats.apply(self, [resolve, reject]);
+        }
       });
     };
 
@@ -422,7 +456,7 @@ if (typeof window === 'undefined' || !window.navigator) {
 
   // Attach a media stream to an element.
   attachMediaStream = function(element, stream) {
-    if (typeof element.srcObject !== 'undefined') {
+    if (webrtcDetectedVersion >= 43) {
       element.srcObject = stream;
     } else if (typeof element.src !== 'undefined') {
       element.src = URL.createObjectURL(stream);
@@ -430,9 +464,12 @@ if (typeof window === 'undefined' || !window.navigator) {
       webrtcUtils.log('Error attaching stream to element.');
     }
   };
-
   reattachMediaStream = function(to, from) {
-    to.src = from.src;
+    if (webrtcDetectedVersion >= 43) {
+      to.srcObject = from.srcObject;
+    } else {
+      to.src = from.src;
+    }
   };
 
 } else if (navigator.mediaDevices && navigator.userAgent.match(
@@ -445,15 +482,6 @@ if (typeof window === 'undefined' || !window.navigator) {
 
   // the minimum version still supported by adapter.
   webrtcMinimumVersion = 12;
-
-  getUserMedia = navigator.getUserMedia;
-
-  attachMediaStream = function(element, stream) {
-    element.srcObject = stream;
-  };
-  reattachMediaStream = function(to, from) {
-    to.srcObject = from.srcObject;
-  };
 } else {
   webrtcUtils.log('Browser does not appear to be WebRTC-capable');
 }
