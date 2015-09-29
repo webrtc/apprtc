@@ -118,7 +118,7 @@ Call.prototype.hangup = function(async) {
   }
 
   if (this.localStream_) {
-    if (typeof this.localStream_.stop === 'function') {
+    if (typeof this.localStream_.getTracks === 'undefined') {
       // Support legacy browsers, like phantomJs we use to run tests.
       this.localStream_.stop();
     } else {
