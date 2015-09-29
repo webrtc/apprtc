@@ -118,9 +118,14 @@ Call.prototype.hangup = function(async) {
   }
 
   if (this.localStream_) {
-    this.localStream_.getTracks().forEach(function(track) {
-      track.stop();
-    });
+    if (typeof this.localStream_.stop === "function") {
+      // Support legacy browsers, like phantomJs we use to run tests.
+      this.localStream_.stop();
+    } else {
+      this.localStream_.getTracks().forEach(function(track) {
+        track.stop();
+      });
+    }
     this.localStream_ = null;
   }
 
