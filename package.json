@@ -4,7 +4,7 @@
   "description": "Project checking for AppRTC repo",
   "main": "Gruntfile.js",
   "scripts": {
-    "postinstall": "cp node_modules/webrtc-adapter-test/adapter.js src/web_app/js/",
+    "postinstall": "python build/copy_portable.py node_modules/webrtc-adapter-test/adapter.js src/web_app/js/",
     "test": "grunt --verbose"
   },
   "devDependencies": {
