@@ -7,6 +7,7 @@
 package collider
 
 import (
+	"crypto/tls"
 	"golang.org/x/net/websocket"
 	"encoding/json"
 	"errors"
@@ -38,7 +39,7 @@ func NewCollider(rs string) *Collider {
 }
 
 // Run starts the collider server and blocks the thread until the program exits.
-func (c *Collider) Run(p int, tls bool) {
+func (c *Collider) Run(p int, useTls bool) {
 	http.Handle("/ws", websocket.Handler(c.wsHandler))
 	http.HandleFunc("/status", c.httpStatusHandler)
 	http.HandleFunc("/", c.httpHandler)
@@ -46,8 +47,25 @@ func (c *Collider) Run(p int, tls bool) {
 	var e error
 
 	pstr := ":" + strconv.Itoa(p)
-	if tls {
-		e = http.ListenAndServeTLS(pstr, "/cert/cert.pem", "/cert/key.pem", nil)
+	if useTls {
+		config := &tls.Config {
+			MinVersion: tls.VersionTLS12,
+			// Only allow ciphers that support forward secrecy for iOS9 compatibility:
+			// https://developer.apple.com/library/prerelease/ios/technotes/App-Transport-Security-Technote/
+			CipherSuites: []uint16 {
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+			},
+			PreferServerCipherSuites: true,
+		}
+		server := &http.Server{ Addr: pstr, Handler: nil, TLSConfig: config }
+
+		e = server.ListenAndServeTLS("/cert/cert.pem", "/cert/key.pem")
 	} else {
 		e = http.ListenAndServe(pstr, nil)
 	}
