@@ -104,10 +104,11 @@ RoomSelection.prototype.buildRecentRoomList_ = function(recentRooms) {
 
 RoomSelection.prototype.onRoomIdInput_ = function() {
   // Validate room id, enable/disable join button.
-  // The server currently accepts only the \w character class.
+  // The server currently accepts only the \w character class and
+  // hyphen+underscor.
   var room = this.roomIdInput_.value;
   var valid = room.length >= 5;
-  var re = /^\w+$/;
+  var re = /^([a-zA-Z0-9-_]+)+$/;
   valid = valid && re.exec(room);
   if (valid) {
     this.roomJoinButton_.disabled = false;
