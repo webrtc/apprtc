@@ -568,9 +568,9 @@ app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/a/', analytics_page.AnalyticsPage),
     ('/compute/(\w+)/(\S+)/(\S+)', compute_page.ComputePage),
-    ('/join/(\w+)', JoinPage),
-    ('/leave/(\w+)/(\w+)', LeavePage),
-    ('/message/(\w+)/(\w+)', MessagePage),
+    ('/join/([a-zA-Z0-9-_]+)', JoinPage),
+    ('/leave/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)', LeavePage),
+    ('/message/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)', MessagePage),
     ('/params', ParamsPage),
-    ('/r/(\w+)', RoomPage),
+    ('/r/([a-zA-Z0-9-_]+)', RoomPage),
 ], debug=True)
