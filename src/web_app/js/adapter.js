@@ -30,6 +30,10 @@ var webrtcUtils = {
       return;
     }
     console.log.apply(console, arguments);
+  },
+  extractVersion: function(uastring, expr, pos) {
+    var match = uastring.match(expr);
+    return match && match.length >= pos && parseInt(match[pos]);
   }
 };
 
@@ -90,8 +94,8 @@ if (typeof window === 'undefined' || !window.navigator) {
   webrtcDetectedBrowser = 'firefox';
 
   // the detected firefox version.
-  webrtcDetectedVersion =
-    parseInt(navigator.userAgent.match(/Firefox\/([0-9]+)\./)[1], 10);
+  webrtcDetectedVersion = webrtcUtils.extractVersion(navigator.userAgent,
+      /Firefox\/([0-9]+)\./, 1);
 
   // the minimum firefox version still supported by adapter.
   webrtcMinimumVersion = 31;
@@ -227,14 +231,14 @@ if (typeof window === 'undefined' || !window.navigator) {
       });
     };
   }
-} else if (navigator.webkitGetUserMedia && !!window.chrome) {
+} else if (navigator.webkitGetUserMedia && window.webkitRTCPeerConnection) {
   webrtcUtils.log('This appears to be Chrome');
 
   webrtcDetectedBrowser = 'chrome';
 
   // the detected chrome version.
-  webrtcDetectedVersion =
-    parseInt(navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)[2], 10);
+  webrtcDetectedVersion = webrtcUtils.extractVersion(navigator.userAgent,
+      /Chrom(e|ium)\/([0-9]+)\./, 2);
 
   // the minimum chrome version still supported by adapter.
   webrtcMinimumVersion = 38;
@@ -481,8 +485,8 @@ if (typeof window === 'undefined' || !window.navigator) {
   webrtcUtils.log('This appears to be Edge');
   webrtcDetectedBrowser = 'edge';
 
-  webrtcDetectedVersion =
-    parseInt(navigator.userAgent.match(/Edge\/(\d+).(\d+)$/)[2], 10);
+  webrtcDetectedVersion = webrtcUtils.extractVersion(navigator.userAgent,
+      /Edge\/(\d+).(\d+)$/, 2);
 
   // the minimum version still supported by adapter.
   webrtcMinimumVersion = 12;
@@ -519,7 +523,8 @@ if (typeof module !== 'undefined') {
     webrtcDetectedBrowser: webrtcDetectedBrowser,
     webrtcDetectedVersion: webrtcDetectedVersion,
     webrtcMinimumVersion: webrtcMinimumVersion,
-    webrtcTesting: webrtcTesting
+    webrtcTesting: webrtcTesting,
+    webrtcUtils: webrtcUtils
     //requestUserMedia: not exposed on purpose.
     //trace: not exposed on purpose.
   };
@@ -534,7 +539,8 @@ if (typeof module !== 'undefined') {
       webrtcDetectedBrowser: webrtcDetectedBrowser,
       webrtcDetectedVersion: webrtcDetectedVersion,
       webrtcMinimumVersion: webrtcMinimumVersion,
-      webrtcTesting: webrtcTesting
+      webrtcTesting: webrtcTesting,
+      webrtcUtils: webrtcUtils
       //requestUserMedia: not exposed on purpose.
       //trace: not exposed on purpose.
     };
