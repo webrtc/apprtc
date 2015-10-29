@@ -8,8 +8,8 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals computeBitrate, computeE2EDelay, extractStatAsInt, getStatsReport,
-   iceCandidateType, computeRate */
+/* globals computeBitrate, computeE2EDelay, extractStatAsInt,
+   formatTypePreference, getStatsReport, iceCandidateType, computeRate */
 /* exported InfoBox */
 
 'use strict';
@@ -115,8 +115,19 @@ InfoBox.prototype.updateInfoDiv = function() {
       remoteAddrType = activeCandPair.stat('googRemoteCandidateType');
     }
     if (localAddr && remoteAddr) {
+      var localCandId = activeCandPair.stat('localCandidateId');
+      var localCand;
+      var localTypePref;
+      if (localCandId) {
+        localCand = getStatsReport(this.stats_, 'localcandidate', 'id',
+            localCandId);
+        if (localCand) {
+          localTypePref = localCand.stat('priority') >> 24;
+        }
+      }
       contents += this.buildLine_('LocalAddr', localAddr +
-          ' (' + localAddrType + ')');
+          ' (' + localAddrType + (localTypePref !== undefined ?
+          ' ' + formatTypePreference(localTypePref) : '') + ')');
       contents += this.buildLine_('RemoteAddr', remoteAddr +
           ' (' + remoteAddrType + ')');
     }
