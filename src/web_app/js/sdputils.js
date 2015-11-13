@@ -226,7 +226,7 @@ function maybePreferVideoReceiveCodec(sdp, params) {
 // The format of |codec| is 'NAME/RATE', e.g. 'opus/48000'.
 function maybePreferCodec(sdp, type, dir, codec) {
   var str = type + ' ' + dir + ' codec';
-  if (codec === '') {
+  if (typeof codec === 'undefined' || codec === '') {
     trace('No preference on ' + str + '.');
     return sdp;
   }
