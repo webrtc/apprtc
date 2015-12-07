@@ -458,7 +458,7 @@ AppController.prototype.toggleFullScreen_ = function() {
         '<title>Enter fullscreen</title>';
     document.cancelFullScreen();
   } else {
-    trace('Entering fullscreen');
+    trace('Entering fullscreen.');
     document.querySelector('#fullscreen').childNodes[1].innerHTML  =
         '<title>Exit fullscreen</title>';
     document.body.requestFullScreen();
