@@ -42,7 +42,11 @@ def get_hd_default(user_agent):
 
 # iceServers will be filled in by the TURN HTTP request.
 def make_pc_config(ice_transports):
-  config = { 'iceServers': [] };
+  config = {
+  'iceServers': [],
+  'bundlePolicy': 'max-bundle',
+  'rtcpMuxPolicy': 'require'
+  };
   if ice_transports:
     config['iceTransports'] = ice_transports
   return config
@@ -97,7 +101,7 @@ def maybe_add_constraint(constraints, param, constraint):
   return constraints
 
 def make_pc_constraints(dtls, dscp, ipv6):
-  constraints = { 'optional': [] }
+  constraints = {'optional': []};
   maybe_add_constraint(constraints, dtls, 'DtlsSrtpKeyAgreement')
   maybe_add_constraint(constraints, dscp, 'googDscp')
   maybe_add_constraint(constraints, ipv6, 'googIPv6')
@@ -253,7 +257,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
 
   pc_config = make_pc_config(ice_transports)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
-  offer_constraints = { 'mandatory': {}, 'optional': [] }
+  offer_options = {};
   media_constraints = make_media_stream_constraints(audio, video,
                                                     firefox_fake_device)
   wss_url, wss_post_url = get_wss_parameters(request)
@@ -266,7 +270,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'is_loopback' : json.dumps(debug == 'loopback'),
     'pc_config': json.dumps(pc_config),
     'pc_constraints': json.dumps(pc_constraints),
-    'offer_constraints': json.dumps(offer_constraints),
+    'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
     'turn_url': turn_url,
     'turn_transports': turn_transports,

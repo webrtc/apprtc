@@ -132,7 +132,7 @@
 {% endif %}
 
       mediaConstraints: {{ media_constraints | safe }},
-      offerConstraints: {{ offer_constraints | safe }},
+      offerOptions: {{ offer_options | safe }},
       peerConnectionConfig: {{ pc_config | safe }},
       peerConnectionConstraints: {{ pc_constraints | safe }},
       turnRequestUrl: '{{ turn_url }}',

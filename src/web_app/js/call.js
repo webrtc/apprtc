@@ -452,7 +452,7 @@ Call.prototype.startSignaling_ = function() {
     this.pcClient_.addStream(this.localStream_);
   }
   if (this.params_.isInitiator) {
-    this.pcClient_.startAsCaller(this.params_.offerConstraints);
+    this.pcClient_.startAsCaller(this.params_.offerOptions);
   } else {
     this.pcClient_.startAsCallee(this.params_.messages);
   }

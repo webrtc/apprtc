@@ -58,14 +58,10 @@ var PeerConnectionClient = function(params, startTime) {
 
 // Set up audio and video regardless of what devices are present.
 // Disable comfort noise for maximum audio quality.
-PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_ = {
-  'mandatory': {
-    'OfferToReceiveAudio': true,
-    'OfferToReceiveVideo': true
-  },
-  'optional': [{
-    'VoiceActivityDetection': false
-  }]
+PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_ = {
+  offerToReceiveAudio: 1,
+  offerToReceiveVideo: 1,
+  voiceActivityDetection: false
 };
 
 PeerConnectionClient.prototype.addStream = function(stream) {
@@ -75,7 +71,7 @@ PeerConnectionClient.prototype.addStream = function(stream) {
   this.pc_.addStream(stream);
 };
 
-PeerConnectionClient.prototype.startAsCaller = function(offerConstraints) {
+PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
   if (!this.pc_) {
     return false;
   }
@@ -87,7 +83,7 @@ PeerConnectionClient.prototype.startAsCaller = function(offerConstraints) {
   this.isInitiator_ = true;
   this.started_ = true;
   var constraints = mergeConstraints(
-      offerConstraints, PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_);
+    PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
   trace('Sending offer to peer, with constraints: \n\'' +
       JSON.stringify(constraints) + '\'.');
   this.pc_.createOffer(constraints)
@@ -180,7 +176,7 @@ PeerConnectionClient.prototype.doAnswer_ = function() {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1098015
     p = this.pc_.createAnswer();
   } else {
-    p = this.pc_.createAnswer(PeerConnectionClient.DEFAULT_SDP_CONSTRAINTS_);
+    p = this.pc_.createAnswer(PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_);
   }
   p.then(this.setLocalSdpAndNotify_.bind(this))
   .catch(this.onError_.bind(this, 'createAnswer'));
