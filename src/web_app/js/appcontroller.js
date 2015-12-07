@@ -454,9 +454,13 @@ AppController.prototype.toggleVideoMute_ = function() {
 AppController.prototype.toggleFullScreen_ = function() {
   if (isFullScreen()) {
     trace('Exiting fullscreen.');
+    document.querySelector('#fullscreen').childNodes[1].innerHTML =
+        '<title>Enter fullscreen</title>';
     document.cancelFullScreen();
   } else {
-    trace('Entering fullscreen.');
+    trace('Entering fullscreen');
+    document.querySelector('#fullscreen').childNodes[1].innerHTML  =
+        '<title>Exit fullscreen</title>';
     document.body.requestFullScreen();
   }
   this.fullscreenIconSet_.toggle();
