@@ -21,6 +21,7 @@ var InfoBox = function(infoDiv, remoteVideo, call, versionInfo) {
   this.versionInfo_ = versionInfo;
 
   this.errorMessages_ = [];
+  this.warningMessages_ = [];
   // Time when the call was intiated and accepted.
   this.startTime_ = null;
   this.connectTime_ = null;
@@ -49,6 +50,12 @@ InfoBox.prototype.recordIceCandidateTypes = function(location, candidate) {
 
 InfoBox.prototype.pushErrorMessage = function(msg) {
   this.errorMessages_.push(msg);
+  this.updateInfoDiv();
+  this.showInfoDiv();
+};
+
+InfoBox.prototype.pushWarningMessage = function(msg) {
+  this.warningMessages_.push(msg);
   this.updateInfoDiv();
   this.showInfoDiv();
 };
@@ -136,10 +143,19 @@ InfoBox.prototype.updateInfoDiv = function() {
     contents += this.buildStatsSection_();
   }
 
-  if (this.errorMessages_.length) {
-    this.infoDiv_.classList.add('warning');
-    for (var i = 0; i !== this.errorMessages_.length; ++i) {
-      contents += this.errorMessages_[i] + '\n';
+
+  if (this.errorMessages_.length > 0 || this.warningMessages_.length > 0) {
+    contents += this.buildLine_('\nMessages');
+    if (this.errorMessages_.length) {
+      this.infoDiv_.classList.add('warning');
+      for (var i = 0; i !== this.errorMessages_.length; ++i) {
+        contents += this.errorMessages_[i] + '\n';
+      }
+    } else {
+      this.infoDiv_.classList.add('active');
+      for (var j = 0; j !== this.warningMessages_.length; ++j) {
+        contents += this.warningMessages_[j] + '\n';
+      }
     }
   } else {
     this.infoDiv_.classList.remove('warning');

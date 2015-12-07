@@ -17,6 +17,7 @@
 var roomServer = 'https://apprtc.appspot.com';
 var loadingParams = {
   errorMessages: [],
+  warningMessages: [],
   suggestedRoomId: randomString(9),
   roomServer: roomServer,
   connect: false,

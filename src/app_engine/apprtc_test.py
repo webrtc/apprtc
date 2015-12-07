@@ -84,6 +84,7 @@ class AppRtcPageHandlerTest(unittest.TestCase):
     self.assertEqual(json.dumps(is_initiator), params['is_initiator'])
     self.assertEqual(room_id, params['room_id'])
     self.assertEqual([], params['error_messages'])
+    self.assertEqual([], params['warning_messages'])
     return caller_id
 
   def testConnectingWithoutRoomIdServesIndex(self):

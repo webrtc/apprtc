@@ -157,6 +157,7 @@ def get_version_info():
 # TODO(tkchin): move query parameter parsing to JS code.
 def get_room_parameters(request, room_id, client_id, is_initiator):
   error_messages = []
+  warning_messages = []
   # Get the base url without arguments.
   base_url = request.path_url
   user_agent = request.headers['User-Agent']
@@ -215,18 +216,20 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   hd = request.get('hd').lower()
   if hd and video:
     message = 'The "hd" parameter has overridden video=' + video
-    logging.error(message)
-    error_messages.append(message)
+    logging.warning(message)
+    # HTML template is UTF-8 while python defaults to unicode.
+    warning_messages.append(message.encode('utf-8'))
   if hd == 'true':
     video = 'mandatory:minWidth=1280,mandatory:minHeight=720'
   elif not hd and not video and get_hd_default(user_agent) == 'true':
     video = 'optional:minWidth=1280,optional:minHeight=720'
 
   if request.get('minre') or request.get('maxre'):
-    message = ('The "minre" and "maxre" parameters are no longer supported. '
-              'Use "video" instead.')
-    logging.error(message)
-    error_messages.append(message)
+    message = ('The "minre" and "maxre" parameters are no longer ' +
+        'supported. Use "video" instead.')
+    logging.warning(message)
+    # HTML template is UTF-8 while python defaults to unicode.
+    warning_messages.append(message.encode('utf-8'))
 
   # Options for controlling various networking features.
   dtls = request.get('dtls')
@@ -263,6 +266,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
 
   params = {
     'error_messages': error_messages,
+    'warning_messages': warning_messages,
     'is_loopback' : json.dumps(debug == 'loopback'),
     'pc_config': json.dumps(pc_config),
     'pc_constraints': json.dumps(pc_constraints),
