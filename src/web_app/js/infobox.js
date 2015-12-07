@@ -143,7 +143,6 @@ InfoBox.prototype.updateInfoDiv = function() {
     contents += this.buildStatsSection_();
   }
 
-
   if (this.errorMessages_.length > 0 || this.warningMessages_.length > 0) {
     contents += this.buildLine_('\nMessages');
     if (this.errorMessages_.length) {
