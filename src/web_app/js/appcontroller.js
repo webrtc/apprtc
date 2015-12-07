@@ -298,6 +298,12 @@ AppController.prototype.attachLocalStream_ = function() {
   this.displayStatus_('');
   this.activate_(this.localVideo_);
   this.show_(this.icons_);
+  if (this.localStream_.getVideoTracks().length === 0) {
+    this.hide_($(UI_CONSTANTS.muteVideoSvg));
+  }
+  if (this.localStream_.getAudioTracks().length === 0) {
+    this.hide_($(UI_CONSTANTS.muteAudioSvg));
+  }
 };
 
 AppController.prototype.transitionToActive_ = function() {
