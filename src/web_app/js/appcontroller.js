@@ -459,7 +459,7 @@ AppController.prototype.toggleFullScreen_ = function() {
     document.cancelFullScreen();
   } else {
     trace('Entering fullscreen.');
-    document.querySelector('svg#fullscreen title').textContent  =
+    document.querySelector('svg#fullscreen title').textContent =
         'Exit fullscreen';
     document.body.requestFullScreen();
   }
