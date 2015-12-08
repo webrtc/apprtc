@@ -217,7 +217,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   if hd and video:
     message = 'The "hd" parameter has overridden video=' + video
     logging.warning(message)
-    # HTML template is UTF-8 while python defaults to unicode.
+    # HTML template is UTF-8, make sure the string is UTF-8 as well.
     warning_messages.append(message.encode('utf-8'))
   if hd == 'true':
     video = 'mandatory:minWidth=1280,mandatory:minHeight=720'
@@ -228,7 +228,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     message = ('The "minre" and "maxre" parameters are no longer ' +
         'supported. Use "video" instead.')
     logging.warning(message)
-    # HTML template is UTF-8 while python defaults to unicode.
+    # HTML template is UTF-8, make sure the string is UTF-8 as well.
     warning_messages.append(message.encode('utf-8'))
 
   # Options for controlling various networking features.
