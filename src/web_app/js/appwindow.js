@@ -17,6 +17,7 @@
 var roomServer = 'https://appr.tc';
 var loadingParams = {
   errorMessages: [],
+  warningMessages: [],
   suggestedRoomId: randomString(9),
   roomServer: roomServer,
   connect: false,

@@ -149,11 +149,16 @@ AppController.prototype.createCall_ = function() {
                               this.loadingParams_.versionInfo);
 
   var roomErrors = this.loadingParams_.errorMessages;
+  var roomWarnings = this.loadingParams_.warningMessages;
   if (roomErrors && roomErrors.length > 0) {
     for (var i = 0; i < roomErrors.length; ++i) {
       this.infoBox_.pushErrorMessage(roomErrors[i]);
     }
     return;
+  } else if (roomWarnings && roomWarnings.length > 0) {
+    for (var j = 0; j < roomWarnings.length; ++j) {
+      this.infoBox_.pushWarningMessage(roomWarnings[j]);
+    }
   }
 
   // TODO(jiayl): replace callbacks with events.
