@@ -13,6 +13,7 @@ import logging
 import os
 import random
 import threading
+from urllib import quote
 
 import jinja2
 import webapp2
@@ -112,11 +113,11 @@ def append_url_arguments(request, link):
   arguments = request.arguments()
   if len(arguments) == 0:
     return link
-  link += ('?' + cgi.escape(arguments[0], True) + '=' +
-           cgi.escape(request.get(arguments[0]), True))
+  link += ('?' + cgi.escape(quote(arguments[0]), True) + '=' +
+           cgi.escape(quote(request.get(arguments[0])), True))
   for argument in arguments[1:]:
-    link += ('&' + cgi.escape(argument, True) + '=' +
-             cgi.escape(request.get(argument), True))
+    link += ('&' + cgi.escape(quote(argument), True) + '=' +
+             cgi.escape(quote(request.get(argument)), True))
   return link
 
 def get_wss_parameters(request):
@@ -219,7 +220,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # doesn't actually support HD modes.
   hd = request.get('hd').lower()
   if hd and video:
-    message = 'The "hd" parameter has overridden video=' + video
+    message = 'The "hd" parameter has overridden video=' + quote(video)
     logging.warning(message)
     # HTML template is UTF-8, make sure the string is UTF-8 as well.
     warning_messages.append(message.encode('utf-8'))
@@ -255,6 +256,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   if len(turn_base_url) > 0:
     turn_url = constants.TURN_URL_TEMPLATE % \
         (turn_base_url, username, constants.CEOD_KEY)
+    print turn_url
   else:
     turn_url = ''
 
@@ -276,8 +278,8 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'pc_constraints': json.dumps(pc_constraints),
     'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
-    'turn_url': turn_url,
-    'turn_transports': turn_transports,
+    'turn_url': quote(turn_url),
+    'turn_transports': quote(turn_transports),
     'include_loopback_js' : include_loopback_js,
     'wss_url': wss_url,
     'wss_post_url': wss_post_url,

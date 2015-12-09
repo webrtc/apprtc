@@ -132,7 +132,7 @@
       roomLink: '{{ room_link }}',
 {% endif %}
 
-      mediaConstraints: {{ media_constraints | safe }},
+      mediaConstraints: {{ media_constraints }},
       offerOptions: {{ offer_options | safe }},
       peerConnectionConfig: {{ pc_config | safe }},
       peerConnectionConstraints: {{ pc_constraints | safe }},
@@ -141,7 +141,7 @@
       wssUrl: '{{ wss_url }}',
       wssPostUrl: '{{ wss_post_url }}',
       bypassJoinConfirmation: {{ bypass_join_confirmation }},
-      versionInfo: {{ version_info }}
+      versionInfo: {{ version_info | safe }}
     };
 
     var appController;
