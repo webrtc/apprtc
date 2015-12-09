@@ -519,9 +519,9 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.opusStereo = urlParams['stereo'];
   this.loadingParams_.videoSendBitrate = urlParams['vsbr'];
   this.loadingParams_.videoSendInitialBitrate = urlParams['vsibr'];
-  this.loadingParams_.videoSendCodec = urlParams['vsc'];
+  this.loadingParams_.videoSendCodec = urlParams['vsc'] || 'VP9';
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
-  this.loadingParams_.videoRecvCodec = urlParams['vrc'];
+  this.loadingParams_.videoRecvCodec = urlParams['vrc'] || 'VP9';
   /* jshint ignore:end */
   /* jscs: enable */
 };
