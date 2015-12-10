@@ -148,12 +148,12 @@ InfoBox.prototype.updateInfoDiv = function() {
     if (this.errorMessages_.length) {
       this.infoDiv_.classList.add('warning');
       for (var i = 0; i !== this.errorMessages_.length; ++i) {
-        contents += this.errorMessages_[i] + '\n';
+        contents += decodeURIComponent(this.errorMessages_[i]) + '\n';
       }
     } else {
       this.infoDiv_.classList.add('active');
       for (var j = 0; j !== this.warningMessages_.length; ++j) {
-        contents += this.warningMessages_[j] + '\n';
+        contents += decodeURIComponent(this.warningMessages_[j]) + '\n';
       }
     }
   } else {

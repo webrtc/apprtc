@@ -65,7 +65,7 @@ function sendUrlRequest(method, url, async, body) {
         reportResults();
       };
     }
-    xhr.open(method, url, async);
+    xhr.open(method, decodeURIComponent(url), async);
     xhr.send(body);
 
     if (!async) {
