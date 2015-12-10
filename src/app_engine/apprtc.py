@@ -256,7 +256,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   if len(turn_base_url) > 0:
     turn_url = constants.TURN_URL_TEMPLATE % \
         (turn_base_url, username, constants.CEOD_KEY)
-    print turn_url
   else:
     turn_url = ''
 
