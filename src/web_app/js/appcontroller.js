@@ -508,6 +508,7 @@ AppController.prototype.loadUrlParams_ = function() {
   // Suppressing jshint warns about using urlParams['KEY'] instead of
   // urlParams.KEY, since we'd like to use string literals to avoid the Closure
   // compiler renaming the properties.
+  var DEFAULT_VIDEO_CODEC = 'VP9';
   var urlParams = queryStringToDictionary(window.location.search);
   this.loadingParams_.audioSendBitrate = urlParams['asbr'];
   this.loadingParams_.audioSendCodec = urlParams['asc'];
@@ -519,9 +520,9 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.opusStereo = urlParams['stereo'];
   this.loadingParams_.videoSendBitrate = urlParams['vsbr'];
   this.loadingParams_.videoSendInitialBitrate = urlParams['vsibr'];
-  this.loadingParams_.videoSendCodec = urlParams['vsc'] || 'VP9';
+  this.loadingParams_.videoSendCodec = urlParams['vsc'];
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
-  this.loadingParams_.videoRecvCodec = urlParams['vrc'] || 'VP9';
+  this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
   /* jshint ignore:end */
   /* jscs: enable */
 };
