@@ -10,7 +10,7 @@
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
    requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString, $,
-   queryStringToDictionary */
+   queryStringToDictionary, maybeReplaceHTMLEscChar*/
 /* globals chrome */
 
 'use strict';
@@ -72,6 +72,22 @@ function sendUrlRequest(method, url, async, body) {
       reportResults();
     }
   });
+}
+
+function maybeReplaceHTMLEscChar(str, find, replace) {
+  try {
+    if (str === null || typeof str !== 'string') {
+      return str;
+    }
+    return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+  } catch (error) {
+    trace('maybeReplaceHTMLEscChar error:' + error + '\n' + 'String: ' + str +
+        '\n' + 'Find: ' + find + '\n' + 'Replace: ' + replace);
+  }
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions.
+  function escapeRegExp(str) {
+    return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
+  }
 }
 
 // Returns a list of turn servers after requesting it from CEOD.
