@@ -151,18 +151,18 @@
       // since it will register the user to GAE without cleaning it up, causing
       // the real navigation to get a "full room" error. Instead we'll initialize
       // once the visibility state changes to non-prerender.
-      if (document.webkitVisibilityState === 'prerender') {
-        document.addEventListener('webkitvisibilitychange', onVisibilityChange);
+      if (document.visibilityState === 'prerender') {
+        document.addEventListener('visibilitychange', onVisibilityChange);
         return;
       }
       appController = new AppController(loadingParams);
     }
 
     function onVisibilityChange() {
-      if (document.webkitVisibilityState === 'prerender') {
+      if (document.visibilityState === 'prerender') {
         return;
       }
-      document.removeEventListener('webkitvisibilitychange', onVisibilityChange);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       initialize();
     }
 
