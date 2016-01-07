@@ -25,7 +25,7 @@ import compute_page
 import constants
 
 jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)), autoescape=True)
 
 
 def generate_random(length):
@@ -219,21 +219,20 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # doesn't actually support HD modes.
   hd = request.get('hd').lower()
   if hd and video:
-    message = 'The "hd" parameter has overridden video=' + video
+    # Use HTML char code for quoutes to avoid JSON parsing issues.
+    message = 'The &#34;hd&#34; parameter has overridden video='
     logging.warning(message)
-    # HTML template is UTF-8, make sure the string is UTF-8 as well.
-    warning_messages.append(message.encode('utf-8'))
+    warning_messages.append(message)
   if hd == 'true':
     video = 'mandatory:minWidth=1280,mandatory:minHeight=720'
   elif not hd and not video and get_hd_default(user_agent) == 'true':
     video = 'optional:minWidth=1280,optional:minHeight=720'
 
   if request.get('minre') or request.get('maxre'):
-    message = ('The "minre" and "maxre" parameters are no longer ' +
+    message = ('The &#34;minre&#34; and &#34;maxre&#34; parameters are no longer ' +
         'supported. Use "video" instead.')
     logging.warning(message)
-    # HTML template is UTF-8, make sure the string is UTF-8 as well.
-    warning_messages.append(message.encode('utf-8'))
+    warning_messages.append(message)
 
   # Options for controlling various networking features.
   dtls = request.get('dtls')
@@ -244,9 +243,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   if debug == 'loopback':
     # Set dtls to false as DTLS does not work for loopback.
     dtls = 'false'
-    include_loopback_js = '<script src="/js/loopback.js"></script>'
-  else:
-    include_loopback_js = ''
 
   # TODO(tkchin): We want to provide a TURN request url on the initial get,
   # but we don't provide client_id until a join. For now just generate
@@ -268,32 +264,33 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   bypass_join_confirmation = 'BYPASS_JOIN_CONFIRMATION' in os.environ and \
       os.environ['BYPASS_JOIN_CONFIRMATION'] == 'True'
 
+  # Use javascript camelCase naming convention in order to avoid remapping
+  # of properties used in javascript.
   params = {
-    'error_messages': error_messages,
-    'warning_messages': warning_messages,
-    'is_loopback' : json.dumps(debug == 'loopback'),
-    'pc_config': json.dumps(pc_config),
-    'pc_constraints': json.dumps(pc_constraints),
-    'offer_options': json.dumps(offer_options),
-    'media_constraints': json.dumps(media_constraints),
-    'turn_url': turn_url,
-    'turn_transports': turn_transports,
-    'include_loopback_js' : include_loopback_js,
-    'wss_url': wss_url,
-    'wss_post_url': wss_post_url,
-    'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
-    'version_info': json.dumps(get_version_info())
+    'errorMessages': error_messages,
+    'warningMessages': warning_messages,
+    'isLoopback' : debug == 'loopback',
+    'peerConnectionConfig': pc_config,
+    'peerConnectionConstraints': pc_constraints,
+    'offerOptions': offer_options,
+    'mediaConstraints': media_constraints,
+    'turnRequestUrl': turn_url,
+    'turnTransports': turn_transports,
+    'wssUrl': wss_url,
+    'wssPost_url': wss_post_url,
+    'bypassJoinConfirmation': bypass_join_confirmation,
+    'versionInfo': get_version_info()
   }
 
   if room_id is not None:
     room_link = request.host_url + '/r/' + room_id
     room_link = append_url_arguments(request, room_link)
-    params['room_id'] = room_id
-    params['room_link'] = room_link
+    params['roomId'] = room_id
+    params['roomLink'] = room_link
   if client_id is not None:
-    params['client_id'] = client_id
+    params['clientId'] = client_id
   if is_initiator is not None:
-    params['is_initiator'] = json.dumps(is_initiator)
+    params['isInitiator'] = is_initiator
   return params
 
 # For now we have (room_id, client_id) pairs are 'unique' but client_ids are
@@ -365,7 +362,6 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
     if room.has_client(client_id):
       error = constants.RESPONSE_DUPLICATE_CLIENT
       break
-
     if occupancy == 0:
       is_initiator = True
       room.add_client(client_id, Client(is_initiator))
@@ -520,7 +516,6 @@ class JoinPage(webapp2.RequestHandler):
           ', room_state=' + result['room_state'])
       self.write_response(result['error'], {}, [])
       return
-
     self.write_room_parameters(
         room_id, client_id, result['messages'], result['is_initiator'])
     logging.info('User ' + client_id + ' joined room ' + room_id)
@@ -537,10 +532,18 @@ class MainPage(webapp2.RequestHandler):
     if self.request.headers['Host'] == 'apprtc.net':
       webapp2.redirect('https://www.apprtc.net', permanent=True)
     # Parse out parameters from request.
-    params = get_room_parameters(self.request, None, None, None)
-    # room_id/room_link will not be included in the returned parameters
-    # so the client will show the landing page for room selection.
-    self.write_response('index_template.html', params)
+    loadingParams = get_room_parameters(self.request, None, None, None)
+    def maybe_include_loopback():
+      if loadingParams['isLoopback'] is True:
+        print 'here'
+        return '<script src="/js/loopback.js"></script>'
+      else:
+        return ''
+    # room_id/room_link will be included in the returned parameters
+    # so the client will launch the requested room.
+    self.write_response('index_template.html',
+        {'loadingParams': json.dumps(loadingParams),
+        'include_loopback_js': maybe_include_loopback()})
 
 class RoomPage(webapp2.RequestHandler):
   def write_response(self, target_page, params={}):
@@ -560,16 +563,24 @@ class RoomPage(webapp2.RequestHandler):
         self.write_response('full_template.html')
         return
     # Parse out room parameters from request.
-    params = get_room_parameters(self.request, room_id, None, None)
+    loadingParams = get_room_parameters(self.request, room_id, None, None)
+    def maybe_include_loopback():
+      if loadingParams['isLoopback'] is True:
+        print 'here2'
+        return '<script src="/js/loopback.js"></script>'
+      else:
+        return ''
     # room_id/room_link will be included in the returned parameters
     # so the client will launch the requested room.
-    self.write_response('index_template.html', params)
+    self.write_response('index_template.html',
+      {'loadingParams': json.dumps(loadingParams),
+      'include_loopback_js': maybe_include_loopback()})
 
 class ParamsPage(webapp2.RequestHandler):
   def get(self):
     # Return room independent room parameters.
     params = get_room_parameters(self.request, None, None, None)
-    self.response.write(json.dumps(params))
+    self.response.write(params)
 
 
 app = webapp2.WSGIApplication([

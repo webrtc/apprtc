@@ -79,12 +79,12 @@ class AppRtcPageHandlerTest(unittest.TestCase):
 
     self.assertEqual('SUCCESS', response_json['result'])
     params = response_json['params']
-    caller_id = params['client_id']
+    caller_id = params['clientId']
     self.assertTrue(len(caller_id) > 0)
-    self.assertEqual(json.dumps(is_initiator), params['is_initiator'])
-    self.assertEqual(room_id, params['room_id'])
-    self.assertEqual([], params['error_messages'])
-    self.assertEqual([], params['warning_messages'])
+    self.assertEqual(is_initiator, params['isInitiator'])
+    self.assertEqual(room_id, params['roomId'])
+    self.assertEqual([], params['errorMessages'])
+    self.assertEqual([], params['warningMessages'])
     return caller_id
 
   def testConnectingWithoutRoomIdServesIndex(self):
@@ -95,7 +95,8 @@ class AppRtcPageHandlerTest(unittest.TestCase):
   def testConnectingWithRoomIdServesIndex(self):
     response = self.makeGetRequest('/r/testRoom')
     self.assertEqual(response.status_int, 200)
-    self.assertRegexpMatches(response.body, 'roomId: \'testRoom\'')
+    self.assertRegexpMatches(response.body,
+        '&#34;roomId&#34;: &#34;testRoom&#34;')
 
   def testJoinAndLeave(self):
     room_id = 'foo'

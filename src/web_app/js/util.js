@@ -113,6 +113,7 @@ function parseJSON(json) {
     return JSON.parse(json);
   } catch (e) {
     trace('Error parsing json: ' + json);
+    trace('Error: ' + e);
   }
   return null;
 }
@@ -128,6 +129,16 @@ function filterTurnUrls(urls, protocol) {
     }
   }
 }
+
+// Unescape HTML.
+// https://paulschreiber.com/blog/2008/09/20/javascript-how-to-unescape-html-entities/
+String.prototype.unescapeHtml = function() {
+  var temp = document.createElement('div');
+  temp.innerHTML = this;
+  var result = temp.childNodes[0].nodeValue;
+  temp.removeChild(temp.firstChild);
+  return result;
+};
 
 // Start shims for fullscreen
 function setUpFullScreen() {
