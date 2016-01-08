@@ -2,7 +2,12 @@
   "name": "apprtc",
   "version": "1.0.0",
   "description": "Project checking for AppRTC repo",
+  "license": "BSD-3-Clause",
   "main": "Gruntfile.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webrtc/adapter.git"
+  },
   "scripts": {
     "postinstall": "python build/copy_portable.py node_modules/webrtc-adapter-test/adapter.js src/web_app/js/",
     "test": "grunt --verbose"
@@ -14,7 +19,7 @@
     "grunt-contrib-compress": "^0.13.0",
     "grunt-contrib-csslint": ">=0.3.1",
     "grunt-contrib-jshint": "^0.10.0",
-    "grunt-htmlhint": ">=0.4.1",
+    "grunt-htmlhint": ">=0.9.12",
     "grunt-jinja": "^0.3.0",
     "grunt-jscs": ">=0.8.1",
     "grunt-jstestdriver-phantomjs": ">=0.0.7",
