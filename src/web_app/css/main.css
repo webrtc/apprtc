@@ -340,11 +340,11 @@ svg:hover {
 
 #mute-audio:hover,
 #mute-audio.on {
-  background: #ab47bc;
+  background: #407cf7;
 }
 
 #mute-audio:hover circle {
-  fill: #ab47bc;
+  fill: #407cf7;
 }
 
 #mute-video {
@@ -353,11 +353,11 @@ svg:hover {
 
 #mute-video:hover,
 #mute-video.on {
-  background: #ff9f00;
+  background: #407cf7;
 }
 
 #mute-video:hover circle {
-  fill: #ff9f00;
+  fill: #407cf7;
 }
 
 #switch-video {
@@ -365,11 +365,11 @@ svg:hover {
 }
 
 #switch-video:hover {
-  background: #12a256;
+  background: #407cf7;
 }
 
 #switch-video:hover circle {
-  fill: #12a256;
+  fill: #407cf7;
 }
 
 #fullscreen {

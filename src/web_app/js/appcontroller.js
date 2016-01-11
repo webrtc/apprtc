@@ -200,6 +200,7 @@ AppController.prototype.showRoomSelection_ = function() {
 AppController.prototype.finishCallSetup_ = function(roomId) {
   this.call_.start(roomId);
 
+  this.iconEventSetup_();
   document.onkeypress = this.onKeyPress_.bind(this);
   window.onmousemove = this.showIcons_.bind(this);
 
@@ -496,10 +497,34 @@ AppController.prototype.deactivate_ = function(element) {
 AppController.prototype.showIcons_ = function() {
   if (!this.icons_.classList.contains('active')) {
     this.activate_(this.icons_);
-    setTimeout(function() {
-      this.deactivate_(this.icons_);
-    }.bind(this), 5000);
+    this.setIconTimeout_();
   }
+};
+
+AppController.prototype.hideIcons_ = function() {
+  if (this.icons_.classList.contains('active')) {
+    this.deactivate_(this.icons_);
+  }
+};
+
+AppController.prototype.setIconTimeout_ = function() {
+  if (this.hideIconsAfterTimeout) {
+    window.clearTimeout.bind(this, this.hideIconsAfterTimeout);
+  }
+  this.hideIconsAfterTimeout =
+    window.setTimeout(function() {
+    this.hideIcons_();
+  }.bind(this), 5000);
+};
+
+AppController.prototype.iconEventSetup_ = function() {
+  this.icons_.onmouseenter = function() {
+    window.clearTimeout(this.hideIconsAfterTimeout);
+  }.bind(this);
+
+  this.icons_.onmouseleave = function() {
+    this.setIconTimeout_();
+  }.bind(this);
 };
 
 AppController.prototype.loadUrlParams_ = function() {
