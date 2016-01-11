@@ -277,7 +277,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'turnRequestUrl': turn_url,
     'turnTransports': turn_transports,
     'wssUrl': wss_url,
-    'wssPost_url': wss_post_url,
+    'wssPostUrl': wss_post_url,
     'bypassJoinConfirmation': bypass_join_confirmation,
     'versionInfo': get_version_info()
   }
