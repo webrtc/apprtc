@@ -10,7 +10,7 @@
 
 /* globals trace, requestTurnServers, sendUrlRequest, sendAsyncUrlRequest,
    requestUserMedia, SignalingChannel, PeerConnectionClient, setupLoopback,
-   parseJSON, isChromeApp, apprtc, Constants */
+   parseJSON, isChromeApp, apprtc, Constants, maybeReplaceHTMLEscChar */
 
 /* exported Call */
 
@@ -18,6 +18,40 @@
 
 var Call = function(params) {
   this.params_ = params;
+
+  // List of properties that should have escaped HTML code cleaned up.
+  var escapedParams = [
+    'mediaConstraints',
+    'peerConnectionConfig',
+    'peerConnectionConstraints',
+    'turnRequestUrl',
+    'turnTransports',
+    'versionInfo',
+    'wssPostUrl',
+    'wssUrl'
+  ];
+
+  // These properties are provided by the jinja2 template in loadingParams and
+  // are autoescaped.
+  // Cleanup escaped HTML code for properties in escapedParams.
+  for (var param = 0; param < escapedParams.length; param++) {
+    var origParameter = params[escapedParams[param]];
+    if (this.params_[escapedParams[param]] === origParameter) {
+      // If param is an object, do not parse it.
+      if (typeof origParameter !== 'object') {
+        this.params_[escapedParams[param]] =
+          parseJSON(maybeReplaceHTMLEscChar(origParameter, '&#34;', '"'));
+      }
+    } else {
+      // Make sure to make the parameter an object if not found in the
+      // provided params due to that not all parameters are provided in the
+      // tests.
+      this.params_[escapedParams[param]] = {};
+    }
+  }
+
+  this.params_.isLoopback = parseJSON(this.params_.isLoopback);
+
   this.roomServer_ = params.roomServer || '';
 
   this.channel_ = new SignalingChannel(params.wssUrl, params.wssPostUrl);
@@ -370,7 +404,7 @@ Call.prototype.maybeGetMedia_ = function() {
 // Asynchronously request a TURN server if needed.
 Call.prototype.maybeGetTurnServers_ = function() {
   var shouldRequestTurnServers =
-      (this.params_.turnRequestUrl && this.params_.turnRequestUrl.length > 0);
+    (this.params_.turnRequestUrl && this.params_.turnRequestUrl.length > 0);
 
   var turnPromise = null;
   if (shouldRequestTurnServers) {
@@ -382,11 +416,11 @@ Call.prototype.maybeGetTurnServers_ = function() {
           this.params_.peerConnectionConfig.iceServers =
               iceServers.concat(turnServers);
         }.bind(this)).catch(function(error) {
-          if (this.onstatusmessage) {
+          if (this.onwarning) {
             // Error retrieving TURN servers.
             var subject =
                 encodeURIComponent('AppRTC demo TURN server not working');
-            this.onstatusmessage(
+            this.onwarning(
                 'No TURN server; unlikely that media will traverse networks. ' +
                 'If this persists please ' +
                 '<a href="mailto:discuss-webrtc@googlegroups.com?' +

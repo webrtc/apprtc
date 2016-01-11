@@ -25,7 +25,7 @@ import compute_page
 import constants
 
 jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)), autoescape=True)
 
 
 def generate_random(length):
@@ -219,10 +219,10 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # doesn't actually support HD modes.
   hd = request.get('hd').lower()
   if hd and video:
-    message = 'The "hd" parameter has overridden video=' + video
+    message = 'The "hd" parameter has overridden video= parameter'
     logging.warning(message)
     # HTML template is UTF-8, make sure the string is UTF-8 as well.
-    warning_messages.append(message.encode('utf-8'))
+    warning_messages.append(message)
   if hd == 'true':
     video = 'mandatory:minWidth=1280,mandatory:minHeight=720'
   elif not hd and not video and get_hd_default(user_agent) == 'true':
@@ -233,7 +233,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
         'supported. Use "video" instead.')
     logging.warning(message)
     # HTML template is UTF-8, make sure the string is UTF-8 as well.
-    warning_messages.append(message.encode('utf-8'))
+    warning_messages.append(message)
 
   # Options for controlling various networking features.
   dtls = request.get('dtls')
@@ -269,18 +269,18 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
       os.environ['BYPASS_JOIN_CONFIRMATION'] == 'True'
 
   params = {
-    'error_messages': error_messages,
-    'warning_messages': warning_messages,
+    'error_messages': json.dumps(error_messages),
+    'warning_messages': json.dumps(warning_messages),
     'is_loopback' : json.dumps(debug == 'loopback'),
     'pc_config': json.dumps(pc_config),
     'pc_constraints': json.dumps(pc_constraints),
     'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
-    'turn_url': turn_url,
-    'turn_transports': turn_transports,
-    'include_loopback_js' : include_loopback_js,
-    'wss_url': wss_url,
-    'wss_post_url': wss_post_url,
+    'turn_url': json.dumps(turn_url),
+    'turn_transports': json.dumps(turn_transports),
+    'include_loopback_js': include_loopback_js,
+    'wss_url': json.dumps(wss_url),
+    'wss_post_url': json.dumps(wss_post_url),
     'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
     'version_info': json.dumps(get_version_info())
   }
@@ -289,7 +289,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     room_link = request.host_url + '/r/' + room_id
     room_link = append_url_arguments(request, room_link)
     params['room_id'] = room_id
-    params['room_link'] = room_link
+    params['room_link'] = json.dumps(room_link, sort_keys=True)
   if client_id is not None:
     params['client_id'] = client_id
   if is_initiator is not None:

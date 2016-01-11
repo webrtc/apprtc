@@ -51,7 +51,7 @@ var UI_CONSTANTS = {
 
 // The controller that connects the Call with the UI.
 var AppController = function(loadingParams) {
-  trace('Initializing; server= ' + loadingParams.roomServer + '.');
+  trace('Initializing; server=' + loadingParams.roomServer + '.');
   trace('Initializing; room=' + loadingParams.roomId + '.');
 
   this.hangupSvg_ = $(UI_CONSTANTS.hangupSvg);
@@ -175,6 +175,7 @@ AppController.prototype.createCall_ = function() {
       this.infoBox_.recordIceCandidateTypes.bind(this.infoBox_);
 
   this.call_.onerror = this.displayError_.bind(this);
+  this.call_.onwarning = this.displayWarning_.bind(this);
   this.call_.onstatusmessage = this.displayStatus_.bind(this);
   this.call_.oncallerstarted = this.displaySharingInfo_.bind(this);
 };
@@ -431,10 +432,10 @@ AppController.prototype.pushCallNavigation_ = function(roomId, roomLink) {
 };
 
 AppController.prototype.displaySharingInfo_ = function(roomId, roomLink) {
-  this.roomLinkHref_.href = roomLink;
-  this.roomLinkHref_.text = roomLink;
-  this.roomLink_ = roomLink;
-  this.pushCallNavigation_(roomId, roomLink);
+  this.roomLink_ = JSON.parse(roomLink);
+  this.roomLinkHref_.href = this.roomLink_;
+  this.roomLinkHref_.text = this.roomLink_;
+  this.pushCallNavigation_(roomId, this.roomLink_);
   this.activate_(this.sharingDiv_);
 };
 
@@ -445,6 +446,11 @@ AppController.prototype.displayStatus_ = function(status) {
     this.activate_(this.statusDiv_);
   }
   this.statusDiv_.innerHTML = status;
+};
+
+AppController.prototype.displayWarning_ = function(error) {
+  trace(error);
+  this.infoBox_.pushWarningMessage(error);
 };
 
 AppController.prototype.displayError_ = function(error) {
