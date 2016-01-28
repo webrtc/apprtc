@@ -59,6 +59,7 @@ Start the AppRTC dev server from the `out/app_engine` directory by running the G
 ```
 <path to sdk>/dev_appserver.py ./out/app_engine
 ```
+Then navigate to http://localhost:8080 in your browser (given it's on the same machine).
 
 ### Testing
 
