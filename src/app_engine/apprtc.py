@@ -16,7 +16,7 @@ import threading
 
 import jinja2
 import webapp2
-from google.appengine.api import memcache
+import memcache
 from google.appengine.api import urlfetch
 
 import analytics
@@ -24,9 +24,19 @@ import analytics_page
 import compute_page
 import constants
 
+from hashlib import sha1
+import hmac
+import time
+
+
+TURN_SERVER_SECRET_KEY = 'foobar'
+
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
+def my_memcache_client():
+  address = "{0}:{1}".format(constants.MEMCACHE_HOST, constants.MEMCACHE_PORT)
+  return memcache.Client([address])
 
 def generate_random(length):
   word = ''
@@ -126,7 +136,8 @@ def get_wss_parameters(request):
   if not wss_host_port_pair:
     # Attempt to get a wss server from the status provided by prober,
     # if that fails, use fallback value.
-    memcache_client = memcache.Client()
+    memcache_client = my_memcache_client()
+
     wss_active_host = memcache_client.get(constants.WSS_HOST_ACTIVE_HOST_KEY)
     if wss_active_host in constants.WSS_HOST_PORT_PAIRS:
       wss_host_port_pair = wss_active_host
@@ -340,7 +351,7 @@ def get_memcache_key_for_room(host, room_id):
 
 def add_client_to_room(request, room_id, client_id, is_loopback):
   key = get_memcache_key_for_room(request.host_url, room_id)
-  memcache_client = memcache.Client()
+  memcache_client = my_memcache_client()
   error = None
   retries = 0
   room = None
@@ -395,7 +406,7 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
 
 def remove_client_from_room(host, room_id, client_id):
   key = get_memcache_key_for_room(host, room_id)
-  memcache_client = memcache.Client()
+  memcache_client = my_memcache_client()
   retries = 0
   # Compare and set retry loop.
   while True:
@@ -430,7 +441,7 @@ def save_message_from_client(host, room_id, client_id, message):
     return {'error': constants.RESPONSE_ERROR, 'saved': False}
 
   key = get_memcache_key_for_room(host, room_id)
-  memcache_client = memcache.Client()
+  memcache_client = my_memcache_client()
   retries = 0
   # Compare and set retry loop.
   while True:
@@ -551,7 +562,8 @@ class RoomPage(webapp2.RequestHandler):
   def get(self, room_id):
     """Renders index.html or full.html."""
     # Check if room is full.
-    room = memcache.get(
+    memcache_client = my_memcache_client()
+    room = memcache_client.get(
         get_memcache_key_for_room(self.request.host_url, room_id))
     if room is not None:
       logging.info('Room ' + room_id + ' has state ' + str(room))
@@ -571,6 +583,25 @@ class ParamsPage(webapp2.RequestHandler):
     params = get_room_parameters(self.request, None, None, None)
     self.response.write(json.dumps(params))
 
+# From http://stackoverflow.com/questions/30984670/apprtc-with-coturn-stun-turn-server
+class TurnPage(webapp2.RequestHandler):
+  def get(self):
+
+    unix_timestamp_tomorrow = int(time.time()) + (24*60*60)
+    new_username = str(unix_timestamp_tomorrow)+':'+self.request.get('username')
+    hashed = hmac.new(TURN_SERVER_SECRET_KEY, new_username, sha1)
+    password = hashed.digest().encode("base64").rstrip('\n')
+
+    turn_udp_uri = 'turn:%s:3478?transport=udp' % 'chat.integration.grandrounds.com'
+    turn_tcp_uri = 'turn:%s:3478?transport=tcp' % 'chat.integration.grandrounds.com'
+
+    self.response.write(json.dumps({
+            'username':new_username,
+            'password':password,
+            'uris':[turn_udp_uri,
+                    turn_tcp_uri,
+                   ]
+        }))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -581,4 +612,5 @@ app = webapp2.WSGIApplication([
     ('/message/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)', MessagePage),
     ('/params', ParamsPage),
     ('/r/([a-zA-Z0-9-_]+)', RoomPage),
+    ('/turn', TurnPage),
 ], debug=True)
