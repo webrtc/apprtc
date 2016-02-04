@@ -9,14 +9,14 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals trace, InfoBox, setUpFullScreen, isFullScreen,
-   RoomSelection, isChromeApp, $ */
+   RoomSelection, isChromeApp, $1 */
 /* exported AppController, remoteVideo */
 
 'use strict';
 
 // TODO(jiayl): remove |remoteVideo| once the chrome browser tests are updated.
 // Do not use in the production code.
-var remoteVideo = $('#remote-video');
+var remoteVideo = $1('#remote-video');
 
 // Keep this in sync with the HTML element id attributes. Keep it sorted.
 var UI_CONSTANTS = {
@@ -54,20 +54,20 @@ var AppController = function(loadingParams) {
   trace('Initializing; server= ' + loadingParams.roomServer + '.');
   trace('Initializing; room=' + loadingParams.roomId + '.');
 
-  this.hangupSvg_ = $(UI_CONSTANTS.hangupSvg);
-  this.icons_ = $(UI_CONSTANTS.icons);
-  this.localVideo_ = $(UI_CONSTANTS.localVideo);
-  this.miniVideo_ = $(UI_CONSTANTS.miniVideo);
-  this.sharingDiv_ = $(UI_CONSTANTS.sharingDiv);
-  this.statusDiv_ = $(UI_CONSTANTS.statusDiv);
-  this.remoteVideo_ = $(UI_CONSTANTS.remoteVideo);
-  this.videosDiv_ = $(UI_CONSTANTS.videosDiv);
-  this.roomLinkHref_ = $(UI_CONSTANTS.roomLinkHref);
-  this.rejoinDiv_ = $(UI_CONSTANTS.rejoinDiv);
-  this.rejoinLink_ = $(UI_CONSTANTS.rejoinLink);
-  this.newRoomLink_ = $(UI_CONSTANTS.newRoomLink);
-  this.rejoinButton_ = $(UI_CONSTANTS.rejoinButton);
-  this.newRoomButton_ = $(UI_CONSTANTS.newRoomButton);
+  this.hangupSvg_ = $1(UI_CONSTANTS.hangupSvg);
+  this.icons_ = $1(UI_CONSTANTS.icons);
+  this.localVideo_ = $1(UI_CONSTANTS.localVideo);
+  this.miniVideo_ = $1(UI_CONSTANTS.miniVideo);
+  this.sharingDiv_ = $1(UI_CONSTANTS.sharingDiv);
+  this.statusDiv_ = $1(UI_CONSTANTS.statusDiv);
+  this.remoteVideo_ = $1(UI_CONSTANTS.remoteVideo);
+  this.videosDiv_ = $1(UI_CONSTANTS.videosDiv);
+  this.roomLinkHref_ = $1(UI_CONSTANTS.roomLinkHref);
+  this.rejoinDiv_ = $1(UI_CONSTANTS.rejoinDiv);
+  this.rejoinLink_ = $1(UI_CONSTANTS.rejoinLink);
+  this.newRoomLink_ = $1(UI_CONSTANTS.newRoomLink);
+  this.rejoinButton_ = $1(UI_CONSTANTS.rejoinButton);
+  this.newRoomButton_ = $1(UI_CONSTANTS.newRoomButton);
 
   this.newRoomButton_.addEventListener('click',
       this.onNewRoomClick_.bind(this), false);
@@ -114,13 +114,13 @@ var AppController = function(loadingParams) {
       // Ask the user to confirm.
       if (!RoomSelection.matchRandomRoomPattern(this.loadingParams_.roomId)) {
         // Show the room name only if it does not match the random room pattern.
-        $(UI_CONSTANTS.confirmJoinRoomSpan).textContent = ' "' +
+        $1(UI_CONSTANTS.confirmJoinRoomSpan).textContent = ' "' +
             this.loadingParams_.roomId + '"';
       }
-      var confirmJoinDiv = $(UI_CONSTANTS.confirmJoinDiv);
+      var confirmJoinDiv = $1(UI_CONSTANTS.confirmJoinDiv);
       this.show_(confirmJoinDiv);
 
-      $(UI_CONSTANTS.confirmJoinButton).onclick = function() {
+      $1(UI_CONSTANTS.confirmJoinButton).onclick = function() {
         this.hide_(confirmJoinDiv);
 
         // Record this room in the recently used list.
@@ -130,7 +130,7 @@ var AppController = function(loadingParams) {
       }.bind(this);
 
       if (this.loadingParams_.bypassJoinConfirmation) {
-        $(UI_CONSTANTS.confirmJoinButton).onclick();
+        $1(UI_CONSTANTS.confirmJoinButton).onclick();
       }
     } else {
       // Display the room selection UI.
@@ -143,7 +143,7 @@ var AppController = function(loadingParams) {
 
 AppController.prototype.createCall_ = function() {
   this.call_ = new Call(this.loadingParams_);
-  this.infoBox_ = new InfoBox($(UI_CONSTANTS.infoDiv),
+  this.infoBox_ = new InfoBox($1(UI_CONSTANTS.infoDiv),
                               this.remoteVideo_,
                               this.call_,
                               this.loadingParams_.versionInfo);
@@ -180,7 +180,7 @@ AppController.prototype.createCall_ = function() {
 };
 
 AppController.prototype.showRoomSelection_ = function() {
-  var roomSelectionDiv = $(UI_CONSTANTS.roomSelectionDiv);
+  var roomSelectionDiv = $1(UI_CONSTANTS.roomSelectionDiv);
   this.roomSelection_ = new RoomSelection(roomSelectionDiv, UI_CONSTANTS);
 
   this.show_(roomSelectionDiv);
@@ -204,10 +204,10 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
   document.onkeypress = this.onKeyPress_.bind(this);
   window.onmousemove = this.showIcons_.bind(this);
 
-  $(UI_CONSTANTS.muteAudioSvg).onclick = this.toggleAudioMute_.bind(this);
-  $(UI_CONSTANTS.muteVideoSvg).onclick = this.toggleVideoMute_.bind(this);
-  $(UI_CONSTANTS.fullscreenSvg).onclick = this.toggleFullScreen_.bind(this);
-  $(UI_CONSTANTS.hangupSvg).onclick = this.hangup_.bind(this);
+  $1(UI_CONSTANTS.muteAudioSvg).onclick = this.toggleAudioMute_.bind(this);
+  $1(UI_CONSTANTS.muteVideoSvg).onclick = this.toggleVideoMute_.bind(this);
+  $1(UI_CONSTANTS.fullscreenSvg).onclick = this.toggleFullScreen_.bind(this);
+  $1(UI_CONSTANTS.hangupSvg).onclick = this.hangup_.bind(this);
 
   setUpFullScreen();
 
@@ -305,10 +305,10 @@ AppController.prototype.attachLocalStream_ = function() {
   this.activate_(this.localVideo_);
   this.show_(this.icons_);
   if (this.localStream_.getVideoTracks().length === 0) {
-    this.hide_($(UI_CONSTANTS.muteVideoSvg));
+    this.hide_($1(UI_CONSTANTS.muteVideoSvg));
   }
   if (this.localStream_.getAudioTracks().length === 0) {
-    this.hide_($(UI_CONSTANTS.muteAudioSvg));
+    this.hide_($1(UI_CONSTANTS.muteAudioSvg));
   }
 };
 

@@ -14,7 +14,7 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeSetOpusOptions */
+   maybeSetOpusOptions, $, jsSHA, io, callstats */
 
 /* exported PeerConnectionClient */
 
@@ -36,8 +36,9 @@ var PeerConnectionClient = function(params, startTime) {
   this.pc_.onaddstream = this.onRemoteStreamAdded_.bind(this);
   this.pc_.onremovestream = trace.bind(null, 'Remote stream removed.');
   this.pc_.onsignalingstatechange = this.onSignalingStateChanged_.bind(this);
-  this.pc_.oniceconnectionstatechange =
+  this.pc_.oniceconnectionstatange =
       this.onIceConnectionStateChanged_.bind(this);
+  this.pc_.onnegotiationneeded = this.setupCallStats_();
 
   this.hasRemoteSdp_ = false;
   this.messageQueue_ = [];
@@ -189,6 +190,7 @@ PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
   sessionDescription.sdp = maybeSetVideoReceiveBitRate(
     sessionDescription.sdp,
     this.params_);
+  this.remoteSdp = sessionDescription.sdp;
   this.pc_.setLocalDescription(sessionDescription)
   .then(trace.bind(null, 'Set session description success.'))
   .catch(this.onError_.bind(this, 'setLocalDescription'));
@@ -212,6 +214,7 @@ PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetAudioSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendInitialBitRate(message.sdp, this.params_);
+  this.remoteSdp = message.sdp;
   this.pc_.setRemoteDescription(new RTCSessionDescription(message))
   .then(this.onSetRemoteDescriptionSuccess_.bind(this))
   .catch(this.onError_.bind(this, 'setRemoteDescription'));
@@ -358,7 +361,76 @@ PeerConnectionClient.prototype.onRemoteStreamAdded_ = function(event) {
 };
 
 PeerConnectionClient.prototype.onError_ = function(tag, error) {
+  var localSdp = this.localSdp || null;
+  var remoteSdp = this.remoteSdp || null;
   if (this.onerror) {
     this.onerror(tag + ': ' + error.toString());
+    this.callStats_.reportError(this.pc_, this.conferenceId_, tag, error,
+        localSdp, remoteSdp);
   }
+};
+
+// Setup the callstats api and attach it to the peerconnection.
+PeerConnectionClient.prototype.setupCallStats_ = function() {
+  if (typeof $ !== 'function' && typeof io !== 'function' &&
+      typeof jsSHA !== 'function')  {
+    trace('Callstats dependencies missing, stats will not be setup.');
+    return;
+  }
+
+  trace('Setting up callstats.');
+  // jscs:disable requireCapitalizedConstructors
+  /* jshint newcap: false */
+  var callStats = new callstats($, io, jsSHA);
+  // jscs:enable requireCapitalizedConstructors
+  /* jshint newcap: true */
+
+  var appId = '423310139';
+  var appSecret = 'jpZu5pquoROlCn5gekQX1RzTHPk=';
+  var userId = this.params_.clientId;
+  // We do not know the remote client id. Setting NA for now.
+  var remoteUserId = 'NA';
+  var conferenceId = this.params_.roomId;
+  var statsCallback = null;
+  var configParams = null;
+  var callback = function(status, msg) {
+    trace('Callstats status: ' + status + ' msg: ' + msg);
+  };
+
+  callStats.initialize(appId, appSecret, userId, callback, statsCallback,
+      configParams);
+
+  // Multiplex should be used when sending audio and video on a peerConnection.
+  // http://www.callstats.io/api/#enumeration-of-fabricusage
+  // TODO: Might need to change this dynamically if an audio/video only call.
+  var usage = callStats.fabricUsage.multiplex;
+  callStats.addNewFabric(this.pc_, remoteUserId, usage, conferenceId,
+      callback);
+
+  this.callStats_ = callStats;
+  this.conferenceId_ = this.params_.roomId;
+};
+
+// Send events to callstats backend.
+PeerConnectionClient.prototype.callStatsEvents = function(fabricEvent) {
+  // http://www.callstats.io/api/#enumeration-of-fabricevent
+  var fabricEvents = {
+    audioMute: 'audioMute',
+    audioUnmute: 'audioUnmute',
+    videoMute: 'videoPause',
+    videoUnmute: 'videoResume'
+  };
+
+  if (!this.callStats_) {
+    trace('Callstats API not setup.');
+    return;
+  }
+
+  if (typeof fabricEvents[fabricEvent] === 'undefined') {
+    trace('Unknown fabricEvent: ' + fabricEvent);
+    return;
+  }
+
+  this.callStats_.sendFabricEvent(this.pc_,
+      fabricEvents[fabricEvent], this.conferenceId_);
 };

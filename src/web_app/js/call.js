@@ -261,6 +261,8 @@ Call.prototype.toggleVideoMute = function() {
   for (var i = 0; i < videoTracks.length; ++i) {
     videoTracks[i].enabled = !videoTracks[i].enabled;
   }
+  this.pcClient_.callStatsEvents(
+      (videoTracks[0].enabled ? 'videoUnmute' : 'videoMute'));
 
   trace('Video ' + (videoTracks[0].enabled ? 'unmuted.' : 'muted.'));
 };
@@ -276,7 +278,8 @@ Call.prototype.toggleAudioMute = function() {
   for (var i = 0; i < audioTracks.length; ++i) {
     audioTracks[i].enabled = !audioTracks[i].enabled;
   }
-
+  this.pcClient_.callStatsEvents(
+      (audioTracks[0].enabled ? 'audioUnmute' : 'audioMute'));
   trace('Audio ' + (audioTracks[0].enabled ? 'unmuted.' : 'muted.'));
 };
 
