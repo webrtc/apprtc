@@ -30,15 +30,10 @@ var PeerConnectionClient = function(params, startTime) {
     '\'.');
 
   if (typeof RTCPeerConnection.generateCertificate === 'function') {
-    trace('Trying to generate an ECDSA certificate.');
     RTCPeerConnection.generateCertificate({name: 'ECDSA', namedCurve: 'P-256'})
     .then(function(cert) {
-      if (cert.expires) {
-        trace('Certificate generated successfully.');
-        params.peerConnectionConfig.certificates = [cert];
-      } else {
-        trace('Could not generate an ECDSA certificate, using default.');
-      }
+      trace('Certificate generated successfully.');
+      params.peerConnectionConfig.certificates = [cert];
     })
     .catch(function(error) {
       trace('Could not generate a certificate: ' + error);
