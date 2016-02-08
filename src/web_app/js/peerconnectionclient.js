@@ -29,6 +29,17 @@ var PeerConnectionClient = function(params, startTime) {
     '  constraints: \'' + JSON.stringify(params.peerConnectionConstraints) +
     '\'.');
 
+  if (typeof RTCPeerConnection.generateCertificate === 'function') {
+    RTCPeerConnection.generateCertificate({name: 'ECDSA', namedCurve: 'P-256'})
+    .then(function(cert) {
+      trace('Certificate generated successfully.');
+      params.peerConnectionConfig.certificates = [cert];
+    })
+    .catch(function(error) {
+      trace('Could not generate a certificate: ' + error);
+    });
+  }
+
   // Create an RTCPeerConnection via the polyfill (adapter.js).
   this.pc_ = new RTCPeerConnection(
       params.peerConnectionConfig, params.peerConnectionConstraints);
