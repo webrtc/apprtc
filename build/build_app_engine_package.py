@@ -28,6 +28,17 @@ def call_cmd_and_return_output_lines(cmd):
     print str(e)
     return []
 
+def setupCallStatsParams(dest_path):
+  params = {
+    'appId': os.environ.get('APPID'),
+    'appSecret': os.environ.get('APPSECRET')
+  }
+
+  try:
+    with open(dest_path, 'w') as f:
+      f.write(json.dumps(params))
+  except IOError as e:
+    print str(e)
 
 def build_version_info_file(dest_path):
   """Build the version info JSON file."""
@@ -96,6 +107,7 @@ def CopyApprtcSource(src_path, dest_path):
           break
 
   build_version_info_file(os.path.join(dest_path, 'version_info.json'))
+  setupCallStatsParams(os.path.join(dest_path, 'callstats_params.json'))
 
 
 def main():

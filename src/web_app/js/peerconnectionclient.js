@@ -36,7 +36,7 @@ var PeerConnectionClient = function(params, startTime) {
   this.pc_.onaddstream = this.onRemoteStreamAdded_.bind(this);
   this.pc_.onremovestream = trace.bind(null, 'Remote stream removed.');
   this.pc_.onsignalingstatechange = this.onSignalingStateChanged_.bind(this);
-  this.pc_.oniceconnectionstatange =
+  this.pc_.oniceconnectionstatechange =
       this.onIceConnectionStateChanged_.bind(this);
   this.pc_.onnegotiationneeded = this.setupCallStats_();
 
@@ -363,52 +363,76 @@ PeerConnectionClient.prototype.onRemoteStreamAdded_ = function(event) {
 PeerConnectionClient.prototype.onError_ = function(tag, error) {
   var localSdp = this.localSdp || null;
   var remoteSdp = this.remoteSdp || null;
+  // Enumerate supported callstats error types.
+  // http://www.callstats.io/api/#enumeration-of-wrtcfuncnames
+  var webrtcFuncNames = {
+    getUserMedia: 'getUserMedia',
+    createOffer: 'createOffer',
+    createAnswer: 'createAnswer',
+    setLocalDescription: 'setLocalDescription',
+    setRemoteDescription: 'setRemoteDescription',
+    addIceCandidate: 'addIceCandidate'
+  };
+
   if (this.onerror) {
     this.onerror(tag + ': ' + error.toString());
-    this.callStats_.reportError(this.pc_, this.conferenceId_, tag, error,
-        localSdp, remoteSdp);
+
+    // Only report supported error types to the callstats backend.
+    if (webrtcFuncNames[tag]) {
+      this.callStats_.reportError(this.pc_, this.conferenceId,
+        webrtcFuncNames[tag], error, localSdp, remoteSdp);
+    }
   }
 };
 
 // Setup the callstats api and attach it to the peerconnection.
 PeerConnectionClient.prototype.setupCallStats_ = function() {
+  // Check dependencies.
   if (typeof $ !== 'function' && typeof io !== 'function' &&
       typeof jsSHA !== 'function')  {
     trace('Callstats dependencies missing, stats will not be setup.');
     return;
   }
 
-  trace('Setting up callstats.');
-  // jscs:disable requireCapitalizedConstructors
-  /* jshint newcap: false */
-  var callStats = new callstats($, io, jsSHA);
-  // jscs:enable requireCapitalizedConstructors
-  /* jshint newcap: true */
+  // Need to catch the error otherwise the peerConnection creation
+  // will fail.
+  try {
+    trace('Setting up callstats.');
+    // jscs:disable requireCapitalizedConstructors
+    /* jshint newcap: false */
+    var callStats = new callstats($, io, jsSHA);
+    // jscs:enable requireCapitalizedConstructors
+    /* jshint newcap: true */
 
-  var appId = '423310139';
-  var appSecret = 'jpZu5pquoROlCn5gekQX1RzTHPk=';
-  var userId = this.params_.clientId;
-  // We do not know the remote client id. Setting NA for now.
-  var remoteUserId = 'NA';
-  var conferenceId = this.params_.roomId;
-  var statsCallback = null;
-  var configParams = null;
-  var callback = function(status, msg) {
-    trace('Callstats status: ' + status + ' msg: ' + msg);
-  };
+    var appId = this.params_.callStatsParams.appId;
+    var appSecret = this.params_.callStatsParams.appSecret;
+    var userId = this.params_.clientId;
+    var conferenceId = this.params_.roomId;
+    // We do not know the remote client id. Setting NA for now.
+    var remoteUserId = 'NA';
+    // Multiplex should be used when sending audio and video on a peerConnection.
+    // http://www.callstats.io/api/#enumeration-of-fabricusage
+    // TODO: Might need to change this dynamically if an audio/video only call.
+    var usage = callStats.fabricUsage.multiplex;
+    var statsCallback = null;
+    var configParams = null;
+    var callback = function(status, msg) {
+      trace('Callstats status: ' + status + ' msg: ' + msg);
+    };
 
-  callStats.initialize(appId, appSecret, userId, callback, statsCallback,
+    // Init the callstats api.
+    callStats.initialize(appId, appSecret, userId, callback, statsCallback,
       configParams);
 
-  // Multiplex should be used when sending audio and video on a peerConnection.
-  // http://www.callstats.io/api/#enumeration-of-fabricusage
-  // TODO: Might need to change this dynamically if an audio/video only call.
-  var usage = callStats.fabricUsage.multiplex;
-  callStats.addNewFabric(this.pc_, remoteUserId, usage, conferenceId,
-      callback);
+    // Hookup the callstats api to the peerconnection object.
+    callStats.addNewFabric(this.pc_, remoteUserId, usage,
+      conferenceId, callback);
 
-  this.callStats_ = callStats;
-  this.conferenceId_ = this.params_.roomId;
+    this.callStats = callStats;
+    this.conferenceId = this.params_.roomId;
+  } catch (error) {
+    trace('Callstats could not be setup: ' + error);
+  }
 };
 
 // Send events to callstats backend.
@@ -432,5 +456,5 @@ PeerConnectionClient.prototype.callStatsEvents = function(fabricEvent) {
   }
 
   this.callStats_.sendFabricEvent(this.pc_,
-      fabricEvents[fabricEvent], this.conferenceId_);
+      fabricEvents[fabricEvent], this.conferenceId);
 };

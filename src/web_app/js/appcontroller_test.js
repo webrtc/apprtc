@@ -9,7 +9,7 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals AppController, TestCase, UI_CONSTANTS, assertEquals, assertFalse,
-   assertTrue, $, RoomSelection:true, Call:true */
+   assertTrue, $1, RoomSelection:true, Call:true */
 
 'use strict';
 
@@ -62,10 +62,10 @@ AppControllerTest.prototype.testConfirmToJoin = function() {
   // Verifies that the confirm-to-join UI is visible and the text matches the
   // room.
   assertEquals(' "' + this.loadingParams_.roomId + '"',
-               $(UI_CONSTANTS.confirmJoinRoomSpan).textContent);
-  assertFalse($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'));
+               $1(UI_CONSTANTS.confirmJoinRoomSpan).textContent);
+  assertFalse($1(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'));
 
   // Verifies that the UI is hidden after clicking the button.
-  $(UI_CONSTANTS.confirmJoinButton).onclick();
-  assertTrue($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'));
+  $1(UI_CONSTANTS.confirmJoinButton).onclick();
+  assertTrue($1(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'));
 };
