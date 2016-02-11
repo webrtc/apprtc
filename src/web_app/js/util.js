@@ -10,13 +10,13 @@
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
    requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString,
-   $1, queryStringToDictionary */
+   $, queryStringToDictionary */
 /* globals chrome */
 
 'use strict';
 // Had to rename this due to conflicting with jquery.
 // TODO: Rename?
-function $1(selector) {
+function $(selector) {
   return document.querySelector(selector);
 }
 

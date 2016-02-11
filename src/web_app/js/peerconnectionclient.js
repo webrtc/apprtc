@@ -14,7 +14,7 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeSetOpusOptions, $, jsSHA, io, callstats */
+   maybeSetOpusOptions, jsSHA, io, callstats */
 
 /* exported PeerConnectionClient */
 
@@ -400,7 +400,7 @@ PeerConnectionClient.prototype.setupCallStats_ = function() {
     trace('Setting up callstats.');
     // jscs:disable requireCapitalizedConstructors
     /* jshint newcap: false */
-    var callStats = new callstats($, io, jsSHA);
+    var callStats = new callstats(null, io, jsSHA);
     // jscs:enable requireCapitalizedConstructors
     /* jshint newcap: true */
 
