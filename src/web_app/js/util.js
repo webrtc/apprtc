@@ -9,13 +9,12 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
-   requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString,
-   $, queryStringToDictionary */
+   requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString, $,
+   queryStringToDictionary */
 /* globals chrome */
 
 'use strict';
-// Had to rename this due to conflicting with jquery.
-// TODO: Rename?
+
 function $(selector) {
   return document.querySelector(selector);
 }
