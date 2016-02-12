@@ -419,23 +419,45 @@ Call.prototype.maybeCreatePcClient_ = function() {
   if (this.pcClient_) {
     return;
   }
-  try {
-    this.pcClient_ = new PeerConnectionClient(this.params_, this.startTime);
-    this.pcClient_.onsignalingmessage = this.sendSignalingMessage_.bind(this);
-    this.pcClient_.onremotehangup = this.onremotehangup;
-    this.pcClient_.onremotesdpset = this.onremotesdpset;
-    this.pcClient_.onremotestreamadded = this.onremotestreamadded;
-    this.pcClient_.onsignalingstatechange = this.onsignalingstatechange;
-    this.pcClient_.oniceconnectionstatechange = this.oniceconnectionstatechange;
-    this.pcClient_.onnewicecandidate = this.onnewicecandidate;
-    this.pcClient_.onerror = this.onerror;
-    trace('Created PeerConnectionClient');
-  } catch (e) {
-    this.onError_('Create PeerConnection exception: ' + e.message);
-    alert('Cannot create RTCPeerConnection; ' +
-        'WebRTC is not supported by this browser.');
-    return;
-  }
+  return new Promise(function(resolve, reject) {
+    if (typeof RTCPeerConnection.generateCertificate === 'function') {
+      var certParams = {name: 'ECDSA', namedCurve: 'P-256'};
+      RTCPeerConnection.generateCertificate(certParams)
+      .then(function(cert) {
+        trace('ECDSA Certificate generated successfully.');
+        this.params_.peerConnectionConfig.certificates = [cert];
+        this.createPcClient_();
+        resolve();
+      }.bind(this))
+      .catch(function(error) {
+        if (this.params_.peerConnectionConfig.certificates) {
+          reject(error);
+        } else {
+          // This is not a critical error hence why it should continue
+          // setting up the call.
+          trace('Could not generate a certificate: ' + error);
+          this.createPcClient_();
+          resolve();
+        }
+      }.bind(this));
+    } else {
+      this.createPcClient_();
+      resolve();
+    }
+  }.bind(this));
+};
+
+Call.prototype.createPcClient_ = function() {
+  this.pcClient_ = new PeerConnectionClient(this.params_, this.startTime);
+  this.pcClient_.onsignalingmessage = this.sendSignalingMessage_.bind(this);
+  this.pcClient_.onremotehangup = this.onremotehangup;
+  this.pcClient_.onremotesdpset = this.onremotesdpset;
+  this.pcClient_.onremotestreamadded = this.onremotestreamadded;
+  this.pcClient_.onsignalingstatechange = this.onsignalingstatechange;
+  this.pcClient_.oniceconnectionstatechange = this.oniceconnectionstatechange;
+  this.pcClient_.onnewicecandidate = this.onnewicecandidate;
+  this.pcClient_.onerror = this.onerror;
+  trace('Created PeerConnectionClient');
 };
 
 Call.prototype.startSignaling_ = function() {
@@ -446,16 +468,22 @@ Call.prototype.startSignaling_ = function() {
 
   this.startTime = window.performance.now();
 
-  this.maybeCreatePcClient_();
-  if (this.localStream_) {
-    trace('Adding local stream.');
-    this.pcClient_.addStream(this.localStream_);
-  }
-  if (this.params_.isInitiator) {
-    this.pcClient_.startAsCaller(this.params_.offerOptions);
-  } else {
-    this.pcClient_.startAsCallee(this.params_.messages);
-  }
+  this.maybeCreatePcClient_()
+  .then(function() {
+    if (this.localStream_) {
+      trace('Adding local stream.');
+      this.pcClient_.addStream(this.localStream_);
+    }
+    if (this.params_.isInitiator) {
+      this.pcClient_.startAsCaller(this.params_.offerOptions);
+    } else {
+      this.pcClient_.startAsCallee(this.params_.messages);
+    }
+  }.bind(this))
+  .catch(function(e) {
+    this.onError_('Create PeerConnection exception: ' + e.message);
+    alert('Cannot create RTCPeerConnection: ' + e.message);
+  }.bind(this));
 };
 
 // Join the room and returns room parameters.
