@@ -415,11 +415,13 @@ Call.prototype.onUserMediaError_ = function(error) {
   alert(errorMessage);
 };
 
-Call.prototype.maybeCreatePcClient_ = function() {
-  if (this.pcClient_) {
-    return;
-  }
+Call.prototype.maybeCreatePcClientAsync_ = function() {
   return new Promise(function(resolve, reject) {
+    if (this.pcClient_) {
+      resolve();
+      return;
+    }
+
     if (typeof RTCPeerConnection.generateCertificate === 'function') {
       var certParams = {name: 'ECDSA', namedCurve: 'P-256'};
       RTCPeerConnection.generateCertificate(certParams)
@@ -468,7 +470,7 @@ Call.prototype.startSignaling_ = function() {
 
   this.startTime = window.performance.now();
 
-  this.maybeCreatePcClient_()
+  this.maybeCreatePcClientAsync_()
   .then(function() {
     if (this.localStream_) {
       trace('Adding local stream.');
@@ -517,8 +519,8 @@ Call.prototype.joinRoom_ = function() {
 };
 
 Call.prototype.onRecvSignalingChannelMessage_ = function(msg) {
-  this.maybeCreatePcClient_();
-  this.pcClient_.receiveSignalingMessage(msg);
+  this.maybeCreatePcClientAsync_()
+  .then(this.pcClient_.receiveSignalingMessage(msg));
 };
 
 Call.prototype.sendSignalingMessage_ = function(message) {
