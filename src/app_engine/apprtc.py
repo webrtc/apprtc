@@ -534,8 +534,8 @@ class MainPage(webapp2.RequestHandler):
 
   def get(self):
     """Renders index.html."""
-    REDIRECT_DOMAINS = ['apprtc.appspot.com', 'apprtc.net', 'www.apprtc.net',
-        'apprtc.webrtc.org', 'www.appr.tc']
+    REDIRECT_DOMAINS = ['apprtc.appspot.com', 'apprtc.webrtc.org',
+        'www.appr.tc']
     if self.request.headers['Host'] in REDIRECT_DOMAINS:
       webapp2.redirect('https://appr.tc', permanent=True)
     # Parse out parameters from request.
