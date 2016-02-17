@@ -52,9 +52,9 @@
 
     <section>
 
-      <p>A number of settings for the <a href="https://apprtc.appspot.com">AppRTC video chat application</a> can be changed by adding URL parameters.</p>
+      <p>A number of settings for the <a href="https://appr.tc">AppRTC video chat application</a> can be changed by adding URL parameters.</p>
 
-      <p>For example: <a href="https://apprtc.appspot.com/?hd=true&amp;stereo=true&amp;debug=loopback">https://apprtc.appspot.com/?hd=true&amp;stereo=true&amp;debug=loopback</a></p>
+      <p>For example: <a href="https://appr.tc/?hd=true&amp;stereo=true&amp;debug=loopback">https://appr.tc/?hd=true&amp;stereo=true&amp;debug=loopback</a></p>
 
       <p>The file using the parameters is <a href="https://github.com/webrtc/apprtc/blob/master/src/app_engine/apprtc.py" title="apprtc.py file in AppRTC repo">apprtc.py</a>. More Google-specific parameters are available from the <a href="https://chromium.googlesource.com/external/webrtc/+/master/talk/app/webrtc/mediaconstraintsinterface.h" title="mediaconstraintsinterface.h">MediaConstraints interface</a>.</p>
 
@@ -65,31 +65,32 @@
     <section>
 
       <table>
-        <tr><td><a href="https://apprtc.appspot.com?hd=true">hd=true</a></td><td>Use HD camera resolution <a href="http://googlechrome.github.io/webrtc/samples/web/content/getusermedia/resolution/" title="Video constraints demo">constraints</a>, i.e. minWidth: 1280, minHeight: 720</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?stereo=true">stereo=true</a></td><td>Turn on stereo audio</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?debug=loopback">debug=loopback</a></td><td>Connect to yourself, e.g. to test firewalls</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?ts=https://turn.example.org">ts=[turnserver]</a></td><td>Set TURN server different from the default</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?audio=true&amp;video=false">audio=true&amp;video=false</a></td><td>Audio only</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?audio=false">audio=false</a></td><td>Video only</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?audio=googEchoCancellation=false,googAutoGainControl=true">audio=googEchoCancellation=false,googAutoGainControl=true</a></td><td>Disable echo cancellation and enable gain control</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?audio=googNoiseReduction=true">audio=googNoiseReduction=true</a></td><td>Enable noise reduction</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?asc=ISAC/16000">asc=ISAC/16000</a></td><td>Set preferred audio send codec to be ISAC at 16kHz (use on Android)</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?arc=opus/48000">arc=opus/48000</a></td><td>Set preferred audio receive codec Opus at 48kHz</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?dtls=false">dtls=false</a></td><td>Disable <a href="https://en.wikipedia.org/wiki/Datagram_Transport_Layer_Security" title="Wikipedia article: DTLS">Datagram Transport Layer Security</a></td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?dscp=true">dscp=true</a></td><td>Enable DSCP</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?ipv6=true">ipv6=true</a></td><td>Enable IPv6</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?arbr=48000">arbr=[bitrate]</a></td><td>Set audio receive bitrate, kbps</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?asbr=16000">asbr=[bitrate]</a></td><td>Set audio send bitrate</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?vsbr=1000">vsbr=[bitrate]</a></td><td>Set video receive bitrate</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?vrbr=8000">vrbr=[bitrate]</a></td><td>Set video send bitrate</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?opusfec=false">opusfec=false</a></td><td>Turn off Opus FEC</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?opusdtx=true">opusdtx=true</a></td><td>Turn on Opus DTX</td></tr>
-        <tr><td><a href="https://apprtc.appspot.com?opusmaxpbr=8000">opusmaxpbr=8000</a></td><td>Set the maximum sample rate that the receiver can operate, for optimal Opus encoding performance</td></tr>
+        <tr><td><a href="https://appr.tc?hd=true">hd=true</a></td><td>Use HD camera resolution <a href="http://googlechrome.github.io/webrtc/samples/web/content/getusermedia/resolution/" title="Video constraints demo">constraints</a>, i.e. minWidth: 1280, minHeight: 720</td></tr>
+        <tr><td><a href="https://appr.tc?stereo=true">stereo=true</a></td><td>Turn on stereo audio</td></tr>
+        <tr><td><a href="https://appr.tc?debug=loopback">debug=loopback</a></td><td>Connect to yourself, e.g. to test firewalls</td></tr>
+        <tr><td><a href="https://appr.tc?ts=https://turn.example.org">ts=[turnserver]</a></td><td>Set TURN server different from the default</td></tr>
+        <tr><td><a href="https://appr.tc?audio=true&amp;video=false">audio=true&amp;video=false</a></td><td>Audio only</td></tr>
+        <tr><td><a href="https://appr.tc?audio=false">audio=false</a></td><td>Video only</td></tr>
+        <tr><td><a href="https://appr.tc?audio=echoCancellation=false">echoCancellation=false</a></td><td>Disable all audio processing</td></tr>
+        <tr><td><a href="https://appr.tc?audio=googEchoCancellation=false">googEchoCancellation=false</a></td><td>Disable echo cancellation</td></tr>
+        <tr><td><a href="https://appr.tc?audio=googAutoGainControl=false">googAutoGainControl=false</a></td><td>Disable gain control</td></tr>
+        <tr><td><a href="https://appr.tc?audio=googNoiseReduction=false">audio=googNoiseReduction=false</a></td><td>Disable noise reduction</td></tr>
+        <tr><td><a href="https://appr.tc?asc=ISAC/16000">asc=ISAC/16000</a></td><td>Set preferred audio send codec to be ISAC at 16kHz (use on Android)</td></tr>
+        <tr><td><a href="https://appr.tc?arc=opus/48000">arc=opus/48000</a></td><td>Set preferred audio receive codec Opus at 48kHz</td></tr>
+        <tr><td><a href="https://appr.tc?dscp=true">dscp=true</a></td><td>Enable DSCP</td></tr>
+        <tr><td><a href="https://appr.tc?ipv6=true">ipv6=true</a></td><td>Enable IPv6</td></tr>
+        <tr><td><a href="https://appr.tc?arbr=48000">arbr=[bitrate]</a></td><td>Set audio receive bitrate, kbps</td></tr>
+        <tr><td><a href="https://appr.tc?asbr=16000">asbr=[bitrate]</a></td><td>Set audio send bitrate</td></tr>
+        <tr><td><a href="https://appr.tc?vsbr=1000">vsbr=[bitrate]</a></td><td>Set video receive bitrate</td></tr>
+        <tr><td><a href="https://appr.tc?vrbr=8000">vrbr=[bitrate]</a></td><td>Set video send bitrate</td></tr>
+        <tr><td><a href="https://appr.tc?opusfec=false">opusfec=false</a></td><td>Turn off Opus FEC</td></tr>
+        <tr><td><a href="https://appr.tc?opusdtx=true">opusdtx=true</a></td><td>Turn on Opus DTX</td></tr>
+        <tr><td><a href="https://appr.tc?opusmaxpbr=8000">opusmaxpbr=8000</a></td><td>Set the maximum sample rate that the receiver can operate, for optimal Opus encoding performance</td></tr>
       </table>
 
     </section>
 
-    <a href="//github.com/GoogleChrome/webrtc" title="View the repository" id="viewSource">github.com/GoogleChrome/webrtc</a>
+    <a href="//github.com/webrtc/apprtc" title="View the repository" id="viewSource">github.com/webrtc/apprtc</a>
 
   </div>
 </body>
