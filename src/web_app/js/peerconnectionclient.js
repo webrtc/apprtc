@@ -230,6 +230,8 @@ PeerConnectionClient.prototype.onSetRemoteDescriptionSuccess_ = function() {
   if (this.onremotesdpset) {
     this.onremotesdpset(remoteStreams.length > 0 &&
                         remoteStreams[0].getVideoTracks().length > 0);
+    // Associate SSRC's with media stream tracks and user ID in the
+    // callstats backend.
     this.associateMstWithUserId_();
   }
 };
@@ -407,9 +409,8 @@ PeerConnectionClient.prototype.setupCallStats_ = function() {
 
     var appId = this.params_.callStatsParams.appId;
     var appSecret = this.params_.callStatsParams.appSecret;
-    var userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
     var conferenceId = this.params_.roomId;
-    // We do not know the remote client id. Setting NA for now.
+    var userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
     var remoteUserId = this.params_.roomId + (this.isInitiator_ ? '-1' : '-0');
     // Multiplex should be used when sending audio and video on a peerConnection.
     // http://www.callstats.io/api/#enumeration-of-fabricusage
@@ -439,7 +440,6 @@ PeerConnectionClient.prototype.setupCallStats_ = function() {
     // Init the callstats api.
     callStats.initialize(appId, appSecret, userId, initCallback, statsCallback,
         configParams);
-
   } catch (error) {
     trace('Callstats could not be set up: ' + error);
   }
