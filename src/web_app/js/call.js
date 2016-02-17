@@ -426,22 +426,15 @@ Call.prototype.maybeCreatePcClientAsync_ = function() {
       var certParams = {name: 'ECDSA', namedCurve: 'P-256'};
       RTCPeerConnection.generateCertificate(certParams)
       .then(function(cert) {
-        trace('ECDSA Certificate generated successfully.');
+        trace('ECDSA certificate generated successfully.');
         this.params_.peerConnectionConfig.certificates = [cert];
         this.createPcClient_();
         resolve();
       }.bind(this))
       .catch(function(error) {
-        if (this.params_.peerConnectionConfig.certificates) {
-          reject(error);
-        } else {
-          // This is not a critical error hence why it should continue
-          // setting up the call.
-          trace('Could not generate a certificate: ' + error);
-          this.createPcClient_();
-          resolve();
-        }
-      }.bind(this));
+        trace('ECDSA certificate generation failed.');
+        reject(error);
+      });
     } else {
       this.createPcClient_();
       resolve();
