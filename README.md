@@ -110,3 +110,12 @@ Initialize the required BigQuery datasets and tables with the following,
 bq mk prod
 bq mk -t prod.analytics bigquery/analytics_schema.json
 ```
+
+### Deployment
+
+In order to deploy your own AppRTC instance you need in addition to the components provided in this repository a TURN server. AppRTC currently uses rfc5766-turn-server for this. Credentials and TURN server instances are provided by a CEOD service that generates these on demand in form of a JSON response.
+
+This means you need to replace the [CEOD](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L14) details with your own TURN server provider details.
+
+You can test using your own TURN server by appending the ?ts=serverUrl parameter, details on AppRTC URL parameters can be found at https://appr.tc/params.html.
+
