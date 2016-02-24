@@ -26,34 +26,9 @@ var loadingParams = {
       trace('Initializing; retrieving params from: ' + roomServer + '/params');
       sendAsyncUrlRequest('GET', roomServer + '/params').then(function(result) {
         var serverParams = parseJSON(result);
-        var newParams = {};
-        if (!serverParams) {
-          resolve(newParams);
-          return;
-        }
-
-        // Convert from server format to expected format.
-        // TODO(tkchin): clean up response format. JSHint doesn't like it.
-        /* jshint ignore:start */
-        //jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-        newParams.isLoopback = serverParams.is_loopback === 'true';
-        newParams.mediaConstraints = parseJSON(serverParams.media_constraints);
-        newParams.offerOptions = parseJSON(serverParams.offer_options);
-        newParams.peerConnectionConfig = parseJSON(serverParams.pc_config);
-        newParams.peerConnectionConstraints =
-            parseJSON(serverParams.pc_constraints);
-        newParams.turnRequestUrl = serverParams.turn_url;
-        newParams.turnTransports = serverParams.turn_transports;
-        newParams.wssUrl = serverParams.wss_url;
-        newParams.wssPostUrl = serverParams.wss_post_url;
-        newParams.versionInfo = parseJSON(serverParams.version_info);
-        //jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-        /* jshint ignore:end */
-        newParams.messages = serverParams.messages;
-
         trace('Initializing; parameters from server: ');
-        trace(JSON.stringify(newParams));
-        resolve(newParams);
+        trace(JSON.stringify(serverParams));
+        resolve(serverParams);
       }).catch(function(error) {
         trace('Initializing; error getting params from server: ' +
             error.message);

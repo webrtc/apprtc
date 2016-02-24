@@ -298,17 +298,10 @@ Call.prototype.connectToRoom_ = function(roomId) {
   // Asynchronously join the room.
   var joinPromise =
       this.joinRoom_().then(function(roomParams) {
-        // The only difference in parameters should be clientId and isInitiator,
-        // and the turn servers that we requested.
-        // TODO(tkchin): clean up response format. JSHint doesn't like it.
-        /* jshint ignore:start */
-        //jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-        this.params_.clientId = roomParams.client_id;
-        this.params_.roomId = roomParams.room_id;
-        this.params_.roomLink = roomParams.room_link;
-        this.params_.isInitiator = roomParams.is_initiator === 'true';
-        //jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-        /* jshint ignore:end */
+        this.params_.clientId = roomParams.clientId;
+        this.params_.roomId = roomParams.roomId;
+        this.params_.roomLink = roomParams.roomLink;
+        this.params_.isInitiator = roomParams.isInitiator;
         this.params_.messages = roomParams.messages;
       }.bind(this)).catch(function(error) {
         this.onError_('Room server join error: ' + error.message);

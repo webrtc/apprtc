@@ -51,7 +51,7 @@ var UI_CONSTANTS = {
 
 // The controller that connects the Call with the UI.
 var AppController = function(loadingParams) {
-  trace('Initializing; server= ' + loadingParams.roomServer + '.');
+  trace('Initializing; server=' + loadingParams.roomServer + '.');
   trace('Initializing; room=' + loadingParams.roomId + '.');
 
   this.hangupSvg_ = $(UI_CONSTANTS.hangupSvg);
