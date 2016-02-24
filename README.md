@@ -115,7 +115,7 @@ bq mk -t prod.analytics bigquery/analytics_schema.json
 
 In order to deploy your own AppRTC instance you need in addition to the components provided in this repository a TURN server. AppRTC currently uses rfc5766-turn-server for this. Credentials and TURN server instances are provided by a CEOD service that generates these on demand in form of a JSON response.
 
-This means you need to replace the [CEOD](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L14) details with your own TURN server provider details.
+This means you need to either setup a web server that returns TURN credentials and IP addresses (basically mimic the CEOD server) in JSON response, or replace the [CEOD](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L14) details with your own TURN server provider details, and then change https://github.com/webrtc/apprtc/blob/master/src/app_engine/apprtc.py#L256 to turn_url = constants.TURN_URL_TEMPLATE.
 
 You can test using your own TURN server by appending the ?ts=serverUrl parameter, details on AppRTC URL parameters can be found at https://appr.tc/params.html.
 
