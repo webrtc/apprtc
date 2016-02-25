@@ -25,6 +25,8 @@ var Call = function(params) {
 
   this.pcClient_ = null;
   this.localStream_ = null;
+  this.errorMessageStorage_ = [];
+  this.reportErrorToCallStats_ = null;
 
   this.startTime = null;
 
@@ -415,7 +417,18 @@ Call.prototype.onUserMediaError_ = function(error) {
   var errorMessage = 'Failed to get access to local media. Error name was ' +
       error.name + '. Continuing without sending a stream.';
   this.onError_('getUserMedia error: ' + errorMessage);
+  this.errorMessageStorage_.push(error);
   alert(errorMessage);
+};
+
+Call.prototype.maybeReportGetUserMediaErrors_ = function() {
+  console.log('fired', event);
+  if (this.errorMessageStorage_.length > 0) {
+    for (var errorMsg = 0; errorMsg < this.errorMessageStorage_.length; errorMsg++) {
+      console.log(this.errorMessageStorage_);
+      this.reportErrorToCallStats_('getUserMedia', this.errorMessageStorage_[errorMsg]);  
+    }
+  }
 };
 
 Call.prototype.maybeCreatePcClient_ = function() {
@@ -432,6 +445,7 @@ Call.prototype.maybeCreatePcClient_ = function() {
     this.pcClient_.oniceconnectionstatechange = this.oniceconnectionstatechange;
     this.pcClient_.onnewicecandidate = this.onnewicecandidate;
     this.pcClient_.onerror = this.onerror;
+    this.reportErrorToCallStats_ = this.pcClient_.reportErrorToCallStats;
     trace('Created PeerConnectionClient');
   } catch (e) {
     this.onError_('Create PeerConnection exception: ' + e.message);
@@ -517,5 +531,6 @@ Call.prototype.sendSignalingMessage_ = function(message) {
 Call.prototype.onError_ = function(message) {
   if (this.onerror) {
     this.onerror(message);
+    console.log('call onError: ', message);
   }
 };
