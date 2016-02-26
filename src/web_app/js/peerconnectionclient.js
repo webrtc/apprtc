@@ -14,7 +14,7 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeSetOpusOptions, jsSHA, io, callstats */
+   maybeSetOpusOptions, jsSHA, io, callstats, DOMException */
 
 /* exported PeerConnectionClient */
 
@@ -81,7 +81,7 @@ PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
   }
 
   this.isInitiator_ = true;
-  this.setupCallStats_();
+  this.setupCallstats_();
   this.started_ = true;
   var constraints = mergeConstraints(
     PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
@@ -104,7 +104,7 @@ PeerConnectionClient.prototype.startAsCallee = function(initialMessages) {
   }
 
   this.isInitiator_ = false;
-  this.setupCallStats_();
+  this.setupCallstats_();
   this.started_ = true;
 
   if (initialMessages && initialMessages.length > 0) {
@@ -191,7 +191,6 @@ PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
   sessionDescription.sdp = maybeSetVideoReceiveBitRate(
     sessionDescription.sdp,
     this.params_);
-  this.localSdp = sessionDescription.sdp;
   this.pc_.setLocalDescription(sessionDescription)
   .then(trace.bind(null, 'Set session description success.'))
   .catch(this.onError_.bind(this, 'setLocalDescription'));
@@ -215,7 +214,6 @@ PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetAudioSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendInitialBitRate(message.sdp, this.params_);
-  this.remoteSdp = message.sdp;
   this.pc_.setRemoteDescription(new RTCSessionDescription(message))
   .then(this.onSetRemoteDescriptionSuccess_.bind(this))
   .catch(this.onError_.bind(this, 'setRemoteDescription'));
@@ -230,10 +228,8 @@ PeerConnectionClient.prototype.onSetRemoteDescriptionSuccess_ = function() {
   if (this.onremotesdpset) {
     this.onremotesdpset(remoteStreams.length > 0 &&
                         remoteStreams[0].getVideoTracks().length > 0);
-    // Associate SSRC's with media stream tracks and user ID in the
-    // callstats backend.
-    this.associateMstWithUserId_();
   }
+  // this.bindReceiveMstToId_();
 };
 
 PeerConnectionClient.prototype.processSignalingMessage_ = function(message) {
@@ -328,6 +324,15 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
         (window.performance.now() - this.startTime_).toFixed(0) + 'ms.');
   }
 
+  // The answering side does not transition to "completed" state.
+  if (this.pc_.iceConnectionState === 'connected') {
+    // Associate SSRC's with media stream tracks and user ID in the
+    // callstats backend.
+    // this.bindSendMstToId_();
+    this.bindSendMstToId_();
+    this.bindReceiveMstToId_();
+  }
+
   if (this.oniceconnectionstatechange) {
     this.oniceconnectionstatechange();
   }
@@ -367,14 +372,18 @@ PeerConnectionClient.prototype.onRemoteStreamAdded_ = function(event) {
 PeerConnectionClient.prototype.onError_ = function(tag, error) {
   if (this.onerror) {
     this.onerror(tag + ': ' + error.toString());
-    this.reportErrorToCallStats(tag, error);
+    this.reportErrorToCallstats(tag, error);
   }
 };
 
-PeerConnectionClient.prototype.reportErrorToCallStats = function(funcName, error) {
-  console.log('peerconnectionclient onError: ', funcName, error);
-  var localSdp = this.localSdp || null;
-  var remoteSdp = this.remoteSdp || null;
+PeerConnectionClient.prototype.reportErrorToCallstats =
+    function(funcName, error) {
+  if (!this.callstats) {
+    trace('Callstats not initilized.');
+    return;
+  }
+  var localSdp = this.pc_.localDescription.sdp || null;
+  var remoteSdp = this.pc_.remoteDescription.sdp || null;
   // Enumerate supported callstats error types.
   // http://www.callstats.io/api/#enumeration-of-wrtcfuncnames
   var supportedWebrtcFuncNames = {
@@ -388,36 +397,37 @@ PeerConnectionClient.prototype.reportErrorToCallStats = function(funcName, error
 
   // Only report supported error types to the callstats backend.
   if (supportedWebrtcFuncNames[funcName]) {
-    this.callStats.reportError(this.pc_, this.conferenceId,
-      supportedWebrtcFuncNames[funcName], error, localSdp, remoteSdp);
+    // Some error objects (gUM) have meaningful info in the name
+    // property/getter.
+    var filteredError = (funcName === 'getUserMedia' ? error.name : error);
+    this.callstats.reportError(this.pc_, this.conferenceId,
+      supportedWebrtcFuncNames[funcName], new DOMException(filteredError),
+      localSdp, remoteSdp);
   }
 };
 
-PeerConnectionClient.prototype.initCallStats_ = function() {
+PeerConnectionClient.prototype.initCallstats_ = function() {
   trace('Init callstats.');
   // jscs:disable requireCapitalizedConstructors
   /* jshint newcap: false */
-  var callStats = new callstats(null, io, jsSHA);
+  this.callstats = new callstats(null, io, jsSHA);
   // jscs:enable requireCapitalizedConstructors
   /* jshint newcap: true */
 
-  var appId = this.params_.callStatsParams.appId;
-  var appSecret = this.params_.callStatsParams.appSecret;
-  var userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
+  var appId = this.params_.callstatsParams.appId;
+  var appSecret = this.params_.callstatsParams.appSecret;
+  this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
   var statsCallback = null;
   var configParams = null;
   var callback = function(status, msg) {
-      trace('Init status: ' + status + ' msg: ' + msg);
+    trace('Init status: ' + status + ' msg: ' + msg);
   };
-  callStats.initialize(appId, appSecret, userId, callback, statsCallback,
-      configParams);
-  // Expose needed variables.
-  this.userId = userId;
-  this.callStats = callStats;
+  this.callstats.initialize(appId, appSecret, this.userId, callback,
+      statsCallback, configParams);
 };
 
 // Setup the callstats api and attach it to the peerconnection.
-PeerConnectionClient.prototype.setupCallStats_ = function() {
+PeerConnectionClient.prototype.setupCallstats_ = function() {
   // Check dependencies.
   if (typeof io !== 'function' && typeof jsSHA !== 'function')  {
     trace('Callstats dependencies missing, stats will not be setup.');
@@ -428,90 +438,126 @@ PeerConnectionClient.prototype.setupCallStats_ = function() {
   // will fail.
   try {
     // Authenticate with the callstats backend.
-    this.initCallStats_();
+    this.initCallstats_();
+    this.callStatsAttachedToPc = false;
 
     trace('Set up callstats.');
-    var conferenceId = this.params_.roomId;
-    var remoteUserId = this.params_.roomId + (this.isInitiator_ ? '-1' : '-0');
+    this.conferenceId = this.params_.roomId;
+    this.remoteUserId = this.params_.roomId + (this.isInitiator_ ? '-1' : '-0');
     // Multiplex should be used when sending audio and video on a peerConnection.
     // http://www.callstats.io/api/#enumeration-of-fabricusage
     // TODO: Might need to change this dynamically if an audio/video only call.
-    var usage = this.callStats.fabricUsage.multiplex;
+    var usage = this.callstats.fabricUsage.multiplex;
     var callback = function(status, msg) {
       trace('Callstats status: ' + status + ' msg: ' + msg);
-    };
+    }.bind(this);
     // Hookup the callstats api to the peerConnection object.
-    this.callStats.addNewFabric(this.pc_, remoteUserId, usage, conferenceId,
-        callback);
-
-    this.conferenceId = this.params_.roomId;
-    this.remoteUserId = remoteUserId;
+    this.callstats.addNewFabric(this.pc_, this.remoteUserId, usage,
+        this.conferenceId, callback);
   } catch (error) {
     trace('Callstats could not be set up: ' + error);
   }
 };
 
-PeerConnectionClient.prototype.associateMstWithUserId_ = function() {
-  if (!this.callstats) {
+// Associate send SSRC's with media stream tracks and user ID in the
+// callstats backend.
+PeerConnectionClient.prototype.bindSendMstToId_ = function() {
+  if (!this.callstats && this.pc_.getlocalStreams().length === 0 &&
+      typeof this.pc_.localDescription.sdp === 'undefined') {
+    trace('Cannot associate send mst with userId.');
     return;
   }
 
+  var localVideoTagId = 'mini-video';
+
   // Determine local video track id, label and SSRC.
-  var videoSendTrackId = this.pc_.getLocalStreams()[0].getVideoTracks()[0].id;
-  var videoSendTrackLabel =
-      this.pc_.getLocalStreams()[0].getVideoTracks()[0].label;
-  var videoSendSsrcLine = this.localSdp.sdp.match('a=ssrc:.*.' +
-      videoSendTrackId);
-  var videoSendSsrc = videoSendSsrcLine.match('[0-9]+');
-  // Determine local audio track id, label and SSRC.
-  var audioSendTrackId = this.pc_.getLocalStreams()[0].getAudioTracks()[0].id;
-  var audioSendTrackLabel =
-      this.pc_.getLocalStreams()[0].getAudioTracks()[0].label;
-  var audioSendSsrcLine = this.localSdp.sdp.match('a=ssrc:.*.' +
-      audioSendTrackId);
-  var audioSendSsrc = audioSendSsrcLine.match('[0-9]+');
+  if (this.pc_.getLocalStreams()[0].getVideoTracks().length > 0) {
+    var videoSendTrackId =
+      this.pc_.getLocalStreams()[0].getVideoTracks()[0].id;
+    var videoSendTrackLabel =
+        this.pc_.getLocalStreams()[0].getVideoTracks()[0].label;
+    var videoSendSsrcLine = this.pc_.localDescription.sdp.match('a=ssrc:.*.' +
+        videoSendTrackId);
+    var videoSendSsrc = videoSendSsrcLine[0].match('[0-9]+');
 
-  // Register local MST properties.
-  this.callStats.associateMstWithUserId(this.pc_, this.userId,
-      this.conferenceId, videoSendSsrc, videoSendTrackLabel);
-  this.callStats.associateMstWithUserId(this.pc_, this.userId,
-      this.conferenceId, audioSendSsrc, audioSendTrackLabel);
+    this.callstats.associateMstWithUserID(this.pc_, this.userId,
+      this.conferenceId, videoSendSsrc[0], videoSendTrackLabel,
+      localVideoTagId);
+  }
 
-  // Determine remote video track id, label and SSRC.
-  var videoReceiveTrackId =
-      this.pc_.getRemoteStreams()[0].getVideoTracks()[0].id;
-  var videoReceiveTrackLabel =
-      this.pc_.getRemoteStreams()[0].getVideoTracks()[0].label;
-  var videoReceiveSsrcLine =
-      this.remoteSdp.sdp.match('a=ssrc:.*.' + videoReceiveTrackId);
-  var videoReceiveSsrc = videoReceiveSsrcLine.match('[0-9]+');
-  // Determine remote audio track id, label and SSRC.
-  var audioReceiveTrackId =
-      this.pc_.getRemoteStreams()[0].getAudioTracks()[0].id;
-  var audioReceiveTrackLabel =
-      this.pc_.getRemoteStreams()[0].getAudioTracks()[0].label;
-  var audioReceiveSsrcLine =
-      this.remoteSdp.sdp.match('a=ssrc:.*.' + audioReceiveTrackId);
-  var audioReceiveSsrc = audioReceiveSsrcLine.match('[0-9]+');
+  if (this.pc_.getLocalStreams()[0].getAudioTracks().length > 0) {
+    // Determine local audio track id, label and SSRC.
+    var audioSendTrackId =
+        this.pc_.getLocalStreams()[0].getAudioTracks()[0].id;
+    var audioSendTrackLabel =
+        this.pc_.getLocalStreams()[0].getAudioTracks()[0].label;
+    var audioSendSsrcLine = this.pc_.localDescription.sdp.match('a=ssrc:.*.' +
+        audioSendTrackId);
+    var audioSendSsrc = audioSendSsrcLine[0].match('[0-9]+');
 
-  // Register remote MST properties.
-  this.callStats.associateMstWithUserId(this.pc_, this.remoteUserId,
-      this.conferenceId, videoReceiveSsrc, videoReceiveTrackLabel);
-  this.callStats.associateMstWithUserId(this.pc_, this.remoteUserId,
-      this.conferenceId, audioReceiveSsrc, audioReceiveTrackLabel);
+    this.callstats.associateMstWithUserID(this.pc_, this.userId,
+        this.conferenceId, audioSendSsrc[0], audioSendTrackLabel,
+        localVideoTagId);
+  }
+};
+
+// Associate receive SSRC's with media stream tracks and user ID in the
+// callstats backend.
+PeerConnectionClient.prototype.bindReceiveMstToId_ = function() {
+  if (!this.callstats && this.pc_.getRemoteStreams().length === 0 &&
+      typeof this.pc_.remoteDescription.sdp === 'undefined') {
+    trace('Cannot associate receive mst with userId.');
+    return;
+  }
+
+  var remoteVideoTagId = 'remote-video';
+
+  if (this.pc_.getRemoteStreams()[0].getVideoTracks.length > 0) {
+    // Determine remote video track id, label and SSRC.
+    var videoReceiveTrackId =
+        this.pc_.getRemoteStreams()[0].getVideoTracks()[0].id;
+    var videoReceiveTrackLabel =
+        this.pc_.getRemoteStreams()[0].getVideoTracks()[0].label;
+    var videoReceiveSsrcLine =
+        this.pc_.remoteDescription.sdp.match('a=ssrc:.*.' +
+        videoReceiveTrackId);
+    var videoReceiveSsrc = videoReceiveSsrcLine[0].match('[0-9]+');
+
+    this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
+        this.conferenceId, videoReceiveSsrc[0], videoReceiveTrackLabel,
+        remoteVideoTagId);
+  }
+
+  if (this.pc_.getRemoteStreams()[0].getAudioTracks.length > 0) {
+    // Determine remote audio track id, label and SSRC.
+    var audioReceiveTrackId =
+        this.pc_.getRemoteStreams()[0].getAudioTracks()[0].id;
+    var audioReceiveTrackLabel =
+        this.pc_.getRemoteStreams()[0].getAudioTracks()[0].label;
+    var audioReceiveSsrcLine =
+        this.pc_.remoteDescription.sdp.match('a=ssrc:.*.' +
+        audioReceiveTrackId);
+    var audioReceiveSsrc = audioReceiveSsrcLine[0].match('[0-9]+');
+
+    this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
+        this.conferenceId, audioReceiveSsrc[0], audioReceiveTrackLabel,
+        remoteVideoTagId);
+  }
 };
 
 // Send events to callstats backend.
-PeerConnectionClient.prototype.callStatsEvents = function(fabricEvent) {
+PeerConnectionClient.prototype.sendCallstatsEvents = function(fabricEvent) {
   // http://www.callstats.io/api/#enumeration-of-fabricevent
   var fabricEvents = {
     audioMute: 'audioMute',
     audioUnmute: 'audioUnmute',
+    fabricFailed: 'fabricFailed',
+    fabricTerminated: 'fabricTerminated',
     videoMute: 'videoPause',
     videoUnmute: 'videoResume'
   };
 
-  if (!this.callStats_) {
+  if (!this.callstats) {
     trace('Callstats API not setup.');
     return;
   }
@@ -521,6 +567,6 @@ PeerConnectionClient.prototype.callStatsEvents = function(fabricEvent) {
     return;
   }
 
-  this.callStats_.sendFabricEvent(this.pc_,
+  this.callstats_.sendFabricEvent(this.pc_,
       fabricEvents[fabricEvent], this.conferenceId);
 };

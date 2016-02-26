@@ -25,9 +25,7 @@ var Call = function(params) {
 
   this.pcClient_ = null;
   this.localStream_ = null;
-  this.errorMessageStorage_ = [];
-  this.reportErrorToCallStats_ = null;
-
+  this.errorMessageQueue_ = [];
   this.startTime = null;
 
   // Public callbacks. Keep it sorted.
@@ -118,6 +116,9 @@ Call.prototype.hangup = function(async) {
   if (isChromeApp()) {
     this.clearCleanupQueue_();
   }
+
+  // Let the callstats backend know we are closing the call.
+  this.pcClient_.sendCallstatsEvents('fabricTerminated');
 
   if (this.localStream_) {
     if (typeof this.localStream_.getTracks === 'undefined') {
@@ -230,6 +231,9 @@ Call.prototype.onRemoteHangup = function() {
   // On remote hangup this client becomes the new initiator.
   this.params_.isInitiator = true;
 
+  // Let the callstats backend know we are closing the call.
+  this.pcClient_.sendCallstatsEvents('fabricTerminated');
+
   if (this.pcClient_) {
     this.pcClient_.close();
     this.pcClient_ = null;
@@ -263,7 +267,7 @@ Call.prototype.toggleVideoMute = function() {
   for (var i = 0; i < videoTracks.length; ++i) {
     videoTracks[i].enabled = !videoTracks[i].enabled;
   }
-  this.pcClient_.callStatsEvents(
+  this.pcClient_.sendCallstatsEvents(
       (videoTracks[0].enabled ? 'videoUnmute' : 'videoMute'));
 
   trace('Video ' + (videoTracks[0].enabled ? 'unmuted.' : 'muted.'));
@@ -280,7 +284,7 @@ Call.prototype.toggleAudioMute = function() {
   for (var i = 0; i < audioTracks.length; ++i) {
     audioTracks[i].enabled = !audioTracks[i].enabled;
   }
-  this.pcClient_.callStatsEvents(
+  this.pcClient_.sendCallstatsEvents(
       (audioTracks[0].enabled ? 'audioUnmute' : 'audioMute'));
   trace('Audio ' + (audioTracks[0].enabled ? 'unmuted.' : 'muted.'));
 };
@@ -341,9 +345,16 @@ Call.prototype.connectToRoom_ = function(roomId) {
           }
         }.bind(this)).catch(function(error) {
           this.onError_('Failed to start signaling: ' + error.message);
+          // Let the callstats backend know we are closing the call.
+          this.pcClient_.sendCallstatsEvents('fabricFailed');
+          this.pcClient_.sendCallstatsEvents('fabricTerminated');
         }.bind(this));
   }.bind(this)).catch(function(error) {
     this.onError_('WebSocket register error: ' + error.message);
+    // Let the callstats backend know we failed connecting to the
+    // other endpoint.
+    this.pcClient_.sendCallstatsEvents('fabricFailed');
+    this.pcClient_.sendCallstatsEvents('fabricTerminated');
   }.bind(this));
 };
 
@@ -417,16 +428,18 @@ Call.prototype.onUserMediaError_ = function(error) {
   var errorMessage = 'Failed to get access to local media. Error name was ' +
       error.name + '. Continuing without sending a stream.';
   this.onError_('getUserMedia error: ' + errorMessage);
-  this.errorMessageStorage_.push(error);
+  this.errorMessageQueue_.push(error);
   alert(errorMessage);
 };
 
+// TODO(jansson) Change this to a generic reporting method when callstats
+// supports custom errors. Then we can send in signalling errors etc.
 Call.prototype.maybeReportGetUserMediaErrors_ = function() {
-  console.log('fired', event);
-  if (this.errorMessageStorage_.length > 0) {
-    for (var errorMsg = 0; errorMsg < this.errorMessageStorage_.length; errorMsg++) {
-      console.log(this.errorMessageStorage_);
-      this.reportErrorToCallStats_('getUserMedia', this.errorMessageStorage_[errorMsg]);  
+  if (this.errorMessageQueue_.length > 0) {
+    for (var errorMsg = 0;
+        errorMsg < this.errorMessageQueue_.length; errorMsg++) {
+      this.pcClient_.reportErrorToCallstats('getUserMedia',
+          this.errorMessageQueue_[errorMsg]);
     }
   }
 };
@@ -468,7 +481,6 @@ Call.prototype.createPcClient_ = function() {
   this.pcClient_.oniceconnectionstatechange = this.oniceconnectionstatechange;
   this.pcClient_.onnewicecandidate = this.onnewicecandidate;
   this.pcClient_.onerror = this.onerror;
-  this.reportErrorToCallStats_ = this.pcClient_.reportErrorToCallStats;
   trace('Created PeerConnectionClient');
 };
 
@@ -491,9 +503,14 @@ Call.prototype.startSignaling_ = function() {
     } else {
       this.pcClient_.startAsCallee(this.params_.messages);
     }
+    this.maybeReportGetUserMediaErrors_();
   }.bind(this))
   .catch(function(e) {
-    this.onError_('Create PeerConnection exception: ' + e.message);
+    this.onError_('Create PeerConnection exception: ' + e);
+    // Let the callstats backend know we failed connecting to the
+    // other endpoint.
+    this.pcClient_.sendCallstatsEvents('fabricFailed');
+    this.pcClient_.sendCallstatsEvents('fabricTerminated');
     alert('Cannot create RTCPeerConnection: ' + e.message);
   }.bind(this));
 };
@@ -523,6 +540,10 @@ Call.prototype.joinRoom_ = function() {
       resolve(responseObj.params);
     }.bind(this)).catch(function(error) {
       reject(Error('Failed to join the room: ' + error.message));
+      // Let the callstats backend know we failed connecting to the
+      // other endpoint.
+      this.pcClient_.sendCallstatsEvents('fabricFailed');
+      this.pcClient_.sendCallstatsEvents('fabricTerminated');
       return;
     }.bind(this));
   }.bind(this));
@@ -554,6 +575,5 @@ Call.prototype.sendSignalingMessage_ = function(message) {
 Call.prototype.onError_ = function(message) {
   if (this.onerror) {
     this.onerror(message);
-    console.log('call onError: ', message);
   }
 };
