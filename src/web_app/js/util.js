@@ -74,7 +74,7 @@ function sendUrlRequest(method, url, async, body) {
   });
 }
 
-// Returns a list of turn servers after requesting it from CEOD.
+// Returns a list of turn servers after requesting it from the TURN server.
 function requestTurnServers(turnRequestUrl, turnTransports) {
   return new Promise(function(resolve, reject) {
     sendAsyncUrlRequest('POST', turnRequestUrl).then(function(response) {
@@ -83,11 +83,9 @@ function requestTurnServers(turnRequestUrl, turnTransports) {
         reject(Error('Error parsing response JSON: ' + response));
         return;
       }
-      // Filter the TURN URLs to only use the desired transport, if specified.
+      turnTransports = 'tcp';
       if (turnTransports.length > 0) {
-        for (var i = 0; i < turnServerResponse.iceServers.length; i++) {
-          filterTurnUrls(turnServerResponse.iceServers[i].urls, turnTransports);
-        }
+        filterTurnUrls(turnServerResponse, turnTransports);
       }
       trace('Retrieved TURN server information.');
       resolve(turnServerResponse.iceServers);
@@ -109,15 +107,27 @@ function parseJSON(json) {
 }
 
 // Filter a list of TURN urls to only contain those with transport=|protocol|.
-function filterTurnUrls(urls, protocol) {
-  for (var i = 0; i < urls.length;) {
-    var parts = urls[i].split('?');
-    if (parts.length > 1 && parts[1] !== ('transport=' + protocol)) {
-      urls.splice(i, 1);
-    } else {
-      ++i;
+function filterTurnUrls(config, protocol) {
+  var transport = 'transport=' + protocol;
+  var newIceServers = [];
+  for (var i = 0; i < config.iceServers.length; ++i) {
+    var iceServer = config.iceServers[i];
+    var newUrls = [];
+    for (var j = 0; j < iceServer.urls.length; ++j) {
+      var uri = iceServer.urls[j];
+      if (uri.indexOf(transport) !== -1) {
+        newUrls.push(uri);
+      } else if (
+        uri.indexOf('?transport=') === -1 && uri.startsWith('turn')) {
+          newUrls.push(uri + '?' + transport);
+      }
+    }
+    if (newUrls.length !== 0) {
+      iceServer.urls = newUrls;
+      newIceServers.push(iceServer);
     }
   }
+  config.iceServers = newIceServers;
 }
 
 // Start shims for fullscreen
