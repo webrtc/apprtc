@@ -296,7 +296,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'wss_post_url': wss_post_url,
     'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
     'version_info': json.dumps(get_version_info()),
-    'callstats_params': json.dumps(get_callstats_params())
+    'callstats_params': json.dumps(constants.CALLSTATS_PARAMS)
   }
 
   if room_id is not None:

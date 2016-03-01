@@ -15,6 +15,11 @@ TURN_BASE_URL = 'https://computeengineondemand.appspot.com'
 TURN_URL_TEMPLATE = '%s/turn?username=%s&key=%s'
 CEOD_KEY = '4080218913'
 
+CALLSTATS_PARAMS = {
+  'appId': os.environ.get('APP_ID'),
+  'appSecret': os.environ.get('APP_SECRET')
+}
+
 # Dictionary keys in the collider instance info constant.
 WSS_INSTANCE_HOST_KEY = 'host_port_pair'
 WSS_INSTANCE_NAME_KEY = 'vm_name'

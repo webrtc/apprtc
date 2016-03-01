@@ -322,15 +322,18 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
   if (this.pc_.iceConnectionState === 'completed') {
     trace('ICE complete time: ' +
         (window.performance.now() - this.startTime_).toFixed(0) + 'ms.');
+    // Associate SSRC's with media stream tracks and user ID in the
+    // callstats backend.
+    this.bindSendMstToIdForCallstats_();
+    this.bindReceiveMstToIdForCallstats_();
   }
 
   // The answering side does not transition to "completed" state.
   if (this.pc_.iceConnectionState === 'connected') {
     // Associate SSRC's with media stream tracks and user ID in the
     // callstats backend.
-    // this.bindSendMstToId_();
-    this.bindSendMstToId_();
-    this.bindReceiveMstToId_();
+    this.bindSendMstToIdForCallstats_();
+    this.bindReceiveMstToIdForCallstats_();
   }
 
   if (this.oniceconnectionstatechange) {
@@ -461,13 +464,15 @@ PeerConnectionClient.prototype.setupCallstats_ = function() {
 
 // Associate send SSRC's with media stream tracks and user ID in the
 // callstats backend.
-PeerConnectionClient.prototype.bindSendMstToId_ = function() {
+PeerConnectionClient.prototype.bindSendMstToIdForCallstats_ = function() {
   if (!this.callstats && this.pc_.getlocalStreams().length === 0 &&
       typeof this.pc_.localDescription.sdp === 'undefined') {
     trace('Cannot associate send mst with userId.');
     return;
   }
 
+  // Local video tag changes from local-video to mini-video when the call is
+  // established.
   var localVideoTagId = 'mini-video';
 
   // Determine local video track id, label and SSRC.
@@ -478,11 +483,14 @@ PeerConnectionClient.prototype.bindSendMstToId_ = function() {
         this.pc_.getLocalStreams()[0].getVideoTracks()[0].label;
     var videoSendSsrcLine = this.pc_.localDescription.sdp.match('a=ssrc:.*.' +
         videoSendTrackId);
-    var videoSendSsrc = videoSendSsrcLine[0].match('[0-9]+');
 
-    this.callstats.associateMstWithUserID(this.pc_, this.userId,
+    // Firefox does not use SSRC.
+    if (videoSendSsrcLine !== null) {
+      var videoSendSsrc = videoSendSsrcLine[0].match('[0-9]+')
+      this.callstats.associateMstWithUserID(this.pc_, this.userId,
       this.conferenceId, videoSendSsrc[0], videoSendTrackLabel,
       localVideoTagId);
+    }
   }
 
   if (this.pc_.getLocalStreams()[0].getAudioTracks().length > 0) {
@@ -493,17 +501,20 @@ PeerConnectionClient.prototype.bindSendMstToId_ = function() {
         this.pc_.getLocalStreams()[0].getAudioTracks()[0].label;
     var audioSendSsrcLine = this.pc_.localDescription.sdp.match('a=ssrc:.*.' +
         audioSendTrackId);
-    var audioSendSsrc = audioSendSsrcLine[0].match('[0-9]+');
 
-    this.callstats.associateMstWithUserID(this.pc_, this.userId,
-        this.conferenceId, audioSendSsrc[0], audioSendTrackLabel,
-        localVideoTagId);
+    // Firefox does not use SSRC.
+    if (audioSendSsrcLine !== null) {
+      var audioSendSsrc = audioSendSsrcLine[0].match('[0-9]+');
+      this.callstats.associateMstWithUserID(this.pc_, this.userId,
+          this.conferenceId, audioSendSsrc[0], audioSendTrackLabel,
+          localVideoTagId);
+    }
   }
 };
 
 // Associate receive SSRC's with media stream tracks and user ID in the
 // callstats backend.
-PeerConnectionClient.prototype.bindReceiveMstToId_ = function() {
+PeerConnectionClient.prototype.bindReceiveMstToIdForCallstats_ = function() {
   if (!this.callstats && this.pc_.getRemoteStreams().length === 0 &&
       typeof this.pc_.remoteDescription.sdp === 'undefined') {
     trace('Cannot associate receive mst with userId.');
@@ -521,11 +532,14 @@ PeerConnectionClient.prototype.bindReceiveMstToId_ = function() {
     var videoReceiveSsrcLine =
         this.pc_.remoteDescription.sdp.match('a=ssrc:.*.' +
         videoReceiveTrackId);
-    var videoReceiveSsrc = videoReceiveSsrcLine[0].match('[0-9]+');
 
-    this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
-        this.conferenceId, videoReceiveSsrc[0], videoReceiveTrackLabel,
-        remoteVideoTagId);
+    // Firefox does not use SSRC.
+    if (videoReceiveSsrcLine !== null) {
+      var videoReceiveSsrc = videoReceiveSsrcLine[0].match('[0-9]+');
+      this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
+          this.conferenceId, videoReceiveSsrc[0], videoReceiveTrackLabel,
+          remoteVideoTagId);
+    }
   }
 
   if (this.pc_.getRemoteStreams()[0].getAudioTracks.length > 0) {
@@ -537,11 +551,14 @@ PeerConnectionClient.prototype.bindReceiveMstToId_ = function() {
     var audioReceiveSsrcLine =
         this.pc_.remoteDescription.sdp.match('a=ssrc:.*.' +
         audioReceiveTrackId);
-    var audioReceiveSsrc = audioReceiveSsrcLine[0].match('[0-9]+');
 
-    this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
-        this.conferenceId, audioReceiveSsrc[0], audioReceiveTrackLabel,
-        remoteVideoTagId);
+    // Firefox does not use SSRC.
+    if (audioReceiveSsrcLine !== null) {
+      var audioReceiveSsrc = audioReceiveSsrcLine[0].match('[0-9]+');
+      this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
+          this.conferenceId, audioReceiveSsrc[0], audioReceiveTrackLabel,
+          remoteVideoTagId);
+    }
   }
 };
 

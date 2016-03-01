@@ -48,3 +48,8 @@ libraries:
 
 env_variables:
   BYPASS_JOIN_CONFIRMATION: false
+  # Callstats API parameters
+  # Only change these while developing, do not commit to source!
+  # Use appcfg.py --env_variable=APP_ID:ID to replace variables when deploying.
+  APP_ID: none
+  APP_SECRET: none
