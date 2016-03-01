@@ -119,7 +119,7 @@ function filterTurnUrls(config, protocol) {
         newUrls.push(uri);
       } else if (
         uri.indexOf('?transport=') === -1 && uri.startsWith('turn')) {
-          newUrls.push(uri + '?' + transport);
+        newUrls.push(uri + '?' + transport);
       }
     }
     if (newUrls.length !== 0) {
