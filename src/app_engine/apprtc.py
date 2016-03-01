@@ -254,7 +254,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   username = client_id if client_id is not None else generate_random(9)
   if len(turn_base_url) > 0:
     turn_url = constants.TURN_URL_TEMPLATE % \
-        (turn_base_url, username, constants.CEOD_KEY)
+        (turn_base_url, constants.TURN_API_KEY)
   else:
     turn_url = ''
 

@@ -77,11 +77,7 @@ function sendUrlRequest(method, url, async, body) {
 // Returns a list of turn servers after requesting it from CEOD.
 function requestTurnServers(turnRequestUrl, turnTransports) {
   return new Promise(function(resolve, reject) {
-    // Chrome apps don't send origin header for GET requests, but
-    // do send it for POST requests. Origin header is required for
-    // access to turn request url.
-    var method = isChromeApp() ? 'POST' : 'GET';
-    sendAsyncUrlRequest(method, turnRequestUrl).then(function(response) {
+    sendAsyncUrlRequest('POST', turnRequestUrl).then(function(response) {
       var turnServerResponse = parseJSON(response);
       if (!turnServerResponse) {
         reject(Error('Error parsing response JSON: ' + response));
@@ -89,17 +85,12 @@ function requestTurnServers(turnRequestUrl, turnTransports) {
       }
       // Filter the TURN URLs to only use the desired transport, if specified.
       if (turnTransports.length > 0) {
-        filterTurnUrls(turnServerResponse.uris, turnTransports);
+        for (var i = 0; i < turnServerResponse.iceServers.length; i++) {
+          filterTurnUrls(turnServerResponse.iceServers[i].urls, turnTransports);
+        }
       }
-
-      // Create the RTCIceServer objects from the response.
-      var turnServers = {
-        urls: turnServerResponse.uris,
-        username: turnServerResponse.username,
-        credential: turnServerResponse.password
-      };
       trace('Retrieved TURN server information.');
-      resolve(turnServers);
+      resolve(turnServerResponse.iceServers);
     }).catch(function(error) {
       reject(Error('TURN server request error: ' + error.message));
       return;

@@ -11,9 +11,9 @@ MEMCACHE_RETRY_LIMIT = 100
 
 LOOPBACK_CLIENT_ID = 'LOOPBACK_CLIENT_ID'
 
-TURN_BASE_URL = 'https://computeengineondemand.appspot.com'
-TURN_URL_TEMPLATE = '%s/turn?username=%s&key=%s'
-CEOD_KEY = '4080218913'
+TURN_BASE_URL = 'https://networktraversal.googleapis.com'
+TURN_URL_TEMPLATE = '%s/v1alpha/iceconfig?key=%s'
+TURN_API_KEY = os.environ.get('TURN_API_KEY')
 
 # Dictionary keys in the collider instance info constant.
 WSS_INSTANCE_HOST_KEY = 'host_port_pair'
