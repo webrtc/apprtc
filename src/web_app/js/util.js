@@ -9,8 +9,8 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
-   requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString, $,
-   queryStringToDictionary */
+   requestIceServers, sendAsyncUrlRequest, sendSyncUrlRequest,
+   randomString, $, queryStringToDictionary */
 /* globals chrome */
 
 'use strict';
@@ -74,10 +74,10 @@ function sendUrlRequest(method, url, async, body) {
   });
 }
 
-// Returns a list of TURN servers after requesting it from the ICE server
+// Returns a list of ICE servers after requesting it from the ICE server
 // provider.
-// Example response (turnServerResponse) from the ICE server provider containing
-// two TURN servers and one STUN server:
+// Example response (iceServerRequestResponse) from the ICE server provider
+// containing two TURN servers and one STUN server:
 // {
 //   lifetimeDuration: '43200.000s',
 //   iceServers: [
@@ -91,21 +91,21 @@ function sendUrlRequest(method, url, async, body) {
 //     }
 //   ]
 // }
-function requestTurnServers(turnRequestUrl, turnTransports) {
+function requestIceServers(iceServerRequestUrl, iceTransports) {
   return new Promise(function(resolve, reject) {
-    sendAsyncUrlRequest('POST', turnRequestUrl).then(function(response) {
-      var turnServerResponse = parseJSON(response);
-      if (!turnServerResponse) {
+    sendAsyncUrlRequest('POST', iceServerRequestUrl).then(function(response) {
+      var iceServerRequestResponse = parseJSON(response);
+      if (!iceServerRequestResponse) {
         reject(Error('Error parsing response JSON: ' + response));
         return;
       }
-      if (turnTransports !== '') {
-        filterIceServersUrls(turnServerResponse, turnTransports);
+      if (iceTransports !== '') {
+        filterIceServersUrls(iceServerRequestResponse, iceTransports);
       }
-      trace('Retrieved TURN server information.');
-      resolve(turnServerResponse.iceServers);
+      trace('Retrieved ICE server information.');
+      resolve(iceServerRequestResponse.iceServers);
     }).catch(function(error) {
-      reject(Error('TURN server request error: ' + error.message));
+      reject(Error('ICE server request error: ' + error.message));
       return;
     });
   });
