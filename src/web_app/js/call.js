@@ -117,9 +117,6 @@ Call.prototype.hangup = function(async) {
     this.clearCleanupQueue_();
   }
 
-  // Let the callstats backend know we are closing the call.
-  this.pcClient_.sendCallstatsEvents('fabricTerminated');
-
   if (this.localStream_) {
     if (typeof this.localStream_.getTracks === 'undefined') {
       // Support legacy browsers, like phantomJs we use to run tests.
@@ -231,9 +228,6 @@ Call.prototype.onRemoteHangup = function() {
   // On remote hangup this client becomes the new initiator.
   this.params_.isInitiator = true;
 
-  // Let the callstats backend know we are closing the call.
-  this.pcClient_.sendCallstatsEvents('fabricTerminated');
-
   if (this.pcClient_) {
     this.pcClient_.close();
     this.pcClient_ = null;
@@ -268,7 +262,7 @@ Call.prototype.toggleVideoMute = function() {
     videoTracks[i].enabled = !videoTracks[i].enabled;
   }
   this.pcClient_.sendCallstatsEvents(
-      (videoTracks[0].enabled ? 'videoUnmute' : 'videoMute'));
+      (videoTracks[0].enabled ? 'videoResume' : 'videoPause'));
 
   trace('Video ' + (videoTracks[0].enabled ? 'unmuted.' : 'muted.'));
 };
@@ -345,16 +339,9 @@ Call.prototype.connectToRoom_ = function(roomId) {
           }
         }.bind(this)).catch(function(error) {
           this.onError_('Failed to start signaling: ' + error.message);
-          // Let the callstats backend know we are closing the call.
-          this.pcClient_.sendCallstatsEvents('fabricFailed');
-          this.pcClient_.sendCallstatsEvents('fabricTerminated');
         }.bind(this));
   }.bind(this)).catch(function(error) {
     this.onError_('WebSocket register error: ' + error.message);
-    // Let the callstats backend know we failed connecting to the
-    // other endpoint.
-    this.pcClient_.sendCallstatsEvents('fabricFailed');
-    this.pcClient_.sendCallstatsEvents('fabricTerminated');
   }.bind(this));
 };
 
@@ -507,10 +494,6 @@ Call.prototype.startSignaling_ = function() {
   }.bind(this))
   .catch(function(e) {
     this.onError_('Create PeerConnection exception: ' + e);
-    // Let the callstats backend know we failed connecting to the
-    // other endpoint.
-    this.pcClient_.sendCallstatsEvents('fabricFailed');
-    this.pcClient_.sendCallstatsEvents('fabricTerminated');
     alert('Cannot create RTCPeerConnection: ' + e.message);
   }.bind(this));
 };
@@ -540,10 +523,6 @@ Call.prototype.joinRoom_ = function() {
       resolve(responseObj.params);
     }.bind(this)).catch(function(error) {
       reject(Error('Failed to join the room: ' + error.message));
-      // Let the callstats backend know we failed connecting to the
-      // other endpoint.
-      this.pcClient_.sendCallstatsEvents('fabricFailed');
-      this.pcClient_.sendCallstatsEvents('fabricTerminated');
       return;
     }.bind(this));
   }.bind(this));

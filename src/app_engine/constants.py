@@ -16,8 +16,8 @@ TURN_URL_TEMPLATE = '%s/turn?username=%s&key=%s'
 CEOD_KEY = '4080218913'
 
 CALLSTATS_PARAMS = {
-  'appId': os.environ.get('APP_ID'),
-  'appSecret': os.environ.get('APP_SECRET')
+  'appId': os.environ.get('CALLSTATS_APP_ID'),
+  'appSecret': os.environ.get('CALLSTATS_APP_SECRET')
 }
 
 # Dictionary keys in the collider instance info constant.

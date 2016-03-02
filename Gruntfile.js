@@ -146,8 +146,6 @@ module.exports = function(grunt) {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
-            'node_modules/jssha/src/sha.js',
-            'node_modules/socket.io-client/socket.io.js',
             'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
             'src/web_app/js/adapter.js',

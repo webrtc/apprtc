@@ -148,6 +148,7 @@ PeerConnectionClient.prototype.close = function() {
   if (!this.pc_) {
     return;
   }
+  this.pc_.sendCallstatsEvents('fabricTerminated');
   this.pc_.close();
   this.pc_ = null;
 };
@@ -229,7 +230,6 @@ PeerConnectionClient.prototype.onSetRemoteDescriptionSuccess_ = function() {
     this.onremotesdpset(remoteStreams.length > 0 &&
                         remoteStreams[0].getVideoTracks().length > 0);
   }
-  // this.bindReceiveMstToId_();
 };
 
 PeerConnectionClient.prototype.processSignalingMessage_ = function(message) {
@@ -322,18 +322,6 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
   if (this.pc_.iceConnectionState === 'completed') {
     trace('ICE complete time: ' +
         (window.performance.now() - this.startTime_).toFixed(0) + 'ms.');
-    // Associate SSRC's with media stream tracks and user ID in the
-    // callstats backend.
-    this.bindSendMstToIdForCallstats_();
-    this.bindReceiveMstToIdForCallstats_();
-  }
-
-  // The answering side does not transition to "completed" state.
-  if (this.pc_.iceConnectionState === 'connected') {
-    // Associate SSRC's with media stream tracks and user ID in the
-    // callstats backend.
-    this.bindSendMstToIdForCallstats_();
-    this.bindReceiveMstToIdForCallstats_();
   }
 
   if (this.oniceconnectionstatechange) {
@@ -369,6 +357,7 @@ PeerConnectionClient.prototype.recordIceCandidate_ =
 PeerConnectionClient.prototype.onRemoteStreamAdded_ = function(event) {
   if (this.onremotestreamadded) {
     this.onremotestreamadded(event.stream);
+    this.bindMstToUserIdForCallstats_();
   }
 };
 
@@ -462,15 +451,15 @@ PeerConnectionClient.prototype.setupCallstats_ = function() {
   }
 };
 
-// Associate send SSRC's with media stream tracks and user ID in the
-// callstats backend.
-PeerConnectionClient.prototype.bindSendMstToIdForCallstats_ = function() {
-  if (!this.callstats && this.pc_.getlocalStreams().length === 0 &&
-      typeof this.pc_.localDescription.sdp === 'undefined') {
-    trace('Cannot associate send mst with userId.');
+// Associate device labels, media stream tracks to user Id in the callstats
+// backend.
+PeerConnectionClient.prototype.bindMstToUserIdForCallstats_ = function() {
+  if (!this.callstats && this.pc_.getlocalStreams().length === 0) {
+    trace('Cannot associateMstWithUserID.');
     return;
   }
 
+  // Local.
   // Local video tag changes from local-video to mini-video when the call is
   // established.
   var localVideoTagId = 'mini-video';
@@ -486,7 +475,7 @@ PeerConnectionClient.prototype.bindSendMstToIdForCallstats_ = function() {
 
     // Firefox does not use SSRC.
     if (videoSendSsrcLine !== null) {
-      var videoSendSsrc = videoSendSsrcLine[0].match('[0-9]+')
+      var videoSendSsrc = videoSendSsrcLine[0].match('[0-9]+');
       this.callstats.associateMstWithUserID(this.pc_, this.userId,
       this.conferenceId, videoSendSsrc[0], videoSendTrackLabel,
       localVideoTagId);
@@ -510,17 +499,8 @@ PeerConnectionClient.prototype.bindSendMstToIdForCallstats_ = function() {
           localVideoTagId);
     }
   }
-};
 
-// Associate receive SSRC's with media stream tracks and user ID in the
-// callstats backend.
-PeerConnectionClient.prototype.bindReceiveMstToIdForCallstats_ = function() {
-  if (!this.callstats && this.pc_.getRemoteStreams().length === 0 &&
-      typeof this.pc_.remoteDescription.sdp === 'undefined') {
-    trace('Cannot associate receive mst with userId.');
-    return;
-  }
-
+  // Remote.
   var remoteVideoTagId = 'remote-video';
 
   if (this.pc_.getRemoteStreams()[0].getVideoTracks.length > 0) {
@@ -563,27 +543,15 @@ PeerConnectionClient.prototype.bindReceiveMstToIdForCallstats_ = function() {
 };
 
 // Send events to callstats backend.
+// http://www.callstats.io/api/#enumeration-of-fabricevent
 PeerConnectionClient.prototype.sendCallstatsEvents = function(fabricEvent) {
-  // http://www.callstats.io/api/#enumeration-of-fabricevent
-  var fabricEvents = {
-    audioMute: 'audioMute',
-    audioUnmute: 'audioUnmute',
-    fabricFailed: 'fabricFailed',
-    fabricTerminated: 'fabricTerminated',
-    videoMute: 'videoPause',
-    videoUnmute: 'videoResume'
-  };
-
   if (!this.callstats) {
     trace('Callstats API not setup.');
     return;
-  }
-
-  if (typeof fabricEvents[fabricEvent] === 'undefined') {
-    trace('Unknown fabricEvent: ' + fabricEvent);
+  } else if (!fabricEvent) {
+    trace('Must provide a fabricEvent.');
     return;
   }
 
-  this.callstats_.sendFabricEvent(this.pc_,
-      fabricEvents[fabricEvent], this.conferenceId);
+  this.callstats_.sendFabricEvent(this.pc_, fabricEvent, this.conferenceId);
 };
