@@ -79,15 +79,15 @@ function sendUrlRequest(method, url, async, body) {
 // Example response (turnServerResponse) from the ICE server provider containing
 // two TURN servers and one STUN server:
 // {
-//   lifetimeDuration: "43200.000s",
+//   lifetimeDuration: '43200.000s',
 //   iceServers: [
 //     {
-//       urls: ["turn:1.2.3.4:19305", "turn:1.2.3.5:19305"],
-//       username: "username",
-//       credential:"credential"
+//       urls: ['turn:1.2.3.4:19305', 'turn:1.2.3.5:19305'],
+//       username: 'username',
+//       credential: 'credential'
 //     },
 //     {
-//       urls: ["stun:stun.l.google.com:19302"]
+//       urls: ['stun:stun.example.com:19302']
 //     }
 //   ]
 // }
@@ -121,7 +121,8 @@ function parseJSON(json) {
   return null;
 }
 
-// Filter a list of TURN urls to only contain those with transport=|protocol|.
+// Filter a peerConnection config to only contain ice servers with
+// transport=|protocol|.
 function filterIceServersUrls(config, protocol) {
   var transport = 'transport=' + protocol;
   var newIceServers = [];
@@ -131,7 +132,7 @@ function filterIceServersUrls(config, protocol) {
     for (var j = 0; j < iceServer.urls.length; ++j) {
       var url = iceServer.urls[j];
       if (url.indexOf(transport) !== -1) {
-        newUrls.push(uri);
+        newUrls.push(url);
       } else if (
         url.indexOf('?transport=') === -1) {
         newUrls.push(url + '?' + transport);
