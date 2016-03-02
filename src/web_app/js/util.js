@@ -74,7 +74,23 @@ function sendUrlRequest(method, url, async, body) {
   });
 }
 
-// Returns a list of turn servers after requesting it from the TURN server.
+// Returns a list of TURN servers after requesting it from the ICE server
+// provider.
+// Example response (turnServerResponse) from the ICE server provider containing
+// two TURN servers and one STUN server:
+// {
+//   lifetimeDuration: "43200.000s",
+//   iceServers: [
+//     {
+//       urls: ["turn:1.2.3.4:19305", "turn:1.2.3.5:19305"],
+//       username: "username",
+//       credential:"credential"
+//     },
+//     {
+//       urls: ["stun:stun.l.google.com:19302"]
+//     }
+//   ]
+// }
 function requestTurnServers(turnRequestUrl, turnTransports) {
   return new Promise(function(resolve, reject) {
     sendAsyncUrlRequest('POST', turnRequestUrl).then(function(response) {
@@ -83,9 +99,8 @@ function requestTurnServers(turnRequestUrl, turnTransports) {
         reject(Error('Error parsing response JSON: ' + response));
         return;
       }
-      turnTransports = 'tcp';
-      if (turnTransports.length > 0) {
-        filterTurnUrls(turnServerResponse, turnTransports);
+      if (turnTransports !== '') {
+        filterIceServersUrls(turnServerResponse, turnTransports);
       }
       trace('Retrieved TURN server information.');
       resolve(turnServerResponse.iceServers);
@@ -107,19 +122,19 @@ function parseJSON(json) {
 }
 
 // Filter a list of TURN urls to only contain those with transport=|protocol|.
-function filterTurnUrls(config, protocol) {
+function filterIceServersUrls(config, protocol) {
   var transport = 'transport=' + protocol;
   var newIceServers = [];
   for (var i = 0; i < config.iceServers.length; ++i) {
     var iceServer = config.iceServers[i];
     var newUrls = [];
     for (var j = 0; j < iceServer.urls.length; ++j) {
-      var uri = iceServer.urls[j];
-      if (uri.indexOf(transport) !== -1) {
+      var url = iceServer.urls[j];
+      if (url.indexOf(transport) !== -1) {
         newUrls.push(uri);
       } else if (
-        uri.indexOf('?transport=') === -1 && uri.startsWith('turn')) {
-        newUrls.push(uri + '?' + transport);
+        url.indexOf('?transport=') === -1) {
+        newUrls.push(url + '?' + transport);
       }
     }
     if (newUrls.length !== 0) {

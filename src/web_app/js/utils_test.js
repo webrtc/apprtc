@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, filterTurnUrls, assertEquals, randomString,
+/* globals TestCase, filterIceServersUrls, assertEquals, randomString,
    queryStringToDictionary */
 
 'use strict';
@@ -32,15 +32,15 @@ var TURN_URLS_TCP = [
 
 var UtilsTest = new TestCase('UtilsTest');
 
-UtilsTest.prototype.testFilterTurnUrlsUdp = function() {
+UtilsTest.prototype.filterIceServersUrlsUdp = function() {
   var urls = TURN_URLS.slice(0);  // make a copy
-  filterTurnUrls(urls, 'udp');
+  filterIceServersUrls(urls, 'udp');
   assertEquals('Only transport=udp URLs should remain.', TURN_URLS_UDP, urls);
 };
 
-UtilsTest.prototype.testFilterTurnUrlsTcp = function() {
+UtilsTest.prototype.filterIceServersUrlsTcp = function() {
   var urls = TURN_URLS.slice(0);  // make a copy
-  filterTurnUrls(urls, 'tcp');
+  filterIceServersUrls(urls, 'tcp');
   assertEquals('Only transport=tcp URLs should remain.', TURN_URLS_TCP, urls);
 };
 
