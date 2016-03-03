@@ -48,5 +48,5 @@ libraries:
 
 env_variables:
   BYPASS_JOIN_CONFIRMATION: false
-  # Use appcfg.py --env_variable=TURN_API_KEY:KEY to add the API Key when deploying.
+  # Use appcfg.py --env_variable=ICE_SERVER_API_KEY:KEY to add the API Key when deploying.
   ICE_SERVER_API_KEY: none
