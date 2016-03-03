@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace, requestTurnServers, sendUrlRequest, sendAsyncUrlRequest,
+/* globals trace, requestIceServers, sendUrlRequest, sendAsyncUrlRequest,
    requestUserMedia, SignalingChannel, PeerConnectionClient, setupLoopback,
    parseJSON, isChromeApp, apprtc, Constants */
 
@@ -41,13 +41,13 @@ var Call = function(params) {
   this.onstatusmessage = null;
 
   this.getMediaPromise_ = null;
-  this.getTurnServersPromise_ = null;
-  this.requestMediaAndTurnServers_();
+  this.getIceServersPromise_ = null;
+  this.requestMediaAndIceServers_();
 };
 
-Call.prototype.requestMediaAndTurnServers_ = function() {
+Call.prototype.requestMediaAndIceServers_ = function() {
   this.getMediaPromise_ = this.maybeGetMedia_();
-  this.getTurnServersPromise_ = this.maybeGetTurnServers_();
+  this.getIceServersPromise_ = this.maybeGetIceServers_();
 };
 
 Call.prototype.isInitiator = function() {
@@ -106,7 +106,7 @@ Call.prototype.clearCleanupQueue_ = function() {
 Call.prototype.restart = function() {
   // Reinitialize the promises so the media gets hooked up as a result
   // of calling maybeGetMedia_.
-  this.requestMediaAndTurnServers_();
+  this.requestMediaAndIceServers_();
   this.start(this.params_.previousRoomId);
 };
 
@@ -327,7 +327,7 @@ Call.prototype.connectToRoom_ = function(roomId) {
     // and have media and TURN. Since we send candidates as soon as the peer
     // connection generates them we need to wait for the signaling channel to be
     // ready.
-    Promise.all([this.getTurnServersPromise_, this.getMediaPromise_])
+    Promise.all([this.getIceServersPromise_, this.getMediaPromise_])
         .then(function() {
           this.startSignaling_();
           if (isChromeApp()) {
@@ -370,25 +370,26 @@ Call.prototype.maybeGetMedia_ = function() {
   return mediaPromise;
 };
 
-// Asynchronously request a TURN server if needed.
-Call.prototype.maybeGetTurnServers_ = function() {
-  var shouldRequestTurnServers =
-      (this.params_.turnRequestUrl && this.params_.turnRequestUrl.length > 0);
+// Asynchronously request an ICE server if needed.
+Call.prototype.maybeGetIceServers_ = function() {
+  var shouldRequestIceServers =
+      (this.params_.iceServerRequestUrl &&
+      this.params_.iceServerRequestUrl.length > 0);
 
-  var turnPromise = null;
-  if (shouldRequestTurnServers) {
-    var requestUrl = this.params_.turnRequestUrl;
-    turnPromise =
-        requestTurnServers(requestUrl, this.params_.turnTransports).then(
-        function(turnServers) {
-          var iceServers = this.params_.peerConnectionConfig.iceServers;
+  var iceServerPromise = null;
+  if (shouldRequestIceServers) {
+    var requestUrl = this.params_.iceServerRequestUrl;
+    iceServerPromise =
+        requestIceServers(requestUrl, this.params_.iceServerTransports).then(
+        function(iceServers) {
+          var servers = this.params_.peerConnectionConfig.iceServers;
           this.params_.peerConnectionConfig.iceServers =
-              iceServers.concat(turnServers);
+              servers.concat(iceServers);
         }.bind(this)).catch(function(error) {
           if (this.onstatusmessage) {
-            // Error retrieving TURN servers.
+            // Error retrieving ICE servers.
             var subject =
-                encodeURIComponent('AppRTC demo TURN server not working');
+                encodeURIComponent('AppRTC demo ICE servers not working');
             this.onstatusmessage(
                 'No TURN server; unlikely that media will traverse networks. ' +
                 'If this persists please ' +
@@ -399,9 +400,9 @@ Call.prototype.maybeGetTurnServers_ = function() {
           trace(error.message);
         }.bind(this));
   } else {
-    turnPromise = Promise.resolve();
+    iceServerPromise = Promise.resolve();
   }
-  return turnPromise;
+  return iceServerPromise;
 };
 
 Call.prototype.onUserMediaSuccess_ = function(stream) {

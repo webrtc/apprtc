@@ -51,8 +51,11 @@ libraries:
 
 env_variables:
   BYPASS_JOIN_CONFIRMATION: false
-  # Callstats API parameters
   # Only change these while developing, do not commit to source!
-  # Use appcfg.py --env_variable=APP_ID:ID to replace variables when deploying.
+  # Use appcfg.py --env_variable=CALLSTATS_APP_ID:ID  \
+  #               --env_variable=CALLSTATS_APP_SECRET:SECRET \
+  #               --env_variable=ICE_SERVER_API_KEY:KEY \
+  # in order to replace variables when deploying.
   CALLSTATS_APP_ID: none
   CALLSTATS_APP_SECRET: none
+  ICE_SERVER_API_KEY: none

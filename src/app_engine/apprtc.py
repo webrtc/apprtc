@@ -184,13 +184,14 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # Which ICE candidates to allow. This is useful for forcing a call to run
   # over TURN, by setting it=relay.
   ice_transports = request.get('it')
-  # Which TURN transport= to allow (i.e., only TURN URLs with transport=<tt>
-  # will be used). This is useful for forcing a session to use TURN/TCP, by
-  # setting it=relay&tt=tcp.
-  turn_transports = request.get('tt')
-  # A HTTP server that will be used to find the right TURN servers to use, as
+  # Which ICE server transport= to allow (i.e., only TURN URLs with
+  # transport=<tt> will be used). This is useful for forcing a session to use
+  # TURN/TCP, by setting it=relay&tt=tcp.
+  ice_server_transports = request.get('tt')
+  # A HTTP server that will be used to find the right ICE servers to use, as
   # described in http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00.
-  turn_base_url = request.get('ts', default_value = constants.TURN_BASE_URL)
+  ice_server_base_url = request.get('ts', default_value =
+      constants.ICE_SERVER_BASE_URL)
 
   # Use "audio" and "video" to set the media stream constraints. Defined here:
   # http://goo.gl/V7cZg
@@ -261,15 +262,15 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   else:
     include_loopback_js = ''
 
-  # TODO(tkchin): We want to provide a TURN request url on the initial get,
+  # TODO(tkchin): We want to provide a ICE request url on the initial get,
   # but we don't provide client_id until a join. For now just generate
   # a random id, but we should make this better.
   username = client_id if client_id is not None else generate_random(9)
-  if len(turn_base_url) > 0:
-    turn_url = constants.TURN_URL_TEMPLATE % \
-        (turn_base_url, username, constants.CEOD_KEY)
+  if len(ice_server_base_url) > 0:
+    ice_server_url = constants.ICE_SERVER_URL_TEMPLATE % \
+        (ice_server_base_url, constants.ICE_SERVER_API_KEY)
   else:
-    turn_url = ''
+    ice_server = ''
 
   pc_config = make_pc_config(ice_transports)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
@@ -289,8 +290,8 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'pc_constraints': json.dumps(pc_constraints),
     'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
-    'turn_url': turn_url,
-    'turn_transports': turn_transports,
+    'ice_server_url': ice_server_url,
+    'ice_server_transports': ice_server_transports,
     'include_loopback_js' : include_loopback_js,
     'wss_url': wss_url,
     'wss_post_url': wss_post_url,
