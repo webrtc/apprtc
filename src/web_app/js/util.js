@@ -9,8 +9,8 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* exported setUpFullScreen, fullScreenElement, isFullScreen,
-   requestTurnServers, sendAsyncUrlRequest, sendSyncUrlRequest, randomString, $,
-   queryStringToDictionary */
+   requestIceServers, sendAsyncUrlRequest, sendSyncUrlRequest,
+   randomString, $, queryStringToDictionary */
 /* globals chrome */
 
 'use strict';
@@ -74,34 +74,38 @@ function sendUrlRequest(method, url, async, body) {
   });
 }
 
-// Returns a list of turn servers after requesting it from CEOD.
-function requestTurnServers(turnRequestUrl, turnTransports) {
+// Returns a list of ICE servers after requesting it from the ICE server
+// provider.
+// Example response (iceServerRequestResponse) from the ICE server provider
+// containing two TURN servers and one STUN server:
+// {
+//   lifetimeDuration: '43200.000s',
+//   iceServers: [
+//     {
+//       urls: ['turn:1.2.3.4:19305', 'turn:1.2.3.5:19305'],
+//       username: 'username',
+//       credential: 'credential'
+//     },
+//     {
+//       urls: ['stun:stun.example.com:19302']
+//     }
+//   ]
+// }
+function requestIceServers(iceServerRequestUrl, iceTransports) {
   return new Promise(function(resolve, reject) {
-    // Chrome apps don't send origin header for GET requests, but
-    // do send it for POST requests. Origin header is required for
-    // access to turn request url.
-    var method = isChromeApp() ? 'POST' : 'GET';
-    sendAsyncUrlRequest(method, turnRequestUrl).then(function(response) {
-      var turnServerResponse = parseJSON(response);
-      if (!turnServerResponse) {
+    sendAsyncUrlRequest('POST', iceServerRequestUrl).then(function(response) {
+      var iceServerRequestResponse = parseJSON(response);
+      if (!iceServerRequestResponse) {
         reject(Error('Error parsing response JSON: ' + response));
         return;
       }
-      // Filter the TURN URLs to only use the desired transport, if specified.
-      if (turnTransports.length > 0) {
-        filterTurnUrls(turnServerResponse.uris, turnTransports);
+      if (iceTransports !== '') {
+        filterIceServersUrls(iceServerRequestResponse, iceTransports);
       }
-
-      // Create the RTCIceServer objects from the response.
-      var turnServers = {
-        urls: turnServerResponse.uris,
-        username: turnServerResponse.username,
-        credential: turnServerResponse.password
-      };
-      trace('Retrieved TURN server information.');
-      resolve(turnServers);
+      trace('Retrieved ICE server information.');
+      resolve(iceServerRequestResponse.iceServers);
     }).catch(function(error) {
-      reject(Error('TURN server request error: ' + error.message));
+      reject(Error('ICE server request error: ' + error.message));
       return;
     });
   });
@@ -117,16 +121,29 @@ function parseJSON(json) {
   return null;
 }
 
-// Filter a list of TURN urls to only contain those with transport=|protocol|.
-function filterTurnUrls(urls, protocol) {
-  for (var i = 0; i < urls.length;) {
-    var parts = urls[i].split('?');
-    if (parts.length > 1 && parts[1] !== ('transport=' + protocol)) {
-      urls.splice(i, 1);
-    } else {
-      ++i;
+// Filter a peerConnection config to only contain ice servers with
+// transport=|protocol|.
+function filterIceServersUrls(config, protocol) {
+  var transport = 'transport=' + protocol;
+  var newIceServers = [];
+  for (var i = 0; i < config.iceServers.length; ++i) {
+    var iceServer = config.iceServers[i];
+    var newUrls = [];
+    for (var j = 0; j < iceServer.urls.length; ++j) {
+      var url = iceServer.urls[j];
+      if (url.indexOf(transport) !== -1) {
+        newUrls.push(url);
+      } else if (
+        url.indexOf('?transport=') === -1) {
+        newUrls.push(url + '?' + transport);
+      }
+    }
+    if (newUrls.length !== 0) {
+      iceServer.urls = newUrls;
+      newIceServers.push(iceServer);
     }
   }
+  config.iceServers = newIceServers;
 }
 
 // Start shims for fullscreen

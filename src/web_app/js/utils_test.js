@@ -8,40 +8,73 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, filterTurnUrls, assertEquals, randomString,
+/* globals TestCase, filterIceServersUrls, assertEquals, randomString,
    queryStringToDictionary */
 
 'use strict';
 
-var TURN_URLS = [
-    'turn:turn.example.com?transport=tcp',
-    'turn:turn.example.com?transport=udp',
-    'turn:turn.example.com:8888?transport=udp',
-    'turn:turn.example.com:8888?transport=tcp'
-];
+var PEERCONNECTION_CONFIG = {
+  iceServers: [
+    {
+      urls: [
+        'turn:turn.example1.com',
+        'turn:turn.example.com?transport=tcp',
+        'turn:turn.example.com?transport=udp',
+        'turn:turn.example1.com:8888',
+        'turn:turn.example.com:8888?transport=tcp',
+        'turn:turn.example.com:8888?transport=udp'
+      ],
+      username: 'username',
+      credential: 'credential'
+    },
+    {
+      urls: [
+        'stun:stun.example1.com',
+        'stun:stun.example.com?transport=tcp',
+        'stun:stun.example.com?transport=udp',
+        'stun:stun.example1.com:8888',
+        'stun:stun.example.com:8888?transport=tcp',
+        'stun:stun.example.com:8888?transport=udp'
+      ]
+    },
+    {
+      // This should not appear at all due to it being empty after filtering it.
+      urls: [
+       'stun:stun2.example.com?transport=tcp'
+      ]
+    }
+  ]
+};
 
-var TURN_URLS_UDP = [
-    'turn:turn.example.com?transport=udp',
-    'turn:turn.example.com:8888?transport=udp',
-];
-
-var TURN_URLS_TCP = [
-    'turn:turn.example.com?transport=tcp',
-    'turn:turn.example.com:8888?transport=tcp'
-];
+var PEERCONNECTION_CONFIG_FILTERED = {
+  iceServers: [
+    {
+      urls: [
+        'turn:turn.example1.com?transport=udp',
+        'turn:turn.example.com?transport=udp',
+        'turn:turn.example1.com:8888?transport=udp',
+        'turn:turn.example.com:8888?transport=udp'
+      ],
+      username: 'username',
+      credential: 'credential'
+    },
+    {
+      urls: [
+        'stun:stun.example1.com?transport=udp',
+        'stun:stun.example.com?transport=udp',
+        'stun:stun.example1.com:8888?transport=udp',
+        'stun:stun.example.com:8888?transport=udp'
+      ]
+    }
+  ]
+};
 
 var UtilsTest = new TestCase('UtilsTest');
 
-UtilsTest.prototype.testFilterTurnUrlsUdp = function() {
-  var urls = TURN_URLS.slice(0);  // make a copy
-  filterTurnUrls(urls, 'udp');
-  assertEquals('Only transport=udp URLs should remain.', TURN_URLS_UDP, urls);
-};
-
-UtilsTest.prototype.testFilterTurnUrlsTcp = function() {
-  var urls = TURN_URLS.slice(0);  // make a copy
-  filterTurnUrls(urls, 'tcp');
-  assertEquals('Only transport=tcp URLs should remain.', TURN_URLS_TCP, urls);
+UtilsTest.prototype.testFilterIceServersUrls = function() {
+  filterIceServersUrls(PEERCONNECTION_CONFIG, 'udp');
+  assertEquals('Only transport=udp URLs should remain.',
+      PEERCONNECTION_CONFIG_FILTERED, PEERCONNECTION_CONFIG);
 };
 
 UtilsTest.prototype.testRandomReturnsCorrectLength = function() {
