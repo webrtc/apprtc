@@ -13,7 +13,6 @@
 'use strict';
 
 // Generate random room id and connect.
-
 var roomServer = 'https://appr.tc';
 var loadingParams = {
   errorMessages: [],
@@ -42,6 +41,7 @@ var loadingParams = {
         newParams.peerConnectionConfig = parseJSON(serverParams.pc_config);
         newParams.peerConnectionConstraints =
             parseJSON(serverParams.pc_constraints);
+        // TODO: Update this to use ICE_SERVER.
         newParams.turnRequestUrl = serverParams.turn_url;
         newParams.turnTransports = serverParams.turn_transports;
         newParams.wssUrl = serverParams.wss_url;
