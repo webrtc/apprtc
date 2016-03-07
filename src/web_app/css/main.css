@@ -108,16 +108,15 @@ div#privacy {
   position: absolute;
   bottom: 0;
   right: 0;
-  /* Makes sure to stay behind room links so they can be clicked */
-  z-index: -1
-  margin-right: 1em;
-  margin-bottom: 0.5em;
-  margin-top: calc(100vh - 34em);
+  /* Makes sure to stay behind room links so they can be clicked when the
+      page is small */
+  z-index: -1;
 }
 
 div#privacy a {
+  margin-right: 0.5em;
+  margin-bottom: 0.5em;
   color: gray;
-  margin: 0.5em;
 }
 
 html {
