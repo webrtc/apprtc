@@ -106,15 +106,14 @@ footer > div.active {
 
 div#privacy {
   position: absolute;
+  color: gray;
   bottom: 7px;
   right: 10px;
-  /* Makes sure to stay behind room links so they can be clicked when the
-      page is small */
-  z-index: -1;
 }
 
 div#privacy a {
   color: gray;
+  font-size: 14px;
 }
 
 html {
