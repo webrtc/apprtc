@@ -4,6 +4,8 @@ node_js:
   - 0.10
 
 install:
+ # We need this module for doing HTTPS requests.
+  - pip install --user requests
   - npm install
 
 script:
