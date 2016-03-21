@@ -9,7 +9,6 @@
     "url": "https://github.com/webrtc/apprtc.git"
   },
   "scripts": {
-    "postinstall": "python build/copy_portable.py",
     "test": "grunt --verbose"
   },
   "devDependencies": {
