@@ -146,7 +146,8 @@ module.exports = function(grunt) {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
-	    'src/web_app/js/analytics.js',
+            'node_modules/webrtc-adapter/out/adapter.js',
+            'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
             'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',

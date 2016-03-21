@@ -8,10 +8,9 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, SignalingChannel:true, requestUserMedia:true,
-   assertEquals, assertTrue, MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
-   FAKE_CLIENT_ID, apprtc, Constants, xhrs, MockXMLHttpRequest, assertFalse,
-   XMLHttpRequest:true */
+/* globals TestCase, SignalingChannel:true, assertEquals, assertTrue,
+   MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID, FAKE_CLIENT_ID, apprtc,
+   Constants, xhrs, MockXMLHttpRequest, assertFalse, XMLHttpRequest:true */
 
 'use strict';
 
@@ -53,10 +52,18 @@ function mockRequestUserMedia() {
 
 CallTest.prototype.setUp = function() {
   mockSignalingChannels = [];
+  // Workaround for jstdPhantom which is ancient.
+  // https://github.com/webrtc/apprtc/issues/199
+  navigator.mediaDevices = {
+    getUserMedia: function() {
+      return navigator.getUserMedia;
+    }
+  };
   this.signalingChannelBackup_ = SignalingChannel;
   SignalingChannel = MockSignalingChannel;
-  this.requestUserMediaBackup_ = requestUserMedia;
-  requestUserMedia = mockRequestUserMedia;
+  this.requestUserMediaBackup_ =
+    navigator.mediaDevices.getUserMedia;
+  navigator.mediaDevices.getUserMedia = mockRequestUserMedia;
 
   this.params_ = {
     mediaConstraints: {
@@ -69,7 +76,7 @@ CallTest.prototype.setUp = function() {
 
 CallTest.prototype.tearDown = function() {
   SignalingChannel = this.signalingChannelBackup_;
-  requestUserMedia = this.requestUserMediaBackup_;
+  navigator.mediaDevices.getUserMedia = this.requestUserMediaBackup_;
 };
 
 CallTest.prototype.testRestartInitializesMedia = function() {

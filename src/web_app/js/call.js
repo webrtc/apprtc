@@ -9,7 +9,7 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals trace, requestIceServers, sendUrlRequest, sendAsyncUrlRequest,
-   requestUserMedia, SignalingChannel, PeerConnectionClient, setupLoopback,
+   SignalingChannel, PeerConnectionClient, setupLoopback,
    parseJSON, isChromeApp, apprtc, Constants */
 
 /* exported Call */
@@ -352,7 +352,8 @@ Call.prototype.maybeGetMedia_ = function() {
   if (needStream) {
     var mediaConstraints = this.params_.mediaConstraints;
 
-    mediaPromise = requestUserMedia(mediaConstraints).then(function(stream) {
+    mediaPromise = navigator.mediaDevices.getUserMedia(mediaConstraints)
+    .then(function(stream) {
       trace('Got access to local media with mediaConstraints:\n' +
           '  \'' + JSON.stringify(mediaConstraints) + '\'');
 
