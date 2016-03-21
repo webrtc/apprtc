@@ -33,6 +33,7 @@ var UI_CONSTANTS = {
   muteVideoSvg: '#mute-video',
   newRoomButton: '#new-room-button',
   newRoomLink: '#new-room-link',
+  privacyLinks: '#privacy',
   remoteVideo: '#remote-video',
   rejoinButton: '#rejoin-button',
   rejoinDiv: '#rejoin-div',
@@ -181,11 +182,13 @@ AppController.prototype.createCall_ = function() {
 
 AppController.prototype.showRoomSelection_ = function() {
   var roomSelectionDiv = $(UI_CONSTANTS.roomSelectionDiv);
+  var privacyLinks = $(UI_CONSTANTS.privacyLinks);
   this.roomSelection_ = new RoomSelection(roomSelectionDiv, UI_CONSTANTS);
 
   this.show_(roomSelectionDiv);
   this.roomSelection_.onRoomSelected = function(roomName) {
     this.hide_(roomSelectionDiv);
+    this.hide_(privacyLinks);
     this.createCall_();
     this.finishCallSetup_(roomName);
 
