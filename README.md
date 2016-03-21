@@ -113,9 +113,9 @@ bq mk -t prod.analytics bigquery/analytics_schema.json
 
 ### Deployment
 
-In order to deploy your own AppRTC instance you need in addition to the components provided in this repository a TURN server. AppRTC currently uses rfc5766-turn-server for this. Credentials and TURN server instances are provided by a CEOD service that generates these on demand in form of a JSON response.
+In order to deploy your own AppRTC instance you need a TURN/ICE server and a signaling server, in addition to AppRTC itself. The signaling server (Collider) is part of this repository and can be found [here](https://github.com/webrtc/apprtc/tree/master/src/collider)) while the TURN server used is [rfc5766-turn-server](https://github.com/coturn/rfc5766-turn-server). Credentials and TURN server instances are provided by a [CEOD](https://github.com/juberti/computeengineondemand) service that generates TURN servers on demand in form of a JSON response.
 
-This means you need to either setup a web server that returns TURN credentials and IP addresses (basically mimic the CEOD server) in JSON response, or replace the [CEOD](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L14) details with your own TURN server provider details, and then change https://github.com/webrtc/apprtc/blob/master/src/app_engine/apprtc.py#L256 to turn_url = constants.TURN_URL_TEMPLATE.
+This means you need to either set-up a web server that returns TURN credentials and IP addresses (basically mimic the [CEOD](https://github.com/juberti/computeengineondemand) server) in a JSON response, or replace the [CEOD](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L15) details with your own TURN server provider details, and then change https://github.com/webrtc/apprtc/blob/master/src/app_engine/apprtc.py#L256 to turn_url = constants.TURN_URL_TEMPLATE.
 
 You can test using your own TURN server by appending the ?ts=serverUrl parameter, details on AppRTC URL parameters can be found at https://appr.tc/params.html.
 
