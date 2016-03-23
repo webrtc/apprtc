@@ -143,6 +143,8 @@ var AppController = function(loadingParams) {
 };
 
 AppController.prototype.createCall_ = function() {
+  var privacyLinks = $(UI_CONSTANTS.privacyLinks);
+  this.hide_(privacyLinks);
   this.call_ = new Call(this.loadingParams_);
   this.infoBox_ = new InfoBox($(UI_CONSTANTS.infoDiv),
                               this.remoteVideo_,
@@ -182,13 +184,11 @@ AppController.prototype.createCall_ = function() {
 
 AppController.prototype.showRoomSelection_ = function() {
   var roomSelectionDiv = $(UI_CONSTANTS.roomSelectionDiv);
-  var privacyLinks = $(UI_CONSTANTS.privacyLinks);
   this.roomSelection_ = new RoomSelection(roomSelectionDiv, UI_CONSTANTS);
 
   this.show_(roomSelectionDiv);
   this.roomSelection_.onRoomSelected = function(roomName) {
     this.hide_(roomSelectionDiv);
-    this.hide_(privacyLinks);
     this.createCall_();
     this.finishCallSetup_(roomName);
 
