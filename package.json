@@ -6,10 +6,9 @@
   "main": "Gruntfile.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/webrtc/adapter.git"
+    "url": "https://github.com/webrtc/apprtc.git"
   },
   "scripts": {
-    "postinstall": "python build/copy_portable.py node_modules/webrtc-adapter-test/adapter.js src/web_app/js/",
     "test": "grunt --verbose"
   },
   "devDependencies": {
@@ -24,6 +23,6 @@
     "grunt-jscs": ">=0.8.1",
     "grunt-jstestdriver-phantomjs": ">=0.0.7",
     "grunt-shell": "^1.1.1",
-    "webrtc-adapter-test": "^0.2.5"
+    "webrtc-adapter": "^1.0.6"
   }
 }
