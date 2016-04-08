@@ -8,14 +8,14 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace */
+/* globals  adapter, trace */
 /* exported setCodecParam, iceCandidateType, formatTypePreference,
    maybeSetOpusOptions, maybePreferAudioReceiveCodec,
    maybePreferAudioSendCodec, maybeSetAudioReceiveBitRate,
    maybeSetAudioSendBitRate, maybePreferVideoReceiveCodec,
    maybePreferVideoSendCodec, maybeSetVideoReceiveBitRate,
    maybeSetVideoSendBitRate, maybeSetVideoSendInitialBitRate,
-   mergeConstraints, removeCodecParam */
+   mergeConstraints, removeCodecParam*/
 
 'use strict';
 
