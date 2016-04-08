@@ -37,7 +37,7 @@ function iceCandidateType(candidateStr) {
 // Turns the local type preference into a human-readable string.
 // Note that this mapping is browser-specific.
 function formatTypePreference(pref) {
-  if (webrtcDetectedBrowser === 'chrome') {
+  if (adapter.browserDetails.browser === 'chrome') {
     switch (pref) {
       case 0:
         return 'TURN/TLS';
@@ -46,7 +46,7 @@ function formatTypePreference(pref) {
       case 2:
         return 'TURN/UDP';
     }
-  } else if (webrtcDetectedBrowser === 'firefox') {
+  } else if (adapter.browserDetails.browser === 'firefox') {
     switch (pref) {
     case 0:
       return 'TURN/TCP';
