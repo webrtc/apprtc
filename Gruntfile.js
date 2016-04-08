@@ -52,7 +52,7 @@ module.exports = function(grunt) {
       // files to validate
       // can choose more than one name + array of paths
       // usage with this name: grunt jshint:files
-      files: ['src/**/*.js', '!src/**/enums.js']
+      files: ['src/**/*.js', '!src/**/enums.js', '!src/**/adapter.js']
     },
 
     shell: {
