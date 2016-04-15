@@ -31,6 +31,7 @@
     "ga": true,
     "GumHandler": true,
     "MediaStreamTrack": true,
+    "Promise": true,
     "reattachMediaStream": true,
     "report": true,
     "reportBug": true,

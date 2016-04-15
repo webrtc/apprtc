@@ -114,6 +114,11 @@
     </svg>
 
   </div>
+  <div id="privacy">
+    <a href="//www.google.com/accounts/TOS">Terms</a>
+    &#32;&#124;&#32;
+    <a href="//www.google.com/policies/privacy/">Privacy</a>
+  </div>
 
 {% if not chromeapp %}
   {{ include_loopback_js }}
@@ -140,6 +145,7 @@
       offerOptions: {{ offer_options | safe }},
       peerConnectionConfig: {{ pc_config | safe }},
       peerConnectionConstraints: {{ pc_constraints | safe }},
+      turnRequestUrl: '{{ turn_url }}',
       iceServerRequestUrl: '{{ ice_server_url }}',
       iceServerTransports: '{{ ice_server_transports }}',
       wssUrl: '{{ wss_url }}',

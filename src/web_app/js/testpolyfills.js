@@ -7,7 +7,6 @@
  */
 
 /* More information about these options at jshint.com/docs/options */
-
 'use strict';
 
 Function.prototype.bind = Function.prototype.bind || function(thisp) {
@@ -69,6 +68,7 @@ MyPromise.all = function(promises) {
   }.bind(null, values));
 };
 
+/* jshint ignore:start */
 MyPromise.resolve = function(value) {
   return new MyPromise(function(resolve) {
     resolve(value);
@@ -76,11 +76,13 @@ MyPromise.resolve = function(value) {
 };
 
 MyPromise.reject = function(error) {
-  // JSHint flags the unused variable resolve.
-  return new MyPromise(function(resolve, reject) { // jshint ignore:line
+
+  return new MyPromise(function(resolve, reject) {
     reject(error);
+
   });
 };
+/* jshint ignore:end */
 
 MyPromise.prototype.then = function(onResolve, onReject) {
   switch (this.state_) {

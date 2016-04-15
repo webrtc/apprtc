@@ -52,7 +52,7 @@ module.exports = function(grunt) {
       // files to validate
       // can choose more than one name + array of paths
       // usage with this name: grunt jshint:files
-      files: ['src/**/*.js', '!src/**/enums.js']
+      files: ['src/**/*.js', '!src/**/enums.js', '!src/**/adapter.js']
     },
 
     shell: {
@@ -146,6 +146,7 @@ module.exports = function(grunt) {
         files: {
           // Destination: [source files]
           'out/app_engine/js/apprtc.debug.js': [
+            'node_modules/webrtc-adapter/out/adapter.js',
             'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
             'src/web_app/js/adapter.js',

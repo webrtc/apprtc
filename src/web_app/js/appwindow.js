@@ -13,7 +13,6 @@
 'use strict';
 
 // Generate random room id and connect.
-
 var roomServer = 'https://appr.tc';
 var loadingParams = {
   errorMessages: [],
@@ -42,8 +41,8 @@ var loadingParams = {
         newParams.peerConnectionConfig = parseJSON(serverParams.pc_config);
         newParams.peerConnectionConstraints =
             parseJSON(serverParams.pc_constraints);
-        newParams.turnRequestUrl = serverParams.turn_url;
-        newParams.turnTransports = serverParams.turn_transports;
+        newParams.iceServerRequestUrl = serverParams.ice_server_url;
+        newParams.iceServerTransports = serverParams.ice_server_transports;
         newParams.wssUrl = serverParams.wss_url;
         newParams.wssPostUrl = serverParams.wss_post_url;
         newParams.versionInfo = parseJSON(serverParams.version_info);
