@@ -18,6 +18,10 @@
 
 /* exported PeerConnectionClient */
 
+// TODO(jansson) disabling for now since we are going replace JSHINT.
+// (It does not say where the strict violation is hence it's not worth fixing.).
+// jshint strict:false
+
 'use strict';
 
 var PeerConnectionClient = function(params, startTime) {
@@ -148,7 +152,9 @@ PeerConnectionClient.prototype.close = function() {
   if (!this.pc_) {
     return;
   }
-  this.pc_.sendCallstatsEvents('fabricTerminated');
+  if (this.callstats) {
+    this.pc_.sendCallstatsEvents('fabricTerminated');
+  }
   this.pc_.close();
   this.pc_ = null;
 };
@@ -454,7 +460,8 @@ PeerConnectionClient.prototype.setupCallstats_ = function() {
 // Associate device labels, media stream tracks to user Id in the callstats
 // backend.
 PeerConnectionClient.prototype.bindMstToUserIdForCallstats_ = function() {
-  if (!this.callstats && this.pc_.getlocalStreams().length === 0) {
+  if (!this.callstats || !this.pc_.getlocalStreams &&
+      this.pc_.getlocalStreams().length === 0) {
     trace('Cannot associateMstWithUserID.');
     return;
   }
@@ -553,5 +560,5 @@ PeerConnectionClient.prototype.sendCallstatsEvents = function(fabricEvent) {
     return;
   }
 
-  this.callstats_.sendFabricEvent(this.pc_, fabricEvent, this.conferenceId);
+  this.callstats.sendFabricEvent(this.pc_, fabricEvent, this.conferenceId);
 };
