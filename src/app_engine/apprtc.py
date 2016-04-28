@@ -257,7 +257,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     ice_server_url = constants.ICE_SERVER_URL_TEMPLATE % \
         (ice_server_base_url, constants.ICE_SERVER_API_KEY)
   else:
-    ice_server = ''
+    ice_server_base_url = ''
 
   turn_url = constants.TURN_URL_TEMPLATE % \
       (constants.TURN_BASE_URL, username, constants.CEOD_KEY)
