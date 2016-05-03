@@ -193,9 +193,10 @@ function maybeSetVideoSendInitialBitRate(sdp, params) {
     return sdp;
   }
 
-  sdp = setCodecParam(sdp, 'VP8/90000', 'x-google-min-bitrate',
+  var codec =  params.videoRecvCodec;
+  sdp = setCodecParam(sdp, codec, 'x-google-min-bitrate',
       params.videoSendInitialBitrate.toString());
-  sdp = setCodecParam(sdp, 'VP8/90000', 'x-google-max-bitrate',
+  sdp = setCodecParam(sdp, codec, 'x-google-max-bitrate',
       maxBitrate.toString());
 
   return sdp;
