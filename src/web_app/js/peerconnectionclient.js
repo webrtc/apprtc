@@ -165,7 +165,8 @@ PeerConnectionClient.prototype.getPeerConnectionStats = function(callback) {
   if (!this.pc_) {
     return;
   }
-  this.pc_.getStats(callback);
+  this.pc_.getStats(null)
+  .then(callback);
 };
 
 PeerConnectionClient.prototype.doAnswer_ = function() {
