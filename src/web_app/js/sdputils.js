@@ -202,6 +202,80 @@ function maybeSetVideoSendInitialBitRate(sdp, params) {
   return sdp;
 }
 
+function removePayloadTypeFromMline(mLine, payloadType) {
+  mLine = mLine.split(' ');
+  for (var i = 0; i < mLine.length; ++i) {
+    if (mLine[i] === payloadType.toString()) {
+      mLine.splice(i, 1);
+    }
+  }
+  return mLine.join(' ');
+
+}
+
+function removeCodecByName(sdpLines, codec) {
+  var index = findLine(sdpLines, 'a=rtpmap', codec);
+  if (index === null) {
+    return sdpLines
+  }
+  var payloadType = getCodecPayloadTypeFromLine(sdpLines[index]);
+  sdpLines.splice(index, 1);
+
+  // Search for the video m= line and remove the codec.
+  var mLineIndex = findLine(sdpLines, 'm=', 'video');
+  if (mLineIndex === null) {
+    return sdpLines
+  }
+  sdpLines[mLineIndex] = removePayloadTypeFromMline(sdpLines[mLineIndex],
+    payloadType);
+  return sdpLines
+}
+
+function removeCodecByPayloadType(sdpLines, payloadType) {
+  var index = findLine(sdpLines, 'a=rtpmap', payloadType.toString());
+  if (index === null) {
+    return sdpLines;
+  }
+  sdpLines.splice(index, 1);
+
+  // Search for the video m= line and remove the codec.
+  var mLineIndex = findLine(sdpLines, 'm=', 'video');
+  if (mLineIndex === null) {
+    return sdpLines;
+  }
+  sdpLines[mLineIndex] = removePayloadTypeFromMline(sdpLines[mLineIndex],
+    payloadType);
+  return sdpLines
+}
+
+function maybeRemoveVideoFec(sdp, params) {
+  var sdpLines = sdp.split('\r\n');
+
+  var index = findLine(sdpLines, 'a=rtpmap', 'red');
+  if (index === null) {
+    return sdp;
+  }
+  var redPayloadType = getCodecPayloadTypeFromLine(sdpLines[index]);
+  sdpLines = removeCodecByPayloadType(sdpLines, redPayloadType);
+
+  sdpLines = removeCodecByName(sdpLines, 'ulpfec');
+
+  // Remove fmtp lines associated with red codec.
+  var index = findLine(sdpLines, 'a=fmtp', redPayloadType.toString());
+  if (index === null) {
+    return sdp;
+  }
+  fmtpLine = parseFmtpLine(sdpLines[index]);
+  var rtxPayloadType = fmtpLine.pt;
+  if (rtxPayloadType === null) {
+    return sdp;
+  }
+  sdpLines.splice(index, 1);
+
+  sdpLines = removeCodecByPayloadType(sdpLines, rtxPayloadType);
+  return sdpLines.join('\r\n');
+}
+
 // Promotes |audioSendCodec| to be the first in the m=audio line, if set.
 function maybePreferAudioSendCodec(sdp, params) {
   return maybePreferCodec(sdp, 'audio', 'send', params.audioSendCodec);
