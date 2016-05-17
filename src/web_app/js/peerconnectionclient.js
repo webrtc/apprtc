@@ -14,7 +14,7 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeSetOpusOptions, maybeRemoveVideoFec */
+   maybeRemoveVideoFec, maybeSetOpusOptions */
 
 /* exported PeerConnectionClient */
 

@@ -15,7 +15,7 @@
    maybeSetAudioSendBitRate, maybePreferVideoReceiveCodec,
    maybePreferVideoSendCodec, maybeSetVideoReceiveBitRate,
    maybeSetVideoSendBitRate, maybeSetVideoSendInitialBitRate,
-   mergeConstraints, removeCodecParam*/
+   maybeRemoveVideoFec, mergeConstraints, removeCodecParam*/
 
 'use strict';
 
@@ -248,7 +248,7 @@ function removeCodecByPayloadType(sdpLines, payloadType) {
   return sdpLines;
 }
 
-function maybeRemoveVideoFec(sdp, params) {
+function maybeRemoveVideoFec(sdp) {
   var sdpLines = sdp.split('\r\n');
 
   var index = findLine(sdpLines, 'a=rtpmap', 'red');
