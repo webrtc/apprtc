@@ -210,7 +210,6 @@ function removePayloadTypeFromMline(mLine, payloadType) {
     }
   }
   return mLine.join(' ');
-
 }
 
 function removeCodecByName(sdpLines, codec) {
