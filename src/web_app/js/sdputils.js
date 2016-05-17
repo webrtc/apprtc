@@ -216,7 +216,7 @@ function removePayloadTypeFromMline(mLine, payloadType) {
 function removeCodecByName(sdpLines, codec) {
   var index = findLine(sdpLines, 'a=rtpmap', codec);
   if (index === null) {
-    return sdpLines
+    return sdpLines;
   }
   var payloadType = getCodecPayloadTypeFromLine(sdpLines[index]);
   sdpLines.splice(index, 1);
@@ -224,11 +224,11 @@ function removeCodecByName(sdpLines, codec) {
   // Search for the video m= line and remove the codec.
   var mLineIndex = findLine(sdpLines, 'm=', 'video');
   if (mLineIndex === null) {
-    return sdpLines
+    return sdpLines;
   }
   sdpLines[mLineIndex] = removePayloadTypeFromMline(sdpLines[mLineIndex],
     payloadType);
-  return sdpLines
+  return sdpLines;
 }
 
 function removeCodecByPayloadType(sdpLines, payloadType) {
@@ -245,7 +245,7 @@ function removeCodecByPayloadType(sdpLines, payloadType) {
   }
   sdpLines[mLineIndex] = removePayloadTypeFromMline(sdpLines[mLineIndex],
     payloadType);
-  return sdpLines
+  return sdpLines;
 }
 
 function maybeRemoveVideoFec(sdp, params) {
