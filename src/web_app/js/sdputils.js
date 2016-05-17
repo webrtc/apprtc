@@ -261,11 +261,11 @@ function maybeRemoveVideoFec(sdp, params) {
   sdpLines = removeCodecByName(sdpLines, 'ulpfec');
 
   // Remove fmtp lines associated with red codec.
-  var index = findLine(sdpLines, 'a=fmtp', redPayloadType.toString());
+  index = findLine(sdpLines, 'a=fmtp', redPayloadType.toString());
   if (index === null) {
     return sdp;
   }
-  fmtpLine = parseFmtpLine(sdpLines[index]);
+  var fmtpLine = parseFmtpLine(sdpLines[index]);
   var rtxPayloadType = fmtpLine.pt;
   if (rtxPayloadType === null) {
     return sdp;
