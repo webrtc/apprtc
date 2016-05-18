@@ -152,8 +152,9 @@ PeerConnectionClient.prototype.close = function() {
   if (!this.pc_) {
     return;
   }
+
   if (this.callstats) {
-    this.pc_.sendCallstatsEvents('fabricTerminated');
+    this.sendCallstatsEvents('fabricTerminated');
   }
   this.pc_.close();
   this.pc_ = null;
@@ -416,7 +417,9 @@ PeerConnectionClient.prototype.initCallstats_ = function() {
   var appSecret = this.params_.callstatsParams.appSecret;
   this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
   var statsCallback = null;
-  var configParams = null;
+  var configParams = {
+    applicationVersion: this.params_.versionInfo.gitHash
+  };
   var callback = function(status, msg) {
     trace('Init status: ' + status + ' msg: ' + msg);
   };
@@ -460,7 +463,7 @@ PeerConnectionClient.prototype.setupCallstats_ = function() {
 // Associate device labels, media stream tracks to user Id in the callstats
 // backend.
 PeerConnectionClient.prototype.bindMstToUserIdForCallstats_ = function() {
-  if (!this.callstats || !this.pc_.getlocalStreams &&
+  if (!this.callstats || !this.pc_ && !this.pc_.getlocalStreams &&
       this.pc_.getlocalStreams().length === 0) {
     trace('Cannot associateMstWithUserID.');
     return;
