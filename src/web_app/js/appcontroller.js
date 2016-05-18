@@ -551,6 +551,7 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.videoSendCodec = urlParams['vsc'];
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
   this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
+  this.loadingParams_.videoFec = urlParams['videofec'];
   /* jshint ignore:end */
   /* jscs: enable */
 };

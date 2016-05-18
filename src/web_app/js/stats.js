@@ -33,8 +33,8 @@ function extractStatAsInt(stats, statObj, statName) {
 // as a string, or null if not present.
 function extractStat(stats, statObj, statName) {
   var report = getStatsReport(stats, statObj, statName);
-  if (report && report.names().indexOf(statName) !== -1) {
-    return report.stat(statName);
+  if (report && report[statName] !== -1) {
+    return report[statName];
   }
   return null;
 }
@@ -44,14 +44,14 @@ function extractStat(stats, statObj, statName) {
 // undef if not present.
 function getStatsReport(stats, statObj, statName, statVal) {
   if (stats) {
-    for (var i = 0; i < stats.length; ++i) {
-      var report = stats[i];
+    for (var stat in stats) {
+      var report = stats[stat];
       if (report.type === statObj) {
         var found = true;
         // If |statName| is present, ensure |report| has that stat.
         // If |statVal| is present, ensure the value matches.
         if (statName) {
-          var val = statName === 'id' ? report.id : report.stat(statName);
+          var val = statName === 'id' ? report.id : report[statName];
           found = (statVal !== undefined) ? (val === statVal) : val;
         }
         if (found) {
@@ -65,8 +65,8 @@ function getStatsReport(stats, statObj, statName, statVal) {
 // Takes two stats reports and determines the rate based on two counter readings
 // and the time between them (which is in units of milliseconds).
 function computeRate(newReport, oldReport, statName) {
-  var newVal = newReport.stat(statName);
-  var oldVal = (oldReport) ? oldReport.stat(statName) : null;
+  var newVal = newReport[statName];
+  var oldVal = (oldReport) ? oldReport[statName] : null;
   if (newVal === null || oldVal === null) {
     return null;
   }

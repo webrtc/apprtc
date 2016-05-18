@@ -83,7 +83,7 @@ InfoBox.prototype.toggleInfoDiv = function() {
 InfoBox.prototype.refreshStats_ = function() {
   this.call_.getPeerConnectionStats(function(response) {
     this.prevStats_ = this.stats_;
-    this.stats_ = response.result();
+    this.stats_ = response;
     this.updateInfoDiv();
   }.bind(this));
 };
@@ -116,20 +116,20 @@ InfoBox.prototype.updateInfoDiv = function() {
     var localAddrType;
     var remoteAddrType;
     if (activeCandPair) {
-      localAddr = activeCandPair.stat('googLocalAddress');
-      remoteAddr = activeCandPair.stat('googRemoteAddress');
-      localAddrType = activeCandPair.stat('googLocalCandidateType');
-      remoteAddrType = activeCandPair.stat('googRemoteCandidateType');
+      localAddr = activeCandPair.googLocalAddress;
+      remoteAddr = activeCandPair.googRemoteAddress;
+      localAddrType = activeCandPair.googLocalCandidateType;
+      remoteAddrType = activeCandPair.googRemoteCandidateType;
     }
     if (localAddr && remoteAddr) {
-      var localCandId = activeCandPair.stat('localCandidateId');
+      var localCandId = activeCandPair.localCandidateId;
       var localCand;
       var localTypePref;
       if (localCandId) {
         localCand = getStatsReport(this.stats_, 'localcandidate', 'id',
             localCandId);
         if (localCand) {
-          localTypePref = localCand.stat('priority') >> 24;
+          localTypePref = localCand.priority >> 24;
         }
       }
       contents += this.buildLine_('LocalAddr', localAddr +
@@ -223,7 +223,7 @@ InfoBox.prototype.buildStatsSection_ = function() {
   var rxVideoBitrate;
   var rxVideoPacketRate;
   if (txAudio) {
-    txAudioCodec = txAudio.stat('googCodecName');
+    txAudioCodec = txAudio.googCodecName;
     txAudioBitrate = computeBitrate(txAudio, txPrevAudio, 'bytesSent');
     txAudioPacketRate = computeRate(txAudio, txPrevAudio, 'packetsSent');
     contents += this.buildLine_('Audio Tx', txAudioCodec + ', ' +
@@ -231,7 +231,7 @@ InfoBox.prototype.buildStatsSection_ = function() {
         InfoBox.formatPacketRate_(txAudioPacketRate));
   }
   if (rxAudio) {
-    rxAudioCodec = rxAudio.stat('googCodecName');
+    rxAudioCodec = rxAudio.googCodecName;
     rxAudioBitrate = computeBitrate(rxAudio, rxPrevAudio, 'bytesReceived');
     rxAudioPacketRate = computeRate(rxAudio, rxPrevAudio, 'packetsReceived');
     contents += this.buildLine_('Audio Rx', rxAudioCodec + ', ' +
@@ -239,9 +239,9 @@ InfoBox.prototype.buildStatsSection_ = function() {
         InfoBox.formatPacketRate_(rxAudioPacketRate));
   }
   if (txVideo) {
-    txVideoCodec = txVideo.stat('googCodecName');
-    txVideoHeight = txVideo.stat('googFrameHeightSent');
-    txVideoFps = txVideo.stat('googFrameRateSent');
+    txVideoCodec = txVideo.googCodecName;
+    txVideoHeight = txVideo.googFrameHeightSent;
+    txVideoFps = txVideo.googFrameRateSent;
     txVideoBitrate = computeBitrate(txVideo, txPrevVideo, 'bytesSent');
     txVideoPacketRate = computeRate(txVideo, txPrevVideo, 'packetsSent');
     contents += this.buildLine_('Video Tx',
@@ -251,10 +251,10 @@ InfoBox.prototype.buildStatsSection_ = function() {
         InfoBox.formatPacketRate_(txVideoPacketRate));
   }
   if (rxVideo) {
-    rxVideoCodec = 'TODO';  // rxVideo.stat('googCodecName');
+    rxVideoCodec = rxVideo.googCodecName;
     rxVideoHeight = this.remoteVideo_.videoHeight;
     // TODO(juberti): this should ideally be obtained from the video element.
-    rxVideoFps = rxVideo.stat('googFrameRateDecoded');
+    rxVideoFps = rxVideo.googFrameRateDecoded;
     rxVideoBitrate = computeBitrate(rxVideo, rxPrevVideo, 'bytesReceived');
     rxVideoPacketRate = computeRate(rxVideo, rxPrevVideo, 'packetsReceived');
     contents += this.buildLine_('Video Rx',

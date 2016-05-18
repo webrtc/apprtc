@@ -14,7 +14,8 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeSetOpusOptions, jsSHA, io, callstats, DOMException */
+   maybeRemoveVideoFec, maybeSetOpusOptions, jsSHA, io, callstats,
+   DOMException */
 
 /* exported PeerConnectionClient */
 
@@ -175,7 +176,8 @@ PeerConnectionClient.prototype.getPeerConnectionStats = function(callback) {
   if (!this.pc_) {
     return;
   }
-  this.pc_.getStats(callback);
+  this.pc_.getStats(null)
+  .then(callback);
 };
 
 PeerConnectionClient.prototype.doAnswer_ = function() {
@@ -222,6 +224,7 @@ PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetAudioSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendInitialBitRate(message.sdp, this.params_);
+  message.sdp = maybeRemoveVideoFec(message.sdp);
   this.pc_.setRemoteDescription(new RTCSessionDescription(message))
   .then(this.onSetRemoteDescriptionSuccess_.bind(this))
   .catch(this.onError_.bind(this, 'setRemoteDescription'));
