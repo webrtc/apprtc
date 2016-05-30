@@ -325,7 +325,7 @@ AppController.prototype.transitionToActive_ = function() {
       'ms.');
 
   // Prepare the remote video and PIP elements.
-  trace('reattachMediaStream: ' + this.localVideo_.src);
+  trace('reattachMediaStream: ' + this.localVideo_.srcObject);
   adapter.browserShim.reattachMediaStream(this.miniVideo_, this.localVideo_);
 
   // Transition opacity from 0 to 1 for the remote and mini videos.
@@ -333,7 +333,7 @@ AppController.prototype.transitionToActive_ = function() {
   this.activate_(this.miniVideo_);
   // Transition opacity from 1 to 0 for the local video.
   this.deactivate_(this.localVideo_);
-  this.localVideo_.src = '';
+  this.localVideo_.srcObject = null;
   // Rotate the div containing the videos 180 deg with a CSS transform.
   this.activate_(this.videosDiv_);
   this.show_(this.hangupSvg_);
@@ -352,13 +352,13 @@ AppController.prototype.transitionToWaiting_ = function() {
     this.remoteVideoResetTimer_ = setTimeout(function() {
       this.remoteVideoResetTimer_ = null;
       trace('Resetting remoteVideo src after transitioning to waiting.');
-      this.remoteVideo_.src = '';
+      this.remoteVideo_.srcObject = null;
     }.bind(this), 800);
   }
 
-  // Set localVideo.src now so that the local stream won't be lost if the call
-  // is restarted before the timeout.
-  this.localVideo_.src = this.miniVideo_.src;
+  // Set localVideo.srcObject now so that the local stream won't be lost if the
+  // call is restarted before the timeout.
+  this.localVideo_.srcObject = this.miniVideo_.srcObject;
 
   // Transition opacity from 0 to 1 for the local video.
   this.activate_(this.localVideo_);
