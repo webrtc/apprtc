@@ -247,7 +247,10 @@ function removeCodecByPayloadType(sdpLines, payloadType) {
   return sdpLines;
 }
 
-function maybeRemoveVideoFec(sdp) {
+function maybeRemoveVideoFec(sdp, params) {
+  if (params.videoFec === 'true')
+    return;
+
   var sdpLines = sdp.split('\r\n');
 
   var index = findLine(sdpLines, 'a=rtpmap', 'red');
