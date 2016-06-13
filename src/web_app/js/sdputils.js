@@ -248,8 +248,9 @@ function removeCodecByPayloadType(sdpLines, payloadType) {
 }
 
 function maybeRemoveVideoFec(sdp, params) {
-  if (params.videoFec === 'true')
+  if (params.videoFec === 'true') {
     return;
+  }
 
   var sdpLines = sdp.split('\r\n');
 
