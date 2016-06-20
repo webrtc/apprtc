@@ -200,9 +200,7 @@ AppController.prototype.showRoomSelection_ = function() {
   }.bind(this);
 };
 
-AppController.prototype.finishCallSetup_ = function(roomId) {
-  this.call_.start(roomId);
-
+AppController.prototype.setupUi_ = function() {
   this.iconEventSetup_();
   document.onkeypress = this.onKeyPress_.bind(this);
   window.onmousemove = this.showIcons_.bind(this);
@@ -213,6 +211,11 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
   $(UI_CONSTANTS.hangupSvg).onclick = this.hangup_.bind(this);
 
   setUpFullScreen();
+}
+
+AppController.prototype.finishCallSetup_ = function(roomId) {
+  this.call_.start(roomId);
+  this.setupUi_();
 
   if (!isChromeApp()) {
     // Call hangup with async = false. Required to complete multiple
@@ -246,6 +249,9 @@ AppController.prototype.hangup_ = function() {
 
   // Call hangup with async = true.
   this.call_.hangup(true);
+  // Reset key and mouse event handlers.
+  document.onkeypress = null;
+  window.onmousemove = null;
 };
 
 AppController.prototype.onRemoteHangup_ = function() {
@@ -383,6 +389,7 @@ AppController.prototype.onRejoinClick_ = function() {
   this.deactivate_(this.rejoinDiv_);
   this.hide_(this.rejoinDiv_);
   this.call_.restart();
+  this.setupUi_();
 };
 
 AppController.prototype.onNewRoomClick_ = function() {
