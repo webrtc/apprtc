@@ -48,10 +48,10 @@ function formatTypePreference(pref) {
     }
   } else if (adapter.browserDetails.browser === 'firefox') {
     switch (pref) {
-    case 0:
-      return 'TURN/TCP';
-    case 5:
-      return 'TURN/UDP';
+      case 0:
+        return 'TURN/TCP';
+      case 5:
+        return 'TURN/UDP';
     }
   }
   return '';
