@@ -421,6 +421,9 @@ AppController.prototype.onKeyPress_ = function(event) {
     case 'q':
       this.hangup_();
       return false;
+    case 'l':
+      this.toggleMiniVideo_();
+      return false;
     default:
       return;
   }
@@ -479,6 +482,15 @@ AppController.prototype.toggleFullScreen_ = function() {
     document.body.requestFullScreen();
   }
   this.fullscreenIconSet_.toggle();
+};
+
+AppController.prototype.toggleMiniVideo_ = function() {
+  console.log(this.miniVideo_);
+  if (this.miniVideo_.classList.contains('active')) {
+    this.deactivate_(this.miniVideo_);
+  } else {
+    this.activate_(this.miniVideo_);
+  }
 };
 
 AppController.prototype.hide_ = function(element) {
