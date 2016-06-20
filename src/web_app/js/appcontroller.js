@@ -211,7 +211,7 @@ AppController.prototype.setupUi_ = function() {
   $(UI_CONSTANTS.hangupSvg).onclick = this.hangup_.bind(this);
 
   setUpFullScreen();
-}
+};
 
 AppController.prototype.finishCallSetup_ = function(roomId) {
   this.call_.start(roomId);
