@@ -485,7 +485,6 @@ AppController.prototype.toggleFullScreen_ = function() {
 };
 
 AppController.prototype.toggleMiniVideo_ = function() {
-  console.log(this.miniVideo_);
   if (this.miniVideo_.classList.contains('active')) {
     this.deactivate_(this.miniVideo_);
   } else {
