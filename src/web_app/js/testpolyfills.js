@@ -86,32 +86,32 @@ MyPromise.reject = function(error) {
 
 MyPromise.prototype.then = function(onResolve, onReject) {
   switch (this.state_) {
-  case PROMISE_STATE.PENDING:
-    this.resolveCallback_ = onResolve;
-    this.rejectCallback_ = onReject;
-    break;
-  case PROMISE_STATE.FULLFILLED:
-    onResolve(this.value_);
-    break;
-  case PROMISE_STATE.REJECTED:
-    if (onReject) {
-      onReject(this.reason_);
-    }
-    break;
+    case PROMISE_STATE.PENDING:
+      this.resolveCallback_ = onResolve;
+      this.rejectCallback_ = onReject;
+      break;
+    case PROMISE_STATE.FULLFILLED:
+      onResolve(this.value_);
+      break;
+    case PROMISE_STATE.REJECTED:
+      if (onReject) {
+        onReject(this.reason_);
+      }
+      break;
   }
   return this;
 };
 
 MyPromise.prototype.catch = function(onReject) {
   switch (this.state_) {
-  case PROMISE_STATE.PENDING:
-    this.rejectCallback_ = onReject;
-    break;
-  case PROMISE_STATE.FULLFILLED:
-    break;
-  case PROMISE_STATE.REJECTED:
-    onReject(this.reason_);
-    break;
+    case PROMISE_STATE.PENDING:
+      this.rejectCallback_ = onReject;
+      break;
+    case PROMISE_STATE.FULLFILLED:
+      break;
+    case PROMISE_STATE.REJECTED:
+      onReject(this.reason_);
+      break;
   }
   return this;
 };

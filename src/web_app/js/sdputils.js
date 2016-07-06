@@ -48,10 +48,10 @@ function formatTypePreference(pref) {
     }
   } else if (adapter.browserDetails.browser === 'firefox') {
     switch (pref) {
-    case 0:
-      return 'TURN/TCP';
-    case 5:
-      return 'TURN/UDP';
+      case 0:
+        return 'TURN/TCP';
+      case 5:
+        return 'TURN/UDP';
     }
   }
   return '';
@@ -247,7 +247,11 @@ function removeCodecByPayloadType(sdpLines, payloadType) {
   return sdpLines;
 }
 
-function maybeRemoveVideoFec(sdp) {
+function maybeRemoveVideoFec(sdp, params) {
+  if (params.videoFec === 'true') {
+    return sdp;
+  }
+
   var sdpLines = sdp.split('\r\n');
 
   var index = findLine(sdpLines, 'a=rtpmap', 'red');
@@ -456,7 +460,7 @@ function getCodecPayloadType(sdpLines, codec) {
 
 // Gets the codec payload type from an a=rtpmap:X line.
 function getCodecPayloadTypeFromLine(sdpLine) {
-  var pattern = new RegExp('a=rtpmap:(\\d+) \\w+\\/\\d+');
+  var pattern = new RegExp('a=rtpmap:(\\d+) [a-zA-Z0-9-]+\\/\\d+');
   var result = sdpLine.match(pattern);
   return (result && result.length === 2) ? result[1] : null;
 }

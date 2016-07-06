@@ -200,9 +200,7 @@ AppController.prototype.showRoomSelection_ = function() {
   }.bind(this);
 };
 
-AppController.prototype.finishCallSetup_ = function(roomId) {
-  this.call_.start(roomId);
-
+AppController.prototype.setupUi_ = function() {
   this.iconEventSetup_();
   document.onkeypress = this.onKeyPress_.bind(this);
   window.onmousemove = this.showIcons_.bind(this);
@@ -213,6 +211,11 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
   $(UI_CONSTANTS.hangupSvg).onclick = this.hangup_.bind(this);
 
   setUpFullScreen();
+};
+
+AppController.prototype.finishCallSetup_ = function(roomId) {
+  this.call_.start(roomId);
+  this.setupUi_();
 
   if (!isChromeApp()) {
     // Call hangup with async = false. Required to complete multiple
@@ -246,6 +249,9 @@ AppController.prototype.hangup_ = function() {
 
   // Call hangup with async = true.
   this.call_.hangup(true);
+  // Reset key and mouse event handlers.
+  document.onkeypress = null;
+  window.onmousemove = null;
 };
 
 AppController.prototype.onRemoteHangup_ = function() {
@@ -325,7 +331,7 @@ AppController.prototype.transitionToActive_ = function() {
       'ms.');
 
   // Prepare the remote video and PIP elements.
-  trace('reattachMediaStream: ' + this.localVideo_.src);
+  trace('reattachMediaStream: ' + this.localVideo_.srcObject);
   adapter.browserShim.reattachMediaStream(this.miniVideo_, this.localVideo_);
 
   // Transition opacity from 0 to 1 for the remote and mini videos.
@@ -333,7 +339,7 @@ AppController.prototype.transitionToActive_ = function() {
   this.activate_(this.miniVideo_);
   // Transition opacity from 1 to 0 for the local video.
   this.deactivate_(this.localVideo_);
-  this.localVideo_.src = '';
+  this.localVideo_.srcObject = null;
   // Rotate the div containing the videos 180 deg with a CSS transform.
   this.activate_(this.videosDiv_);
   this.show_(this.hangupSvg_);
@@ -352,13 +358,13 @@ AppController.prototype.transitionToWaiting_ = function() {
     this.remoteVideoResetTimer_ = setTimeout(function() {
       this.remoteVideoResetTimer_ = null;
       trace('Resetting remoteVideo src after transitioning to waiting.');
-      this.remoteVideo_.src = '';
+      this.remoteVideo_.srcObject = null;
     }.bind(this), 800);
   }
 
-  // Set localVideo.src now so that the local stream won't be lost if the call
-  // is restarted before the timeout.
-  this.localVideo_.src = this.miniVideo_.src;
+  // Set localVideo.srcObject now so that the local stream won't be lost if the
+  // call is restarted before the timeout.
+  this.localVideo_.srcObject = this.miniVideo_.srcObject;
 
   // Transition opacity from 0 to 1 for the local video.
   this.activate_(this.localVideo_);
@@ -383,6 +389,7 @@ AppController.prototype.onRejoinClick_ = function() {
   this.deactivate_(this.rejoinDiv_);
   this.hide_(this.rejoinDiv_);
   this.call_.restart();
+  this.setupUi_();
 };
 
 AppController.prototype.onNewRoomClick_ = function() {
@@ -420,6 +427,9 @@ AppController.prototype.onKeyPress_ = function(event) {
       return false;
     case 'q':
       this.hangup_();
+      return false;
+    case 'l':
+      this.toggleMiniVideo_();
       return false;
     default:
       return;
@@ -479,6 +489,14 @@ AppController.prototype.toggleFullScreen_ = function() {
     document.body.requestFullScreen();
   }
   this.fullscreenIconSet_.toggle();
+};
+
+AppController.prototype.toggleMiniVideo_ = function() {
+  if (this.miniVideo_.classList.contains('active')) {
+    this.deactivate_(this.miniVideo_);
+  } else {
+    this.activate_(this.miniVideo_);
+  }
 };
 
 AppController.prototype.hide_ = function(element) {

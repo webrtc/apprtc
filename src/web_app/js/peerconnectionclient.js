@@ -224,7 +224,7 @@ PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetAudioSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendBitRate(message.sdp, this.params_);
   message.sdp = maybeSetVideoSendInitialBitRate(message.sdp, this.params_);
-  message.sdp = maybeRemoveVideoFec(message.sdp);
+  message.sdp = maybeRemoveVideoFec(message.sdp, this.params_);
   this.pc_.setRemoteDescription(new RTCSessionDescription(message))
   .then(this.onSetRemoteDescriptionSuccess_.bind(this))
   .catch(this.onError_.bind(this, 'setRemoteDescription'));
