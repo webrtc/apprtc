@@ -7,6 +7,8 @@ before_install:
   - npm install -g npm@'>=3.0.0'
 
 install:
+ # We need this module for doing HTTPS requests.
+  - pip install --user requests
   - npm install
 
 script:

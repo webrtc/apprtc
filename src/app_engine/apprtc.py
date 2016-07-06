@@ -157,6 +157,19 @@ def get_version_info():
     logging.info('version_info.json cannot be opened: ' + str(e))
   return None
 
+def get_callstats_params():
+  try:
+    path = os.path.join(os.path.dirname(__file__), 'callstats_params.json')
+    f = open(path)
+    if f is not None:
+      try:
+        return json.load(f)
+      except ValueError as e:
+        logging.warning('callstats_params.json cannot be decoded: ' + str(e))
+  except IOError as e:
+    logging.info('callstats_params.json cannot be opened: ' + str(e))
+  return None
+
 # Returns appropriate room parameters based on query parameters in the request.
 # TODO(tkchin): move query parameter parsing to JS code.
 def get_room_parameters(request, room_id, client_id, is_initiator):
@@ -287,7 +300,8 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'wss_url': wss_url,
     'wss_post_url': wss_post_url,
     'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
-    'version_info': json.dumps(get_version_info())
+    'version_info': json.dumps(get_version_info()),
+    'callstats_params': json.dumps(constants.CALLSTATS_PARAMS)
   }
 
   if room_id is not None:

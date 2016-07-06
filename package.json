@@ -23,6 +23,7 @@
     "grunt-jscs": ">=0.8.1",
     "grunt-jstestdriver-phantomjs": ">=0.0.7",
     "grunt-shell": "^1.1.1",
+    "socket.io-client": "^1.2.0",
     "webrtc-adapter": "^1.0.6"
   }
 }

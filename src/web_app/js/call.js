@@ -25,7 +25,7 @@ var Call = function(params) {
 
   this.pcClient_ = null;
   this.localStream_ = null;
-
+  this.errorMessageQueue_ = [];
   this.startTime = null;
 
   // Public callbacks. Keep it sorted.
@@ -261,6 +261,8 @@ Call.prototype.toggleVideoMute = function() {
   for (var i = 0; i < videoTracks.length; ++i) {
     videoTracks[i].enabled = !videoTracks[i].enabled;
   }
+  this.pcClient_.sendCallstatsEvents(
+      (videoTracks[0].enabled ? 'videoResume' : 'videoPause'));
 
   trace('Video ' + (videoTracks[0].enabled ? 'unmuted.' : 'muted.'));
 };
@@ -276,7 +278,8 @@ Call.prototype.toggleAudioMute = function() {
   for (var i = 0; i < audioTracks.length; ++i) {
     audioTracks[i].enabled = !audioTracks[i].enabled;
   }
-
+  this.pcClient_.sendCallstatsEvents(
+      (audioTracks[0].enabled ? 'audioUnmute' : 'audioMute'));
   trace('Audio ' + (audioTracks[0].enabled ? 'unmuted.' : 'muted.'));
 };
 
@@ -414,7 +417,20 @@ Call.prototype.onUserMediaError_ = function(error) {
   var errorMessage = 'Failed to get access to local media. Error name was ' +
       error.name + '. Continuing without sending a stream.';
   this.onError_('getUserMedia error: ' + errorMessage);
+  this.errorMessageQueue_.push(error);
   alert(errorMessage);
+};
+
+// TODO(jansson) Change this to a generic reporting method when callstats
+// supports custom errors. Then we can send in signalling errors etc.
+Call.prototype.maybeReportGetUserMediaErrors_ = function() {
+  if (this.errorMessageQueue_.length > 0) {
+    for (var errorMsg = 0;
+        errorMsg < this.errorMessageQueue_.length; errorMsg++) {
+      this.pcClient_.reportErrorToCallstats('getUserMedia',
+          this.errorMessageQueue_[errorMsg]);
+    }
+  }
 };
 
 Call.prototype.maybeCreatePcClientAsync_ = function() {
@@ -476,9 +492,10 @@ Call.prototype.startSignaling_ = function() {
     } else {
       this.pcClient_.startAsCallee(this.params_.messages);
     }
+    this.maybeReportGetUserMediaErrors_();
   }.bind(this))
   .catch(function(e) {
-    this.onError_('Create PeerConnection exception: ' + e.message);
+    this.onError_('Create PeerConnection exception: ' + e);
     alert('Cannot create RTCPeerConnection: ' + e.message);
   }.bind(this));
 };
