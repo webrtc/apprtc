@@ -340,7 +340,7 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
   }
 
   if (this.pc_.iceConnectionState === 'connected' && !this.isInitiator_ ||
-      this.pc_.iceConnectionState === 'completed' ) {
+      this.pc_.iceConnectionState === 'completed') {
     this.callStatsCommandQueue_
         .addToQueue(this.bindMstToUserIdForCallstats_.bind(this));
   }
@@ -392,7 +392,7 @@ PeerConnectionClient.prototype.isCallstatsInitialized_ = function() {
   } else {
     return true;
   }
-}
+};
 
 // Cue for commands to send to callStats after the SDK has been authenticated.
 PeerConnectionClient.prototype.callStatsCommandQueue_ = {
@@ -454,7 +454,6 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   var configParams = {
     applicationVersion: this.params_.versionInfo.gitHash
   };
-  var self = this;
   var callback = function(status, msg) {
     if (!this.callstatsInit) {
       if (status === 'httpError') {

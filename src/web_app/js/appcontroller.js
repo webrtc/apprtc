@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals adapter, trace, InfoBox, setUpFullScreen, isFullScreen,
+/* globals trace, InfoBox, setUpFullScreen, isFullScreen,
    RoomSelection, isChromeApp, $ */
 /* exported AppController, remoteVideo */
 
