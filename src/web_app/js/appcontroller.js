@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals adapter, trace, InfoBox, setUpFullScreen, isFullScreen,
+/* globals trace, InfoBox, setUpFullScreen, isFullScreen,
    RoomSelection, isChromeApp, $ */
 /* exported AppController, remoteVideo */
 
@@ -287,7 +287,7 @@ AppController.prototype.waitForRemoteVideo_ = function() {
 AppController.prototype.onRemoteStreamAdded_ = function(stream) {
   this.deactivate_(this.sharingDiv_);
   trace('Remote stream added.');
-  adapter.browserShim.attachMediaStream(this.remoteVideo_, stream);
+  this.remoteVideo_.srcObject = stream;
 
   if (this.remoteVideoResetTimer_) {
     clearTimeout(this.remoteVideoResetTimer_);
@@ -306,9 +306,7 @@ AppController.prototype.onLocalStreamAdded_ = function(stream) {
 
 AppController.prototype.attachLocalStream_ = function() {
   trace('Attaching local stream.');
-
-  // Call the polyfill wrapper to attach the media stream to this element.
-  adapter.browserShim.attachMediaStream(this.localVideo_, this.localStream_);
+  this.localVideo_.srcObject = this.localStream_;
 
   this.displayStatus_('');
   this.activate_(this.localVideo_);
@@ -332,7 +330,7 @@ AppController.prototype.transitionToActive_ = function() {
 
   // Prepare the remote video and PIP elements.
   trace('reattachMediaStream: ' + this.localVideo_.srcObject);
-  adapter.browserShim.reattachMediaStream(this.miniVideo_, this.localVideo_);
+  this.miniVideo_.srcObject = this.localVideo_.srcObject;
 
   // Transition opacity from 0 to 1 for the remote and mini videos.
   this.activate_(this.remoteVideo_);
