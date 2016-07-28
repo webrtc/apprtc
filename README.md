@@ -119,7 +119,7 @@ You need to either set-up a web server that returns TURN credentials and IP addr
 
 You can test using your own TURN server by appending the ?ts=serverUrl parameter, details on AppRTC URL parameters can be found at https://appr.tc/params.html.
 
-Also remember to change the host address for the signalling server in [constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L28) as you cannot use the one already configured.
+Also remember to change the host address for the signalling server (in this case Collider) in [constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L28) as you cannot use the one already configured.
 
 
 
