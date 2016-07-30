@@ -9,6 +9,5 @@
     }
   ],
   "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait"
+  "display": "standalone"
 }
