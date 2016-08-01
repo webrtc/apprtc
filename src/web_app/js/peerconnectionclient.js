@@ -512,7 +512,7 @@ PeerConnectionClient.prototype.setupCallstats_ = function() {
 // backend.
 PeerConnectionClient.prototype.bindMstToUserIdForCallstats_ = function() {
   if (!this.isCallstatsInitialized_() || !this.pc_ &&
-      !this.pc_.getlocalStreams && this.pc_.getlocalStreams().length === 0) {
+      !this.pc_.getLocalStreams && this.pc_.getLocalStreams().length === 0) {
     trace('Cannot associateMstWithUserID.');
     return;
   }
