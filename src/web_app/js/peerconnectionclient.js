@@ -202,6 +202,9 @@ PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
   sessionDescription.sdp = maybeSetVideoReceiveBitRate(
     sessionDescription.sdp,
     this.params_);
+  sessionDescription.sdp = maybeRemoveVideoFec(
+    sessionDescription.sdp,
+    this.params_);
   this.pc_.setLocalDescription(sessionDescription)
   .then(trace.bind(null, 'Set session description success.'))
   .catch(this.onError_.bind(this, 'setLocalDescription'));
