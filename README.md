@@ -128,7 +128,7 @@ function requestIceServers(iceServerRequestUrl, iceTransports) {
         username: "turnUser",
         urls: [
           "turn:localhost:3478?transport=udp",
-          "turn:localhost:3478?transport=tdp"
+          "turn:localhost:3478?transport=tcp"
         ]
     }];
     resolve(servers);
