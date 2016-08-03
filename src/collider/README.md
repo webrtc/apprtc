@@ -16,9 +16,9 @@ A websocket-based signaling server in Go.
 
 4. Link the collider directories into `$GOPATH/src`
 
-        ln -s `pwd`/apprtc/src/collider/collider $GOPATH
-        ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH
-        ln -s `pwd`/apprtc/src/collider/collidertest $GOPATH
+        ln -s `pwd`/apprtc/src/collider/collider $GOPATH/src
+        ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src
+        ln -s `pwd`/apprtc/src/collider/collidertest $GOPATH/src
 
 5. Install dependencies
 
