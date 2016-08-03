@@ -135,7 +135,7 @@ function requestIceServers(iceServerRequestUrl, iceTransports) {
   });
 }
 ```
-7\. (Only do this if you skipped step 5 and 6) AppRTC by default uses an ICE server provider to get TURN servers, it's basically just a web server with authentication that returns a [JSON response](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77) containing TURN servers with credentials, however before it provides a response, it checks where the user is connecting from, checks if there are any TURN servers in that area, if not it spins up an instance. If you have such a service then change the ICE server constants in [constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L19).
+7\. (Only do this if you skipped step 5 and 6) AppRTC by default uses an ICE server provider to get TURN servers, it's basically just a web server with authentication that returns a [JSON response](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77) containing TURN servers with credentials, note that before it provides a response, it checks where the user is connecting from, checks if there are any TURN servers in that area, if not it spins up an instance and gets it's reachable address and credentials. If you have such a service then change the ICE server constants in [constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L19) to point to that.
 
 8\. Now build AppRTC using `grunt build` and then start it using dev appserver provided by GAE
 `pathToGAESDK/dev_appserver.py  out/app_engine/`.
