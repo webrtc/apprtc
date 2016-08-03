@@ -124,7 +124,7 @@ Note this assumes you are setting up AppRTC (Web client and backend), Collider (
 function requestIceServers(iceServerRequestUrl, iceTransports) {
   return new Promise(function(resolve, reject) {
     var servers = [{
-        credentials: "turnPassword",
+        credential: "turnPassword",
         username: "turnUser",
         urls: [
           "turn:localhost:3478?transport=udp",
