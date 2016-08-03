@@ -112,14 +112,29 @@ bq mk -t prod.analytics bigquery/analytics_schema.json
 ```
 
 ### Deployment
+Note this assumes you are setting up AppRTC (Web client and backend), Collider (signalling server) and the Coturn TURN server on the same machine and that it is running Linux, if you are not just perform the steps of each application on the machine you want to run them on. Instructions were performed on Ubuntu 14.04 using Python 2.7.9 and Go 1.6.3.
 
-In order to deploy your own AppRTC instance you need a TURN/ICE server and a signaling server, in addition to AppRTC itself. The signaling server (Collider) is part of this repository and can be found [here](https://github.com/webrtc/apprtc/tree/master/src/collider)) while the TURN server used is [rfc5766-turn-server](https://github.com/coturn/rfc5766-turn-server). Credentials and TURN server instances are provided by a [CEOD](https://github.com/juberti/computeengineondemand) service that generates TURN servers on demand in form of a JSON response.
-
-You need to either set-up a web server that returns TURN credentials and IP addresses (basically mimic the [CEOD](https://github.com/juberti/computeengineondemand) server) in a JSON response, or replace the [CEOD](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L15) details with your own TURN server provider details, and then change https://github.com/webrtc/apprtc/blob/master/src/app_engine/apprtc.py#L256 to turn_url = constants.TURN_URL_TEMPLATE.
-
-You can test using your own TURN server by appending the ?ts=serverUrl parameter, details on AppRTC URL parameters can be found at https://appr.tc/params.html.
-
-Also remember to change the host address for the signalling server (in this case Collider) in [constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L28) as you cannot use the one already configured.
-
-
-
+1. Clone the AppRTC repository on the machine you want to host it on (git clone <this repo URL>)
+2. Do all the steps in the [Collider instructions](https://github.com/webrtc/apprtc/blob/master/src/collider/README.md).
+3. In the AppRTC git checkout navigate to `src/app_engine/constants.py` and change the `WSS_INSTANCE_HOST_KEY:` to the address and port Collider is listening too, in this case `localhost:8089`.
+4. If you want just want to setup AppRTC with a TURN server directly then continue to step 5 otherwise jump to 7.
+5. Install and start the Coturn TURN server according to their [instructions](https://github.com/coturn/coturn/wiki/CoturnConfig)
+6. Now navigate to `src/web_app/js/utils.js` and change the `requestIceServers` function to the following: 
+```javascript
+function requestIceServers(iceServerRequestUrl, iceTransports) {
+  return new Promise(function(resolve, reject) {
+    var servers = [{
+        credentials: "turnPassword",
+        username: "turnUser",
+        urls: [
+          "turn:localhost:3478?transport=udp",
+          "turn:localhost:3478?transport=tdp"
+        ]
+    }];
+    resolve(servers);
+  });
+}
+```
+7. (Only do this if you skipped step 5 and 6) AppRTC by default uses an ICE server provider to get TURN servers, it's basically just a web server with authentication that returns a [JSON response](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77) containing TURN servers with credentials, however before it provides a response, it checks where the user is connecting from, checks if there are any TURN servers in that area, if not it spins up an instance. If you have such a service then change the ICE server constants in [constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L19)
+8. Now build AppRTC using `grunt build` and then start it using dev appserver provided by GAE `pathToGAESDK/dev_appserver.py  out/app_engine/`
+9. Open a WebRTC enabled browser and navigate to `http://localhost:8080` (`http://localhost:8080?wstls=false` if you have TLS disabled on Collider)
