@@ -256,7 +256,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
 
   debug = request.get('debug')
   if debug == 'loopback':
-    # Set dtls to false as DTLS does not work for loopback.
     include_loopback_js = '<script src="/js/loopback.js"></script>'
   else:
     include_loopback_js = ''
@@ -529,7 +528,6 @@ class JoinPage(webapp2.RequestHandler):
 
   def post(self, room_id):
     is_loopback = self.request.get('debug') == 'loopback'
-
     if is_loopback:
       client_id = constants.LOOPBACK_CLIENT_ID
       memcache_client = memcache.Client()

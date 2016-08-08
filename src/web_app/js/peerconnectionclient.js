@@ -458,7 +458,7 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   trace('Init callstats.');
   var appId = this.params_.callstatsParams.appId;
   var appSecret = this.params_.callstatsParams.appSecret;
-  if (!appId || !appSecret) {
+  if (!appId || appId === 'none' || !appSecret || appSecret === 'none') {
     trace('Could not init callstats due to missing App ID and/or API key');
     return;
   }

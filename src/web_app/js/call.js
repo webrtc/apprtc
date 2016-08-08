@@ -42,6 +42,8 @@ var Call = function(params, doNotRequestMediaAndIceServers) {
 
   this.getMediaPromise_ = null;
   this.getIceServersPromise_ = null;
+  // Only request ICE servers and getUserMedia for p2p calls and the 1st
+  // loopback peerConnection.
   if (!doNotRequestMediaAndIceServers) {
     this.requestMediaAndIceServers_();
   }
