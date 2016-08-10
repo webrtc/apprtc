@@ -55,8 +55,8 @@ function setupLoopback(params) {
         // 2nd peerConnection should not be the initiator.
         if (!this.params_.isInitiator_) {
           this.pcClient_.loopBackStream = event.clone();
-          // Disable tracks on the remote tracks of the remote stream otherwise
-          // it will be played back by the Chrome mixer as well.
+          // Disable audio tracks on the remote tracks of the remote stream
+          // otherwise it will be played back by the Chrome mixer as well.
           event.getAudioTracks()[0].enabled = false;
           this.pcClient_.pc_.addStream(this.pcClient_.loopBackStream);
           this.pcClient_.doAnswer_();

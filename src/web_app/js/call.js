@@ -15,7 +15,8 @@
 /* exported Call */
 
 'use strict';
-
+// doNotRequestMediaAndIceServers should be set to true if getUserMedia and Ice
+// servers should not be request.
 var Call = function(params, doNotRequestMediaAndIceServers) {
   this.params_ = params;
   this.roomServer_ = params.roomServer || '';
@@ -491,12 +492,8 @@ Call.prototype.startSignaling_ = function() {
     } else {
       this.pcClient_.startAsCallee(this.params_.messages);
     }
-    // Setup the remote loopback peerconnection client. Give the first
-    // peerConnection some time to setup.
     if (this.params_.isLoopback && this.params_.isInitiator) {
-      setTimeout(function() {
-        setupLoopback(this.params_);
-      }.bind(this), 2000);
+      setupLoopback(this.params_);
     }
     this.maybeReportGetUserMediaErrors_();
   }.bind(this))
