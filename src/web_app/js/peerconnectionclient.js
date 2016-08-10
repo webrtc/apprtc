@@ -28,7 +28,6 @@
 var PeerConnectionClient = function(params, startTime) {
   this.params_ = params;
   this.startTime_ = startTime;
-
   trace('Creating RTCPeerConnnection with:\n' +
     '  config: \'' + JSON.stringify(params.peerConnectionConfig) + '\';\n' +
     '  constraints: \'' + JSON.stringify(params.peerConnectionConstraints) +
@@ -61,6 +60,7 @@ var PeerConnectionClient = function(params, startTime) {
   this.onsignalingstatechange = null;
 
   this.callstatsInit = false;
+  this.loopBackStream = null;
 };
 
 // Set up audio and video regardless of what devices are present.
@@ -160,6 +160,12 @@ PeerConnectionClient.prototype.close = function() {
   this.pc_.close();
   this.pc_ = null;
   this.callstatsInit = false;
+  if (this.loopBackStream !== null) {
+    this.loopBackStream.getTracks().forEach(function(track) {
+      track.stop();
+    });
+    this.loopBackStream = null;
+  }
 };
 
 PeerConnectionClient.prototype.getPeerConnectionStates = function() {
@@ -254,7 +260,12 @@ PeerConnectionClient.prototype.processSignalingMessage_ = function(message) {
       return;
     }
     this.setRemoteSdp_(message);
-    this.doAnswer_();
+    // For the loopback peerconnection, the answer is called in the
+    // onremotestreamadded event to ensure the remote stream is available for
+    // cloning before answering..
+    if (this.params_.clientId !== 'LOOPBACK_CLIENT_ID_2') {
+      this.doAnswer_();
+    }
   } else if (message.type === 'answer' && this.isInitiator_) {
     if (this.pc_.signalingState !== 'have-local-offer') {
       trace('ERROR: remote answer received in unexpected state: ' +
@@ -389,7 +400,7 @@ PeerConnectionClient.prototype.onError_ = function(tag, error) {
 };
 
 PeerConnectionClient.prototype.isCallstatsInitialized_ = function() {
-  if (!this.callstats && !this.callstatsInit) {
+  if (!this.callstats || !this.callstatsInit) {
     trace('Callstats not initilized.');
     return false;
   } else {
@@ -442,16 +453,26 @@ PeerConnectionClient.prototype.reportErrorToCallstats =
   }
 };
 
+// Try to init the callstats library.
 PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   trace('Init callstats.');
+  var appId = this.params_.callstatsParams.appId;
+  var appSecret = this.params_.callstatsParams.appSecret;
+  if (!appId || appId === 'none' || !appSecret || appSecret === 'none') {
+    trace('Could not init callstats due to missing App ID and/or API key');
+    return;
+  }
+  // Check dependencies.
+  if (typeof io !== 'function' || typeof jsSHA !== 'function')  {
+    trace('Callstats dependencies missing, stats will not be setup.');
+    return;
+  }
   // jscs:disable requireCapitalizedConstructors
   /* jshint newcap: false */
   this.callstats = new callstats(null, io, jsSHA);
   // jscs:enable requireCapitalizedConstructors
   /* jshint newcap: true */
 
-  var appId = this.params_.callstatsParams.appId;
-  var appSecret = this.params_.callstatsParams.appSecret;
   this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
   var statsCallback = null;
   var configParams = {
@@ -467,25 +488,18 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
     }
     trace('Init status: ' + status + ' msg: ' + msg);
   }.bind(this);
+
   this.callstats.initialize(appId, appSecret, this.userId, callback,
       statsCallback, configParams);
 };
 
 // Setup the callstats api and attach it to the peerconnection.
 PeerConnectionClient.prototype.setupCallstats_ = function() {
-  // Check dependencies.
-  if (typeof io !== 'function' && typeof jsSHA !== 'function')  {
-    trace('Callstats dependencies missing, stats will not be setup.');
-    return;
-  }
-
   // Need to catch the error otherwise the peerConnection creation
   // will fail.
   try {
     // Authenticate with the callstats backend.
     var successCallback = function() {
-      this.callStatsAttachedToPc = false;
-
       trace('Set up callstats.');
       this.conferenceId = this.params_.roomId;
       this.remoteUserId = this.params_.roomId +

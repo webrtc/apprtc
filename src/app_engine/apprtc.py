@@ -256,8 +256,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
 
   debug = request.get('debug')
   if debug == 'loopback':
-    # Set dtls to false as DTLS does not work for loopback.
-    dtls = 'false'
     include_loopback_js = '<script src="/js/loopback.js"></script>'
   else:
     include_loopback_js = ''
@@ -388,8 +386,6 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
     if occupancy == 0:
       is_initiator = True
       room.add_client(client_id, Client(is_initiator))
-      if is_loopback:
-        room.add_client(constants.LOOPBACK_CLIENT_ID, Client(False))
     else:
       is_initiator = False
       other_client = room.get_other_client(client_id)
@@ -410,7 +406,7 @@ def add_client_to_room(request, room_id, client_id, is_loopback):
     else:
       retries = retries + 1
   return {'error': error, 'is_initiator': is_initiator,
-          'messages': messages, 'room_state': str(room)}
+          'messages': messages, 'room_state': str(room), 'client_id': client_id}
 
 def remove_client_from_room(host, room_id, client_id):
   key = get_memcache_key_for_room(host, room_id)
@@ -531,8 +527,18 @@ class JoinPage(webapp2.RequestHandler):
     self.write_response('SUCCESS', params, messages)
 
   def post(self, room_id):
-    client_id = generate_random(8)
     is_loopback = self.request.get('debug') == 'loopback'
+    if is_loopback:
+      client_id = constants.LOOPBACK_CLIENT_ID
+      memcache_client = memcache.Client()
+      room = memcache_client.gets(
+        get_memcache_key_for_room(self.request.host_url, room_id))
+      if room is not None:
+        if room.has_client(client_id):
+          client_id = constants.LOOPBACK_CLIENT_ID_2
+    else:
+      client_id = generate_random(8)
+
     result = add_client_to_room(self.request, room_id, client_id, is_loopback)
     if result['error'] is not None:
       logging.info('Error adding client to room: ' + result['error'] + \
@@ -541,7 +547,7 @@ class JoinPage(webapp2.RequestHandler):
       return
 
     self.write_room_parameters(
-        room_id, client_id, result['messages'], result['is_initiator'])
+        room_id, result['client_id'], result['messages'], result['is_initiator'])
     logging.info('User ' + client_id + ' joined room ' + room_id)
     logging.info('Room ' + room_id + ' has state ' + result['room_state'])
 
