@@ -327,10 +327,10 @@ PeerConnectionClientTest.prototype.testOnRemoteStreamAdded = function() {
   this.pcClient.onremotestreamadded = onRemoteStreamAdded;
 
   var event = {
-    streams: ['stream']
+    stream: 'stream'
   };
-  peerConnections[0].ontrack(event);
-  assertEquals(event.streams[0], stream);
+  peerConnections[0].onaddstream(event);
+  assertEquals(event.stream, stream);
 };
 
 PeerConnectionClientTest.prototype.testOnSignalingStateChange = function() {
