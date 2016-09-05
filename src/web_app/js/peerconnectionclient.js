@@ -449,11 +449,11 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   if (!appId || appId === 'none' || !appSecret || appSecret === 'none') {
     trace('Could not init callstats due to missing App ID and/or API key');
     return;
-   }
+  }
   // Check dependencies.
   if (typeof io !== 'function' || typeof jsSHA !== 'function')  {
-     trace('Callstats dependencies missing, stats will not be setup.');
-     return;
+    trace('Callstats dependencies missing, stats will not be setup.');
+    return;
   }
   // jscs:disable requireCapitalizedConstructors
   /* jshint newcap: false */
