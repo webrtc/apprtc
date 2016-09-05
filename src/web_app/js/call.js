@@ -15,9 +15,8 @@
 /* exported Call */
 
 'use strict';
-// doNotRequestMediaAndIceServers should be set to true if getUserMedia and Ice
-// servers should not be request.
-var Call = function(params, doNotRequestMediaAndIceServers) {
+
+var Call = function(params) {
   this.params_ = params;
   this.roomServer_ = params.roomServer || '';
 
@@ -43,11 +42,7 @@ var Call = function(params, doNotRequestMediaAndIceServers) {
 
   this.getMediaPromise_ = null;
   this.getIceServersPromise_ = null;
-  // Only request ICE servers and getUserMedia for p2p calls and the 1st
-  // loopback peerConnection.
-  if (!doNotRequestMediaAndIceServers) {
-    this.requestMediaAndIceServers_();
-  }
+  this.requestMediaAndIceServers_();
 };
 
 Call.prototype.requestMediaAndIceServers_ = function() {
@@ -61,6 +56,9 @@ Call.prototype.isInitiator = function() {
 
 Call.prototype.start = function(roomId) {
   this.connectToRoom_(roomId);
+  if (this.params_.isLoopback) {
+    setupLoopback(this.params_.wssUrl, roomId);
+  }
 };
 
 Call.prototype.queueCleanupMessages_ = function() {
@@ -156,32 +154,32 @@ Call.prototype.hangup = function(async) {
   var steps = [];
   steps.push({
     step: function() {
-      // Send POST request to /leave.
-      var path = this.getLeaveUrl_();
-      return sendUrlRequest('POST', path, async);
-    }.bind(this),
+        // Send POST request to /leave.
+        var path = this.getLeaveUrl_();
+        return sendUrlRequest('POST', path, async);
+      }.bind(this),
     errorString: 'Error sending /leave:'
   });
   steps.push({
     step: function() {
-      // Send bye to the other client.
-      this.channel_.send(JSON.stringify({type: 'bye'}));
-    }.bind(this),
+        // Send bye to the other client.
+        this.channel_.send(JSON.stringify({type: 'bye'}));
+      }.bind(this),
     errorString: 'Error sending bye:'
   });
   steps.push({
     step: function() {
-      // Close signaling channel.
-      return this.channel_.close(async);
-    }.bind(this),
+        // Close signaling channel.
+        return this.channel_.close(async);
+      }.bind(this),
     errorString: 'Error closing signaling channel:'
   });
   steps.push({
     step: function() {
-      this.params_.previousRoomId = this.params_.roomId;
-      this.params_.roomId = null;
-      this.params_.clientId = null;
-    }.bind(this),
+        this.params_.previousRoomId = this.params_.roomId;
+        this.params_.roomId = null;
+        this.params_.clientId = null;
+      }.bind(this),
     errorString: 'Error setting params:'
   });
 
@@ -234,6 +232,7 @@ Call.prototype.onRemoteHangup = function() {
     this.pcClient_.close();
     this.pcClient_ = null;
   }
+
   this.startSignaling_();
 };
 
@@ -323,6 +322,7 @@ Call.prototype.connectToRoom_ = function(roomId) {
   // already registered with GAE.
   Promise.all([channelPromise, joinPromise]).then(function() {
     this.channel_.register(this.params_.roomId, this.params_.clientId);
+
     // We only start signaling after we have registered the signaling channel
     // and have media and TURN. Since we send candidates as soon as the peer
     // connection generates them we need to wait for the signaling channel to be
@@ -491,9 +491,6 @@ Call.prototype.startSignaling_ = function() {
       this.pcClient_.startAsCaller(this.params_.offerOptions);
     } else {
       this.pcClient_.startAsCallee(this.params_.messages);
-    }
-    if (this.params_.isLoopback && this.params_.isInitiator) {
-      setupLoopback(this.params_);
     }
     this.maybeReportGetUserMediaErrors_();
   }.bind(this))

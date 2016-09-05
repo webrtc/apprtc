@@ -9,9 +9,7 @@ import os
 ROOM_MEMCACHE_EXPIRATION_SEC = 60 * 60 * 24
 MEMCACHE_RETRY_LIMIT = 100
 
-# Client ID's for the loopback peerconnections.
 LOOPBACK_CLIENT_ID = 'LOOPBACK_CLIENT_ID'
-LOOPBACK_CLIENT_ID_2 = 'LOOPBACK_CLIENT_ID_2'
 
 # TODO: Remove once clients support ICE_SERVER.
 TURN_BASE_URL = 'https://computeengineondemand.appspot.com'

@@ -252,7 +252,6 @@ AppController.prototype.hangup_ = function() {
   // Reset key and mouse event handlers.
   document.onkeypress = null;
   window.onmousemove = null;
-  this.remoteVideo_.srcObject = null;
 };
 
 AppController.prototype.onRemoteHangup_ = function() {
@@ -375,8 +374,6 @@ AppController.prototype.transitionToWaiting_ = function() {
 AppController.prototype.transitionToDone_ = function() {
   // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
-  // Rotate back the video div for rejoin and new room situations.
-  this.deactivate_(this.videosDiv_);
   this.deactivate_(this.localVideo_);
   this.deactivate_(this.remoteVideo_);
   this.deactivate_(this.miniVideo_);
