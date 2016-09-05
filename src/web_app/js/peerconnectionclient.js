@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -389,7 +389,7 @@ PeerConnectionClient.prototype.onError_ = function(tag, error) {
 };
 
 PeerConnectionClient.prototype.isCallstatsInitialized_ = function() {
-  if (!this.callstats && !this.callstatsInit) {
+  if (!this.callstats || !this.callstatsInit) {
     trace('Callstats not initilized.');
     return false;
   } else {
@@ -444,14 +444,22 @@ PeerConnectionClient.prototype.reportErrorToCallstats =
 
 PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   trace('Init callstats.');
+  var appId = this.params_.callstatsParams.appId;
+  var appSecret = this.params_.callstatsParams.appSecret;
+  if (!appId || appId === 'none' || !appSecret || appSecret === 'none') {
+    trace('Could not init callstats due to missing App ID and/or API key');
+    return;
+  }
+  // Check dependencies.
+  if (typeof io !== 'function' || typeof jsSHA !== 'function')  {
+    trace('Callstats dependencies missing, stats will not be setup.');
+    return;
+  }
   // jscs:disable requireCapitalizedConstructors
   /* jshint newcap: false */
   this.callstats = new callstats(null, io, jsSHA);
   // jscs:enable requireCapitalizedConstructors
   /* jshint newcap: true */
-
-  var appId = this.params_.callstatsParams.appId;
-  var appSecret = this.params_.callstatsParams.appSecret;
   this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
   var statsCallback = null;
   var configParams = {
@@ -467,25 +475,18 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
     }
     trace('Init status: ' + status + ' msg: ' + msg);
   }.bind(this);
+
   this.callstats.initialize(appId, appSecret, this.userId, callback,
       statsCallback, configParams);
 };
 
 // Setup the callstats api and attach it to the peerconnection.
 PeerConnectionClient.prototype.setupCallstats_ = function() {
-  // Check dependencies.
-  if (typeof io !== 'function' && typeof jsSHA !== 'function')  {
-    trace('Callstats dependencies missing, stats will not be setup.');
-    return;
-  }
-
   // Need to catch the error otherwise the peerConnection creation
   // will fail.
   try {
     // Authenticate with the callstats backend.
     var successCallback = function() {
-      this.callStatsAttachedToPc = false;
-
       trace('Set up callstats.');
       this.conferenceId = this.params_.roomId;
       this.remoteUserId = this.params_.roomId +
