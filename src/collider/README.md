@@ -6,7 +6,7 @@ A websocket-based signaling server in Go.
 
 1. Install the Go tools and workspaces as documented at http://golang.org/doc/install and http://golang.org/doc/code.html
 
-2. Checkout the `webrtc` repository,
+2. Checkout the `apprtc` repository,
 
         git clone https://github.com/webrtc/apprtc.git
 
