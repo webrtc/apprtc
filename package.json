@@ -9,21 +9,29 @@
     "url": "https://github.com/webrtc/apprtc.git"
   },
   "scripts": {
-    "test": "grunt --verbose"
+    "test": "grunt"
   },
   "devDependencies": {
+    "eslint-config-webrtc": "^1.0.0",
     "grunt": "^0.4.0",
     "grunt-cli": ">=0.1.9",
     "grunt-closurecompiler": ">=0.0.21",
     "grunt-contrib-compress": "^0.13.0",
     "grunt-contrib-csslint": ">=0.3.1",
     "grunt-contrib-jshint": ">=0.10.0",
+    "grunt-eslint": "^19.0.0",
     "grunt-htmlhint": ">=0.9.12",
     "grunt-jinja": ">=0.3.0",
-    "grunt-jscs": ">=0.8.1",
-    "grunt-jstestdriver-phantomjs": ">=0.0.7",
     "grunt-shell": "^1.1.1",
+    "jasmine-core": "^2.4.1",
+    "karma": "^1.1.0",
+    "karma-chrome-launcher": "^1.0.1",
+    "karma-cli": "^1.0.1",
+    "karma-eslint": "^2.1.0",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-jasmine": "^1.0.2",
     "socket.io-client": "^1.2.0",
-    "webrtc-adapter": "^1.0.6"
+    "webrtc-adapter": "^2.0.0",
+    "travis-multirunner": "^3.0.0"
   }
 }

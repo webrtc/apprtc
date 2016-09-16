@@ -1,6 +1,8 @@
 *.pyc
 .DS_Store
+browser*
 bower_components
+firefox*
 google_appengine*
 node_modules
 out
