@@ -52,8 +52,9 @@ module.exports = function(grunt) {
         command: 'python build/install_webtest_on_linux.py webtest-master/'
       },
       runPythonTests: {
-        command: ['python', 'build/run_python_tests.py', 'google_appengine/',
-                  out_app_engine_dir, 'webtest-master/'].join(' ')
+        command: ['python', 'build/run_python_tests.py',
+                  'temp/google_appengine/', out_app_engine_dir,
+                  'temp/webtest-master/'].join(' ')
       },
       buildAppEnginePackage: {
         command: ['python', './build/build_app_engine_package.py', 'src',

@@ -3,11 +3,10 @@
 browser*
 bower_components
 firefox*
-google_appengine*
+temp/*
 node_modules
 out
 secrets.json
 validation-report.json
 validation-status.json
-webtest-master*
 /src/web_app/js/enums.js
