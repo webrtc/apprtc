@@ -186,8 +186,8 @@ module.exports = function(grunt) {
   grunt.registerTask('travis', ['shell:getPythonTestDeps',
                                 'shell:installPythonTestDepsOnLinux',
                                 'default']);
-  grunt.registerTask('runPythonTests', ['shell:buildAppEnginePackageWithTests',
-                                        'shell:getPythonTestDeps',
+  grunt.registerTask('runPythonTests', ['shell:getPythonTestDeps',
+                                        'shell:buildAppEnginePackageWithTests',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
   grunt.registerTask('runUnitTests', ['shell:runUnitTests']),
