@@ -49,7 +49,7 @@ module.exports = function(grunt) {
         command: 'python build/get_python_test_deps.py'
       },
       installPythonTestDepsOnLinux: {
-        command: 'python build/install_webtest_on_linux.py webtest-master/'
+        command: 'python build/install_webtest_on_linux.py temp/webtest-master/'
       },
       runPythonTests: {
         command: ['python', 'build/run_python_tests.py',
