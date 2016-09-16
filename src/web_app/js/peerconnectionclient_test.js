@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,362 +8,371 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, assertEquals, assertNotNull, assertTrue, assertFalse,
+/* globals describe, done, expect, jasmine, it, beforeEach, afterEach,
    PeerConnectionClient */
 
 'use strict';
 
-var FAKEPCCONFIG = {
-  'bar': 'foo'
-};
-var FAKEPCCONSTRAINTS = {
-  'foo': 'bar'
-};
-
-var peerConnections = [];
-var MockRTCPeerConnection = function(config, constraints) {
-  this.config = config;
-  this.constraints = constraints;
-  this.streams = [];
-  this.createSdpRequests = [];
-  this.localDescriptions = [];
-  this.remoteDescriptions = [];
-  this.remoteIceCandidates = [];
-  this.signalingState = 'stable';
-
-  peerConnections.push(this);
-};
-MockRTCPeerConnection.prototype.addStream = function(stream) {
-  this.streams.push(stream);
-};
-MockRTCPeerConnection.prototype.createOffer =
-    function(constraints) {
-  var self = this;
-  return new Promise(function(resolve, reject) {
-    self.createSdpRequests.push({
-      type: 'offer',
-      callback: resolve,
-      errback: reject,
-      constraints: constraints
-    });
-  });
-};
-MockRTCPeerConnection.prototype.createAnswer =
-    function(constraints) {
-  var self = this;
-  return new Promise(function(resolve, reject) {
-    self.createSdpRequests.push({
-      type: 'answer',
-      callback: resolve,
-      errback: reject,
-      constraints: constraints
-    });
-  });
-};
-MockRTCPeerConnection.prototype.resolveLastCreateSdpRequest = function(sdp) {
-  var request = this.createSdpRequests.pop();
-  assertNotNull(request);
-
-  if (sdp) {
-    request.callback({
-      'type': request.type,
-      'sdp': sdp
-    });
-  } else {
-    request.errback(Error('MockCreateSdpError'));
-  }
-};
-MockRTCPeerConnection.prototype.setLocalDescription =
-    function(localDescription) {
-  var self = this;
-  if (localDescription.type === 'offer') {
-    this.signalingState = 'have-local-offer';
-  } else {
-    this.signalingState = 'stable';
-  }
-  return new Promise(function(resolve, reject) {
-    self.localDescriptions.push({
-      description: localDescription,
-      callback: resolve,
-      errback: reject
-    });
-  });
-};
-MockRTCPeerConnection.prototype.setRemoteDescription =
-    function(remoteDescription) {
-  var self = this;
-  if (remoteDescription.type === 'offer') {
-    this.signalingState = 'have-remote-offer';
-  } else {
-    this.signalingState = 'stable';
-  }
-  return new Promise(function(resolve, reject) {
-    self.remoteDescriptions.push({
-      description: remoteDescription,
-      callback: resolve,
-      errback: reject
-    });
-  });
-};
-MockRTCPeerConnection.prototype.addIceCandidate = function(candidate) {
-  this.remoteIceCandidates.push(candidate);
-  return new Promise(function(resolve) {
-    resolve();
-  });
-};
-MockRTCPeerConnection.prototype.close = function() {
-  this.signalingState = 'closed';
-};
-MockRTCPeerConnection.prototype.getRemoteStreams = function() {
-  return [{
-    getVideoTracks: function() { return ['track']; }
-  }];
-};
-
-function getParams(pcConfig, pcConstraints) {
-  return {
-    'peerConnectionConfig': pcConfig,
-    'peerConnectionConstraints': pcConstraints
+describe('PeerConnectionClient Test', function() {
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+  var FAKEPCCONFIG = {
+    'bar': 'foo'
   };
-}
+  var FAKEPCCONSTRAINTS = {
+    'foo': 'bar'
+  };
 
-var PeerConnectionClientTest = new TestCase('PeerConnectionClientTest');
+  var peerConnections = [];
+  var MockRTCPeerConnection = function(config, constraints) {
+    this.config = config;
+    this.constraints = constraints;
+    this.streams = [];
+    this.createSdpRequests = [];
+    this.localDescriptions = [];
+    this.remoteDescriptions = [];
+    this.remoteIceCandidates = [];
+    this.signalingState = 'stable';
 
-PeerConnectionClientTest.prototype.setUp = function() {
-  window.params = {};
-
-  this.readlRTCPeerConnection = window.RTCPeerConnection;
-  window.RTCPeerConnection = MockRTCPeerConnection;
-
-  peerConnections.length = 0;
-  this.pcClient = new PeerConnectionClient(
-      getParams(FAKEPCCONFIG, FAKEPCCONSTRAINTS), window.performance.now());
-};
-
-PeerConnectionClientTest.prototype.tearDown = function() {
-  window.RTCPeerConnection = this.readlRTCPeerConnection;
-};
-
-PeerConnectionClientTest.prototype.testConstructor = function() {
-  assertEquals(1, peerConnections.length);
-  assertEquals(FAKEPCCONFIG, peerConnections[0].config);
-  assertEquals(FAKEPCCONSTRAINTS, peerConnections[0].constraints);
-};
-
-PeerConnectionClientTest.prototype.testAddStream = function() {
-  var stream = {'foo': 'bar'};
-  this.pcClient.addStream(stream);
-  assertEquals(1, peerConnections[0].streams.length);
-  assertEquals(stream, peerConnections[0].streams[0]);
-};
-
-PeerConnectionClientTest.prototype.testStartAsCaller = function() {
-  var signalingMsgs = [];
-  function onSignalingMessage(msg) {
-    signalingMsgs.push(msg);
-  }
-
-  this.pcClient.onsignalingmessage = onSignalingMessage;
-  assertTrue(this.pcClient.startAsCaller(null));
-
-  assertEquals(1, peerConnections[0].createSdpRequests.length);
-  var request = peerConnections[0].createSdpRequests[0];
-  assertEquals('offer', request.type);
-
-  var fakeSdp = 'fake sdp';
-  peerConnections[0].resolveLastCreateSdpRequest(fakeSdp);
-
-  // Verify the input to setLocalDesciption.
-  assertEquals(1, peerConnections[0].localDescriptions.length);
-  assertEquals('offer',
-               peerConnections[0].localDescriptions[0].description.type);
-  assertEquals(fakeSdp,
-               peerConnections[0].localDescriptions[0].description.sdp);
-
-  // Verify the output signaling message for the offer.
-  assertEquals(1, signalingMsgs.length);
-  assertEquals('offer', signalingMsgs[0].type);
-  assertEquals(fakeSdp, signalingMsgs[0].sdp);
-
-  // Verify the output signaling messages for the ICE candidates.
-  signalingMsgs.length = 0;
-  var fakeCandidate = 'fake candidate';
-  var event = {
-    candidate: {
-      sdpMLineIndex: '0',
-      sdpMid: '1',
-      candidate: fakeCandidate
+    peerConnections.push(this);
+  };
+  MockRTCPeerConnection.prototype.addStream = function(stream) {
+    this.streams.push(stream);
+  };
+  MockRTCPeerConnection.prototype.createOffer = function(constraints) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      self.createSdpRequests.push({
+        type: 'offer',
+        callback: resolve,
+        errback: reject,
+        constraints: constraints
+      });
+    });
+  };
+  MockRTCPeerConnection.prototype.createAnswer = function(constraints) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      self.createSdpRequests.push({
+        type: 'answer',
+        callback: resolve,
+        errback: reject,
+        constraints: constraints
+      });
+    });
+  };
+  MockRTCPeerConnection.prototype.resolveLastCreateSdpRequest = function(sdp) {
+    var request = this.createSdpRequests.pop();
+    expect(request).toBeDefined();
+    if (sdp) {
+      request.callback({
+        'type': request.type,
+        'sdp': sdp
+      });
+    } else {
+      request.errback(Error('MockCreateSdpError'));
     }
   };
-  var expectedMessage = {
-    type: 'candidate',
-    label: event.candidate.sdpMLineIndex,
-    id: event.candidate.sdpMid,
-    candidate: event.candidate.candidate
+  MockRTCPeerConnection.prototype.onlocaldescription = function() {};
+  MockRTCPeerConnection.prototype.setLocalDescription =
+      function(localDescription) {
+        var self = this;
+
+        if (localDescription.type === 'offer') {
+          this.signalingState = 'have-local-offer';
+        } else {
+          this.signalingState = 'stable';
+        }
+        return new Promise(function(resolve, reject) {
+          self.localDescriptions.push({
+            description: localDescription,
+            callback: resolve,
+            errback: reject
+          });
+          resolve(self.onlocaldescription());
+        });
+      };
+  MockRTCPeerConnection.prototype.onremotedescription = function() {};
+  MockRTCPeerConnection.prototype.setRemoteDescription =
+      function(remoteDescription) {
+        var self = this;
+        if (remoteDescription.type === 'offer') {
+          this.signalingState = 'have-remote-offer';
+        } else {
+          this.signalingState = 'stable';
+        }
+        return new Promise(function(resolve, reject) {
+          self.remoteDescriptions.push({
+            description: remoteDescription,
+            callback: resolve,
+            errback: reject
+          });
+          resolve(self.onremotedescription());
+        });
+      };
+  MockRTCPeerConnection.prototype.addIceCandidate = function(candidate) {
+    this.remoteIceCandidates.push(candidate);
+    return new Promise(function(resolve) {
+      resolve();
+    });
   };
-  peerConnections[0].onicecandidate(event);
-  assertEquals(1, signalingMsgs.length);
-  assertEquals(expectedMessage, signalingMsgs[0]);
-};
-
-PeerConnectionClientTest.prototype.testCallerReceiveSignalingMessage =
-    function() {
-  this.pcClient.startAsCaller(null);
-  peerConnections[0].resolveLastCreateSdpRequest('fake offer');
-  var remoteAnswer = {
-    type: 'answer',
-    sdp: 'fake answer'
+  MockRTCPeerConnection.prototype.close = function() {
+    this.signalingState = 'closed';
+  };
+  MockRTCPeerConnection.prototype.getRemoteStreams = function() {
+    return [{
+      getVideoTracks: function() {
+        return ['track'];
+      }
+    }];
   };
 
-  var pc = peerConnections[0];
-
-  this.pcClient.receiveSignalingMessage(JSON.stringify(remoteAnswer));
-  assertEquals(1, pc.remoteDescriptions.length);
-  assertEquals('answer', pc.remoteDescriptions[0].description.type);
-  assertEquals(remoteAnswer.sdp, pc.remoteDescriptions[0].description.sdp);
-
-  var candidate = {
-    type: 'candidate',
-    label: '0',
-    candidate: 'fake candidate'
-  };
-  this.pcClient.receiveSignalingMessage(JSON.stringify(candidate));
-  assertEquals(1, pc.remoteIceCandidates.length);
-  assertEquals(candidate.label, pc.remoteIceCandidates[0].sdpMLineIndex);
-  assertEquals(candidate.candidate, pc.remoteIceCandidates[0].candidate);
-};
-
-PeerConnectionClientTest.prototype.testStartAsCallee = function() {
-  var remoteOffer = {
-    type: 'offer',
-    sdp: 'fake sdp'
-  };
-  var candidate = {
-    type: 'candidate',
-    label: '0',
-    candidate: 'fake candidate'
-  };
-  var initialMsgs = [
-    JSON.stringify(candidate),
-    JSON.stringify(remoteOffer)
-  ];
-  this.pcClient.startAsCallee(initialMsgs);
-
-  var pc = peerConnections[0];
-
-  // Verify that remote offer and ICE candidates are set.
-  assertEquals(1, pc.remoteDescriptions.length);
-  assertEquals('offer', pc.remoteDescriptions[0].description.type);
-  assertEquals(remoteOffer.sdp, pc.remoteDescriptions[0].description.sdp);
-  assertEquals(1, pc.remoteIceCandidates.length);
-  assertEquals(candidate.label, pc.remoteIceCandidates[0].sdpMLineIndex);
-  assertEquals(candidate.candidate, pc.remoteIceCandidates[0].candidate);
-
-  // Verify that createAnswer is called.
-  assertEquals(1, pc.createSdpRequests.length);
-  assertEquals('answer', pc.createSdpRequests[0].type);
-
-  var fakeAnswer = 'fake answer';
-  pc.resolveLastCreateSdpRequest(fakeAnswer);
-
-  // Verify that setLocalDescription is called.
-  assertEquals(1, pc.localDescriptions.length);
-  assertEquals('answer', pc.localDescriptions[0].description.type);
-  assertEquals(fakeAnswer, pc.localDescriptions[0].description.sdp);
-};
-
-PeerConnectionClient.prototype.testReceiveRemoteOfferBeforeStarted =
-    function() {
-  var remoteOffer = {
-    type: 'offer',
-    sdp: 'fake sdp'
-  };
-  this.pcClient.receiveSignalingMessage(JSON.stringify(remoteOffer));
-  this.pcClient.startAsCallee(null);
-
-  // Verify that the offer received before started is processed.
-  var pc = peerConnections[0];
-  assertEquals(1, pc.remoteDescriptions.length);
-  assertEquals('offer', pc.remoteDescriptions[0].description.type);
-  assertEquals(remoteOffer.sdp, pc.remoteDescriptions[0].description.sdp);
-};
-
-PeerConnectionClientTest.prototype.testRemoteHangup = function() {
-  var remoteHangup = false;
-  this.pcClient.onremotehangup = function() {
-    remoteHangup = true;
-  };
-  this.pcClient.receiveSignalingMessage(JSON.stringify({
-    type: 'bye'
-  }));
-  assertTrue(remoteHangup);
-};
-
-PeerConnectionClientTest.prototype.testOnRemoteSdpSet = function() {
-  var hasRemoteTrack = false;
-  function onRemoteSdpSet(result) {
-    hasRemoteTrack = result;
+  function getParams(pcConfig, pcConstraints) {
+    return {
+      'peerConnectionConfig': pcConfig,
+      'peerConnectionConstraints': pcConstraints
+    };
   }
-  this.pcClient.onremotesdpset = onRemoteSdpSet;
 
-  var remoteOffer = {
-    type: 'offer',
-    sdp: 'fake sdp'
-  };
-  var initialMsgs = [JSON.stringify(remoteOffer)];
-  this.pcClient.startAsCallee(initialMsgs);
+  beforeEach(function() {
+    window.params = {};
 
-  var callback = peerConnections[0].remoteDescriptions[0].callback;
-  assertNotNull(callback);
-  callback();
-  assertTrue(hasRemoteTrack);
-};
+    this.realRTCPeerConnection = window.RTCPeerConnection;
+    window.RTCPeerConnection = MockRTCPeerConnection;
 
-PeerConnectionClientTest.prototype.testOnRemoteStreamAdded = function() {
-  var stream = null;
-  function onRemoteStreamAdded(s) {
-    stream = s;
-  }
-  this.pcClient.onremotestreamadded = onRemoteStreamAdded;
+    peerConnections.length = 0;
+    this.pcClient = new PeerConnectionClient(
+        getParams(FAKEPCCONFIG, FAKEPCCONSTRAINTS), window.performance.now());
+  });
 
-  var event = {
-    stream: 'stream'
-  };
-  peerConnections[0].onaddstream(event);
-  assertEquals(event.stream, stream);
-};
+  afterEach(function() {
+    peerConnections = [];
+    window.RTCPeerConnection = this.realRTCPeerConnection;
+    // this.pcClient.close();
+    // this.pcClient = null;
+  });
 
-PeerConnectionClientTest.prototype.testOnSignalingStateChange = function() {
-  var called = false;
-  function callback() {
-    called = true;
-  }
-  this.pcClient.onsignalingstatechange = callback;
-  peerConnections[0].onsignalingstatechange();
-  assertTrue(called);
-};
+  it('Constructor', function() {
+    expect(peerConnections.length).toEqual(1);
+    expect(peerConnections[0].config).toEqual(FAKEPCCONFIG);
+    expect(peerConnections[0].constraints).toEqual(FAKEPCCONSTRAINTS);
+  });
 
-PeerConnectionClientTest.prototype.testOnIceConnectionStateChange = function() {
-  var called = false;
-  function callback() {
-    called = true;
-  }
-  this.pcClient.oniceconnectionstatechange = callback;
-  peerConnections[0].oniceconnectionstatechange();
-  assertTrue(called);
-};
+  it('Add stream', function() {
+    var stream = {'foo': 'bar'};
+    this.pcClient.addStream(stream);
+    expect(peerConnections[0].streams.length).toEqual(1);
+    expect(peerConnections[0].streams[0]).toEqual(stream);
+  });
 
-PeerConnectionClientTest.prototype.testStartAsCallerTwiceFailed = function() {
-  assertTrue(this.pcClient.startAsCaller(null));
-  assertFalse(this.pcClient.startAsCaller(null));
-};
+  it('Start as a caller', function(done) {
+    var fakeCandidate = 'fake candidate';
+    var pc = peerConnections[0];
+    var event = {
+      candidate: {
+        sdpMLineIndex: 0,
+        sdpMid: '1',
+        candidate: fakeCandidate
+      }
+    };
+    var expectedMessage = {
+      type: 'candidate',
+      label: event.candidate.sdpMLineIndex,
+      id: event.candidate.sdpMid,
+      candidate: event.candidate.candidate
+    };
+    // Verify the input to setLocalDesciption.
+    pc.onlocaldescription = function() {
+      expect(pc.localDescriptions.length).toEqual(1);
+      expect(pc.localDescriptions[0].description.type).toEqual('offer');
+      expect(pc.localDescriptions[0].description.sdp).toEqual(fakeSdp);
+    };
 
-PeerConnectionClientTest.prototype.testStartAsCalleeTwiceFailed = function() {
-  assertTrue(this.pcClient.startAsCallee(null));
-  assertFalse(this.pcClient.startAsCallee(null));
-};
+    this.pcClient.onsignalingmessage = function(msg) {
+      // Verify the output signaling message for the offer.
+      if (msg.type === 'offer') {
+        expect(msg.sdp).toEqual(fakeSdp);
+        // Trigger the candidate event test.
+        pc.onicecandidate(event);
+      // Verify the output signaling messages for the ICE candidates.
+      } else {
+        expect(msg.type).toEqual('candidate');
+        expect(msg).toEqual(expectedMessage);
+        done();
+      }
+    };
 
-PeerConnectionClientTest.prototype.testClose = function() {
-  this.pcClient.close();
-  assertEquals('closed', peerConnections[0].signalingState);
-};
+    expect(this.pcClient.startAsCaller(null)).toBeTruthy();
+
+    expect(pc.createSdpRequests.length).toEqual(1);
+    var request = pc.createSdpRequests[0];
+    expect(request.type).toEqual('offer');
+
+    var fakeSdp = 'fake sdp';
+    pc.resolveLastCreateSdpRequest(fakeSdp);
+  });
+
+  it('Caller receive signaling message', function(done) {
+    var pc = peerConnections[0];
+    var self = this;
+    var candidate = {
+      type: 'candidate',
+      label: 0,
+      candidate: 'fake candidate'
+    };
+    var remoteAnswer = {
+      type: 'answer',
+      sdp: 'fake answer'
+    };
+
+    pc.onlocaldescription = function() {
+      self.pcClient.receiveSignalingMessage(JSON.stringify(remoteAnswer));
+    };
+
+    pc.onremotedescription = function() {
+      expect(pc.remoteDescriptions.length).toEqual(1);
+      expect(pc.remoteDescriptions[0].description.type).toEqual('answer');
+      expect(pc.remoteDescriptions[0].description.sdp)
+          .toEqual(remoteAnswer.sdp);
+    };
+
+    pc.onlocaldescription = function() {
+      self.pcClient.receiveSignalingMessage(JSON.stringify(remoteAnswer));
+      self.pcClient.receiveSignalingMessage(JSON.stringify(candidate));
+    };
+
+    this.pcClient.onsignalingmessage = function(event) {
+      expect(pc.remoteIceCandidates.length).toEqual(1);
+      expect(pc.remoteIceCandidates[0].sdpMLineIndex).toEqual(candidate.label);
+      expect(pc.remoteIceCandidates[0].candidate).toEqual(candidate.candidate);
+      if (event.type === 'offer') {
+        done();
+      }
+    };
+
+    expect(this.pcClient.startAsCaller(null)).toBeTruthy();
+    pc.resolveLastCreateSdpRequest('fake offer');
+  });
+
+  it('Start as callee', function(done) {
+    var pc = peerConnections[0];
+
+    var remoteOffer = {
+      type: 'offer',
+      sdp: 'fake sdp'
+    };
+    var candidate = {
+      type: 'candidate',
+      label: 0,
+      candidate: 'fake candidate'
+    };
+    var initialMsgs = [
+      JSON.stringify(candidate),
+      JSON.stringify(remoteOffer)
+    ];
+    this.pcClient.startAsCallee(initialMsgs);
+
+    pc.onremotedescription = function() {
+      // Verify that createAnswer is called.
+      expect(pc.createSdpRequests.length).toEqual(1);
+      expect(pc.createSdpRequests[0].type).toEqual('answer');
+
+      var fakeAnswer = 'fake answer';
+      pc.resolveLastCreateSdpRequest(fakeAnswer);
+    };
+
+    pc.onlocaldescription = function() {
+      // Verify that setLocalDescription is called.
+      expect(pc.localDescriptions.length).toEqual(1);
+      expect(pc.localDescriptions[0].description.type).toEqual('answer');
+      expect(pc.localDescriptions[0].description.sdp).toEqual(fakeAnswer);
+      // Verify that remote offer and ICE candidates are set.
+      expect(pc.remoteDescriptions.length).toEqual(1);
+      expect(pc.remoteDescriptions[0].description.type).toEqual('offer');
+      expect(pc.remoteDescriptions[0].description.sdp).toEqual(remoteOffer.sdp);
+      expect(pc.remoteIceCandidates.length).toEqual(1);
+      expect(pc.remoteIceCandidates[0].sdpMLineIndex).toEqual(candidate.label);
+      expect(pc.remoteIceCandidates[0].candidate).toEqual(candidate.candidate);
+
+      // Verify that setLocalDescription is called.
+      expect(pc.localDescriptions.length).toEqual(1);
+      expect(pc.localDescriptions[0].description.type).toEqual('answer');
+      expect(pc.localDescriptions[0].description.sdp).toEqual(fakeAnswer);
+      done();
+    };
+
+    var fakeAnswer = 'fake answer';
+    pc.resolveLastCreateSdpRequest(fakeAnswer);
+  });
+
+  it('Receive remote offer before started', function() {
+    var remoteOffer = {
+      type: 'offer',
+      sdp: 'fake sdp'
+    };
+    this.pcClient.receiveSignalingMessage(JSON.stringify(remoteOffer));
+    this.pcClient.startAsCallee(null);
+
+    // Verify that the offer received before started is processed.
+    var pc = peerConnections[0];
+    expect(pc.remoteDescriptions.length).toEqual(1);
+    expect(pc.remoteDescriptions[0].description.type).toEqual('offer');
+    expect(pc.remoteDescriptions[0].description.sdp).toEqual(remoteOffer.sdp);
+  });
+
+  it('Remote hangup', function(done) {
+    this.pcClient.onremotehangup = done;
+
+    this.pcClient.receiveSignalingMessage(JSON.stringify({
+      type: 'bye'
+    }));
+  });
+
+  it('On remote SDP set', function(done) {
+    var pc = peerConnections[0];
+    this.pcClient.onremotesdpset = function() {
+      var callback = pc.remoteDescriptions[0].callback;
+      expect(callback).toBeDefined();
+      callback();
+      done();
+    };
+
+    var remoteOffer = {
+      type: 'offer',
+      sdp: 'fake sdp'
+    };
+    var initialMsgs = [JSON.stringify(remoteOffer)];
+    expect(this.pcClient.startAsCallee(initialMsgs)).toBeTruthy();
+  });
+
+  it('On remote stream added', function() {
+    var stream = 'stream';
+    var event = {
+      stream: 'stream'
+    };
+    this.pcClient.onremotestreamadded = function(event) {
+      expect(stream).toEqual(event.stream);
+      done();
+    };
+    peerConnections[0].addStream(event);
+  });
+
+  it('On signaling state change', function(done) {
+    this.pcClient.onsignalingstatechange = done;
+    peerConnections[0].onsignalingstatechange();
+  });
+
+  it('On ICE connection state change', function(done) {
+    this.pcClient.oniceconnectionstatechange = done;
+    peerConnections[0].oniceconnectionstatechange();
+  });
+
+  it('Start as a caller twice failed', function() {
+    expect(this.pcClient.startAsCaller(null)).toBeTruthy();
+    expect(this.pcClient.startAsCaller(null)).toBeFalsy();
+  });
+
+  it('Close peerConnection', function() {
+    this.pcClient.close();
+    expect(peerConnections[0].signalingState).toEqual('closed');
+  });
+});

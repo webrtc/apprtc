@@ -45,6 +45,8 @@ function formatTypePreference(pref) {
         return 'TURN/TCP';
       case 2:
         return 'TURN/UDP';
+      default:
+        break;
     }
   } else if (adapter.browserDetails.browser === 'firefox') {
     switch (pref) {
@@ -52,6 +54,8 @@ function formatTypePreference(pref) {
         return 'TURN/TCP';
       case 5:
         return 'TURN/UDP';
+      default:
+        break;
     }
   }
   return '';
@@ -193,7 +197,7 @@ function maybeSetVideoSendInitialBitRate(sdp, params) {
     return sdp;
   }
 
-  var codec =  params.videoRecvCodec;
+  var codec = params.videoRecvCodec;
   sdp = setCodecParam(sdp, codec, 'x-google-min-bitrate',
       params.videoSendInitialBitrate.toString());
   sdp = setCodecParam(sdp, codec, 'x-google-max-bitrate',

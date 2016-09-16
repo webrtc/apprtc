@@ -190,36 +190,36 @@ PeerConnectionClient.prototype.doAnswer_ = function() {
 
 PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
     function(sessionDescription) {
-  sessionDescription.sdp = maybePreferAudioReceiveCodec(
-    sessionDescription.sdp,
-    this.params_);
-  sessionDescription.sdp = maybePreferVideoReceiveCodec(
-    sessionDescription.sdp,
-    this.params_);
-  sessionDescription.sdp = maybeSetAudioReceiveBitRate(
-    sessionDescription.sdp,
-    this.params_);
-  sessionDescription.sdp = maybeSetVideoReceiveBitRate(
-    sessionDescription.sdp,
-    this.params_);
-  sessionDescription.sdp = maybeRemoveVideoFec(
-    sessionDescription.sdp,
-    this.params_);
-  this.pc_.setLocalDescription(sessionDescription)
-  .then(trace.bind(null, 'Set session description success.'))
-  .catch(this.onError_.bind(this, 'setLocalDescription'));
+      sessionDescription.sdp = maybePreferAudioReceiveCodec(
+        sessionDescription.sdp,
+        this.params_);
+      sessionDescription.sdp = maybePreferVideoReceiveCodec(
+        sessionDescription.sdp,
+        this.params_);
+      sessionDescription.sdp = maybeSetAudioReceiveBitRate(
+        sessionDescription.sdp,
+        this.params_);
+      sessionDescription.sdp = maybeSetVideoReceiveBitRate(
+        sessionDescription.sdp,
+        this.params_);
+      sessionDescription.sdp = maybeRemoveVideoFec(
+        sessionDescription.sdp,
+        this.params_);
+      this.pc_.setLocalDescription(sessionDescription)
+    .then(trace.bind(null, 'Set session description success.'))
+    .catch(this.onError_.bind(this, 'setLocalDescription'));
 
-  if (this.onsignalingmessage) {
-    // Chrome version of RTCSessionDescription can't be serialized directly
-    // because it JSON.stringify won't include attributes which are on the
-    // object's prototype chain. By creating the message to serialize explicitly
-    // we can avoid the issue.
-    this.onsignalingmessage({
-      sdp: sessionDescription.sdp,
-      type: sessionDescription.type
-    });
-  }
-};
+      if (this.onsignalingmessage) {
+        // Chrome version of RTCSessionDescription can't be serialized directly
+        // because it JSON.stringify won't include attributes which are on the
+        // object's prototype chain. By creating the message to serialize
+        // explicitly we can avoid the issue.
+        this.onsignalingmessage({
+          sdp: sessionDescription.sdp,
+          type: sessionDescription.type
+        });
+      }
+    };
 
 PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetOpusOptions(message.sdp, this.params_);
@@ -347,7 +347,6 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
     this.callStatsCommandQueue_
         .addToQueue(this.bindMstToUserIdForCallstats_.bind(this));
   }
-
 };
 
 // Return false if the candidate should be dropped, true if not.
@@ -370,10 +369,10 @@ PeerConnectionClient.prototype.filterIceCandidate_ = function(candidateObj) {
 
 PeerConnectionClient.prototype.recordIceCandidate_ =
     function(location, candidateObj) {
-  if (this.onnewicecandidate) {
-    this.onnewicecandidate(location, candidateObj.candidate);
-  }
-};
+      if (this.onnewicecandidate) {
+        this.onnewicecandidate(location, candidateObj.candidate);
+      }
+    };
 
 PeerConnectionClient.prototype.onRemoteStreamAdded_ = function(event) {
   if (this.onremotestreamadded) {
@@ -392,9 +391,8 @@ PeerConnectionClient.prototype.isCallstatsInitialized_ = function() {
   if (!this.callstats || !this.callstatsInit) {
     trace('Callstats not initilized.');
     return false;
-  } else {
-    return true;
   }
+  return true;
 };
 
 // Cue for commands to send to callStats after the SDK has been authenticated.
@@ -415,32 +413,32 @@ PeerConnectionClient.prototype.callStatsCommandQueue_ = {
 
 PeerConnectionClient.prototype.reportErrorToCallstats =
     function(funcName, error) {
-  if (!this.isCallstatsInitialized_()) {
-    return;
-  }
-  var localSdp = this.pc_.localDescription.sdp || null;
-  var remoteSdp = this.pc_.remoteDescription.sdp || null;
-  // Enumerate supported callstats error types.
-  // http://www.callstats.io/api/#enumeration-of-wrtcfuncnames
-  var supportedWebrtcFuncNames = {
-    getUserMedia: 'getUserMedia',
-    createOffer: 'createOffer',
-    createAnswer: 'createAnswer',
-    setLocalDescription: 'setLocalDescription',
-    setRemoteDescription: 'setRemoteDescription',
-    addIceCandidate: 'addIceCandidate'
-  };
+      if (!this.isCallstatsInitialized_()) {
+        return;
+      }
+      var localSdp = this.pc_.localDescription.sdp || null;
+      var remoteSdp = this.pc_.remoteDescription.sdp || null;
+      // Enumerate supported callstats error types.
+      // http://www.callstats.io/api/#enumeration-of-wrtcfuncnames
+      var supportedWebrtcFuncNames = {
+        getUserMedia: 'getUserMedia',
+        createOffer: 'createOffer',
+        createAnswer: 'createAnswer',
+        setLocalDescription: 'setLocalDescription',
+        setRemoteDescription: 'setRemoteDescription',
+        addIceCandidate: 'addIceCandidate'
+      };
 
-  // Only report supported error types to the callstats backend.
-  if (supportedWebrtcFuncNames[funcName]) {
-    // Some error objects (gUM) have meaningful info in the name
-    // property/getter.
-    var filteredError = (funcName === 'getUserMedia' ? error.name : error);
-    this.callstats.reportError(this.pc_, this.conferenceId,
-      supportedWebrtcFuncNames[funcName], new DOMException(filteredError),
-      localSdp, remoteSdp);
-  }
-};
+      // Only report supported error types to the callstats backend.
+      if (supportedWebrtcFuncNames[funcName]) {
+        // Some error objects (gUM) have meaningful info in the name
+        // property/getter.
+        var filteredError = (funcName === 'getUserMedia' ? error.name : error);
+        this.callstats.reportError(this.pc_, this.conferenceId,
+          supportedWebrtcFuncNames[funcName], new DOMException(filteredError),
+          localSdp, remoteSdp);
+      }
+    };
 
 PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   trace('Init callstats.');
@@ -451,15 +449,13 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
     return;
   }
   // Check dependencies.
-  if (typeof io !== 'function' || typeof jsSHA !== 'function')  {
+  if (typeof io !== 'function' || typeof jsSHA !== 'function') {
     trace('Callstats dependencies missing, stats will not be setup.');
     return;
   }
-  // jscs:disable requireCapitalizedConstructors
-  /* jshint newcap: false */
+  // eslint-disable-next-line new-cap
   this.callstats = new callstats(null, io, jsSHA);
-  // jscs:enable requireCapitalizedConstructors
-  /* jshint newcap: true */
+
   this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
   var statsCallback = null;
   var configParams = {

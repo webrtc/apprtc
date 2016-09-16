@@ -531,9 +531,9 @@ AppController.prototype.setIconTimeout_ = function() {
     window.clearTimeout.bind(this, this.hideIconsAfterTimeout);
   }
   this.hideIconsAfterTimeout =
-    window.setTimeout(function() {
-    this.hideIcons_();
-  }.bind(this), 5000);
+      window.setTimeout(function() {
+        this.hideIcons_();
+      }.bind(this), 5000);
 };
 
 AppController.prototype.iconEventSetup_ = function() {
@@ -547,9 +547,8 @@ AppController.prototype.iconEventSetup_ = function() {
 };
 
 AppController.prototype.loadUrlParams_ = function() {
-  /* jscs: disable */
-  /* jshint ignore:start */
-  // Suppressing jshint warns about using urlParams['KEY'] instead of
+  /* eslint-disable dot-notation */
+  // Suppressing eslint warns about using urlParams['KEY'] instead of
   // urlParams.KEY, since we'd like to use string literals to avoid the Closure
   // compiler renaming the properties.
   var DEFAULT_VIDEO_CODEC = 'VP9';
@@ -568,8 +567,7 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
   this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
   this.loadingParams_.videoFec = urlParams['videofec'];
-  /* jshint ignore:end */
-  /* jscs: enable */
+  /* eslint-enable dot-notation */
 };
 
 AppController.IconSet_ = function(iconSelector) {

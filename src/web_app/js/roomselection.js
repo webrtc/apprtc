@@ -161,7 +161,8 @@ RoomSelection.RecentlyUsedList = function(key) {
 
 // Add a room to the recently used list and store to local storage.
 RoomSelection.RecentlyUsedList.prototype.pushRecentRoom = function(roomId) {
-  // Push recent room to top of recent list, keep max of this.LISTLENGTH_ entries.
+  // Push recent room to top of recent list, keep max of this.LISTLENGTH_
+  // entries.
   return new Promise(function(resolve, reject) {
     if (!roomId) {
       resolve();
@@ -177,8 +178,8 @@ RoomSelection.RecentlyUsedList.prototype.pushRecentRoom = function(roomId) {
       recentRooms = recentRooms.slice(0, this.LISTLENGTH_);
       this.storage_.setStorage(this.RECENTROOMSKEY_,
           JSON.stringify(recentRooms), function() {
-        resolve();
-      });
+            resolve();
+          });
     }.bind(this)).catch(function(err) {
       reject(err);
     }.bind(this));

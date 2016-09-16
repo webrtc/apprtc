@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,103 +8,90 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals Analytics, TestCase, assertEquals,
-   sendAsyncUrlRequest:true, Mock, assertTrue, enums */
+/* globals Analytics, describe, expect, it, beforeEach, afterEach,
+   sendAsyncUrlRequest:true, Mock, enums */
 
 'use strict';
 
-var AnalyticsTest = new TestCase('AnalyticsTest');
+describe('AnalyticsTest', function() {
+  var url;
+  var analytics;
+  var eventTime;
+  var eventType;
+  var realDateNow;
+  var realSendAsyncRequest;
 
-AnalyticsTest.prototype.setUp = function() {
-};
+  beforeEach(function() {
+    url = 'https://test.org';
+    analytics = new Analytics(url);
+    eventType = enums.EventType.ROOM_SIZE_2;
+    eventTime = 1234;
+    realDateNow = Date.now;
+    // Mock global calls.
+    realSendAsyncRequest = sendAsyncUrlRequest;
+    sendAsyncUrlRequest = Mock.createSendAsyncUrlRequestMock();
+    Date.now = function() {
+      return eventTime;
+    };
+  });
 
-AnalyticsTest.prototype.tearDown = function() {
-};
+  afterEach(function() {
+    sendAsyncUrlRequest = realSendAsyncRequest;
+    Date.now = realDateNow;
+  });
 
-/** Test sending a report with all fields. */
-AnalyticsTest.prototype.testReportEventAll = function() {
-  var url = 'https://test.org';
-  var analytics = new Analytics(url);
+  it('Report with all fields', function() {
+    var roomId = 'my awesome room';
+    var flowId = 24;
+    // Test reportEvent with all optional arguments.
+    analytics.reportEvent(eventType, roomId, flowId);
 
-  var eventType = enums.EventType.ROOM_SIZE_2;
-  var eventTime = 1234;
-  var roomId = 'my awesome room';
-  var flowId = 24;
+    // Verify xhr request.
+    expect(sendAsyncUrlRequest.calls().length).toEqual(1);
+    var call = sendAsyncUrlRequest.calls()[0];
+    expect(call.method).toEqual('POST');
+    expect(call.url.indexOf(url) === 0).toBeTruthy();
 
-  // Mock global calls.
-  var realSendAsyncRequest = sendAsyncUrlRequest;
-  sendAsyncUrlRequest = Mock.createSendAsyncUrlRequestMock();
+    var actualRequest = JSON.parse(call.body);
+    expect(actualRequest[enums.RequestField.TYPE])
+        .toEqual(enums.RequestField.MessageType.EVENT);
+    expect(actualRequest[enums.RequestField.REQUEST_TIME_MS])
+        .toEqual(eventTime);
 
-  var realDateNow = Date.now;
-  Date.now = function() {
-    return eventTime;
-  };
+    var actualEvent = actualRequest[enums.RequestField.EVENT];
+    expect(actualEvent[enums.RequestField.EventField.EVENT_TYPE])
+        .toEqual(eventType);
+    expect(actualEvent[enums.RequestField.EventField.EVENT_TIME_MS])
+        .toEqual(eventTime);
+    expect(actualEvent[enums.RequestField.EventField.ROOM_ID]).toEqual(roomId);
+    expect(actualEvent[enums.RequestField.EventField.FLOW_ID]).toEqual(flowId);
+  });
 
-  // Test reportEvent with all optional arguments.
-  analytics.reportEvent(eventType, roomId, flowId);
+  it('Report without any optional fields', function() {
+    // Test reportEvent with all optional arguments.
+    analytics.reportEvent(eventType);
 
-  // Verify xhr request.
-  assertEquals(1, sendAsyncUrlRequest.calls().length);
-  var call = sendAsyncUrlRequest.calls()[0];
-  assertEquals('POST', call.method);
-  assertTrue(call.url.indexOf(url) === 0);
+    // Verify xhr request.
+    expect(sendAsyncUrlRequest.calls().length).toEqual(1);
+    var call = sendAsyncUrlRequest.calls()[0];
+    expect(call.method).toEqual('POST');
+    expect(call.url.indexOf(url) === 0).toBeTruthy();
 
-  var actualRequest = JSON.parse(call.body);
-  assertEquals(enums.RequestField.MessageType.EVENT,
-      actualRequest[enums.RequestField.TYPE]);
-  assertEquals(eventTime, actualRequest[enums.RequestField.REQUEST_TIME_MS]);
+    var actualRequest = JSON.parse(call.body);
+    expect(actualRequest[enums.RequestField.TYPE])
+        .toEqual(enums.RequestField.MessageType.EVENT);
+    expect(actualRequest[enums.RequestField.REQUEST_TIME_MS])
+        .toEqual(eventTime);
 
-  var actualEvent = actualRequest[enums.RequestField.EVENT];
-  assertEquals(eventType,
-      actualEvent[enums.RequestField.EventField.EVENT_TYPE]);
-  assertEquals(eventTime,
-      actualEvent[enums.RequestField.EventField.EVENT_TIME_MS]);
-  assertEquals(roomId, actualEvent[enums.RequestField.EventField.ROOM_ID]);
-  assertEquals(flowId, actualEvent[enums.RequestField.EventField.FLOW_ID]);
+    var actualEvent = actualRequest[enums.RequestField.EVENT];
+    expect(actualEvent[enums.RequestField.EventField.EVENT_TYPE])
+        .toEqual(eventType);
+    expect(actualEvent[enums.RequestField.EventField.EVENT_TIME_MS])
+        .toEqual(eventTime);
+    expect(actualEvent[enums.RequestField.EventField.ROOM_ID])
+        .toEqual(undefined);
+    expect(actualEvent[enums.RequestField.EventField.FLOW_ID])
+        .toEqual(undefined);
+  });
+});
 
-  sendAsyncUrlRequest = realSendAsyncRequest;
-  Date.now = realDateNow;
-};
-
-/** Test sending a report without any optional fields. */
-AnalyticsTest.prototype.testReportEventWithoutOptional = function() {
-  var url = 'https://test.org';
-  var analytics = new Analytics(url);
-
-  var eventType = enums.EventType.ROOM_SIZE_2;
-  var eventTime = 1234;
-
-  // Mock global calls.
-  var realSendAsyncRequest = sendAsyncUrlRequest;
-  sendAsyncUrlRequest = Mock.createSendAsyncUrlRequestMock();
-
-  var realDateNow = Date.now;
-  Date.now = function() {
-    return eventTime;
-  };
-
-  // Test reportEvent with all optional arguments.
-  analytics.reportEvent(eventType);
-
-  // Verify xhr request.
-  assertEquals(1, sendAsyncUrlRequest.calls().length);
-  var call = sendAsyncUrlRequest.calls()[0];
-  assertEquals('POST', call.method);
-  assertTrue(call.url.indexOf(url) === 0);
-
-  var actualRequest = JSON.parse(call.body);
-  assertEquals(enums.RequestField.MessageType.EVENT,
-      actualRequest[enums.RequestField.TYPE]);
-  assertEquals(eventTime, actualRequest[enums.RequestField.REQUEST_TIME_MS]);
-
-  var actualEvent = actualRequest[enums.RequestField.EVENT];
-  assertEquals(eventType,
-      actualEvent[enums.RequestField.EventField.EVENT_TYPE]);
-  assertEquals(eventTime,
-      actualEvent[enums.RequestField.EventField.EVENT_TIME_MS]);
-  assertEquals(undefined, actualEvent[enums.RequestField.EventField.ROOM_ID]);
-  assertEquals(undefined, actualEvent[enums.RequestField.EventField.FLOW_ID]);
-
-  sendAsyncUrlRequest = realSendAsyncRequest;
-  Date.now = realDateNow;
-};

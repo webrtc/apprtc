@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,187 +8,164 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, assertEquals, assertNotNull, assertTrue, assertFalse,
-   WebSocket:true, XMLHttpRequest:true, SignalingChannel, webSockets:true,
-   xhrs:true, FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID, FAKE_CLIENT_ID,
+/* globals  describe, expect, it, beforeEach, afterEach, fail, WebSocket:true,
+   XMLHttpRequest:true, SignalingChannel, webSockets:true, xhrs:true,
+   FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID, FAKE_CLIENT_ID,
    MockXMLHttpRequest, MockWebSocket */
 
 'use strict';
 
-var SignalingChannelTest = new TestCase('SignalingChannelTest');
+describe('Signaling Channel Test', function() {
+  beforeEach(function() {
+    webSockets = [];
+    xhrs = [];
 
-SignalingChannelTest.prototype.setUp = function() {
-  webSockets = [];
-  xhrs = [];
+    this.realWebSocket = WebSocket;
+    WebSocket = MockWebSocket;
 
-  this.realWebSocket = WebSocket;
-  WebSocket = MockWebSocket;
+    this.channel =
+        new SignalingChannel(FAKE_WSS_URL, FAKE_WSS_POST_URL);
 
-  this.channel =
-      new SignalingChannel(FAKE_WSS_URL, FAKE_WSS_POST_URL);
-};
-
-SignalingChannelTest.prototype.tearDown = function() {
-  WebSocket = this.realWebSocket;
-};
-
-SignalingChannelTest.prototype.testOpenSuccess = function() {
-  var promise = this.channel.open();
-  assertEquals(1, webSockets.length);
-
-  var resolved = false;
-  var rejected = false;
-  promise.then(function() {
-    resolved = true;
-  }).catch(function() {
-    rejected = true;
+    this.realXMLHttpRequest = XMLHttpRequest;
+    XMLHttpRequest = MockXMLHttpRequest;
   });
 
-  var socket = webSockets[0];
-  socket.simulateOpenResult(true);
-  assertTrue(resolved);
-  assertFalse(rejected);
-};
-
-SignalingChannelTest.prototype.testReceiveMessage = function() {
-  this.channel.open();
-  var socket = webSockets[0];
-  socket.simulateOpenResult(true);
-
-  assertNotNull(socket.onmessage);
-
-  var msgs = [];
-  this.channel.onmessage = function(msg) {
-    msgs.push(msg);
-  };
-
-  var expectedMsg = 'hi';
-  var event = {
-    'data': JSON.stringify({'msg': expectedMsg})
-  };
-  socket.onmessage(event);
-  assertEquals(1, msgs.length);
-  assertEquals(expectedMsg, msgs[0]);
-};
-
-SignalingChannelTest.prototype.testOpenFailure = function() {
-  var promise = this.channel.open();
-  assertEquals(1, webSockets.length);
-
-  var resolved = false;
-  var rejected = false;
-  promise.then(function() {
-    resolved = true;
-  }).catch(function() {
-    rejected = true;
+  afterEach(function() {
+    WebSocket = this.realWebSocket;
+    XMLHttpRequest = this.realXMLHttpRequest;
   });
 
-  var socket = webSockets[0];
-  socket.simulateOpenResult(false);
-  assertFalse(resolved);
-  assertTrue(rejected);
-};
+  it('open success', function(done) {
+    var promise = this.channel.open();
+    expect(webSockets.length).toEqual(1);
 
-SignalingChannelTest.prototype.testRegisterBeforeOpen = function() {
-  this.channel.open();
-  this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+    promise.then(function() {
+      done();
+    }).catch(function() {
+      fail('Websocket could not be opened.');
+    });
 
-  var socket = webSockets[0];
-  socket.simulateOpenResult(true);
+    var socket = webSockets[0];
+    socket.simulateOpenResult(true);
+  });
 
-  assertEquals(1, socket.messages.length);
+  it('receive message', function(done) {
+    this.channel.open();
+    var socket = webSockets[0];
+    socket.simulateOpenResult(true);
 
-  var registerMessage = {
-    cmd: 'register',
-    roomid: FAKE_ROOM_ID,
-    clientid: FAKE_CLIENT_ID
-  };
-  assertEquals(JSON.stringify(registerMessage), socket.messages[0]);
-};
+    expect(socket.onmessage).not.toBeNull();
 
-SignalingChannelTest.prototype.testRegisterAfterOpen = function() {
-  this.channel.open();
-  var socket = webSockets[0];
-  socket.simulateOpenResult(true);
-  this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+    this.channel.onmessage = function(msg) {
+      expect(msg).toEqual(expectedMsg);
+      done();
+    };
 
-  assertEquals(1, socket.messages.length);
+    var expectedMsg = 'hi';
+    var event = {
+      'data': JSON.stringify({'msg': expectedMsg})
+    };
+    socket.onmessage(event);
+  });
 
-  var registerMessage = {
-    cmd: 'register',
-    roomid: FAKE_ROOM_ID,
-    clientid: FAKE_CLIENT_ID
-  };
-  assertEquals(JSON.stringify(registerMessage), socket.messages[0]);
-};
+  it('open failure', function(done) {
+    var promise = this.channel.open();
+    expect(webSockets.length).toEqual(1);
 
-SignalingChannelTest.prototype.testSendBeforeOpen = function() {
-  // Stubbing XMLHttpRequest cannot be done in setUp since it caused PhantomJS
-  // to hang.
-  var realXMLHttpRequest = XMLHttpRequest;
-  XMLHttpRequest = MockXMLHttpRequest;
+    promise.then(function() {
+      fail('WebSocket could be opened');
+    }).catch(function() {
+      done();
+    });
 
-  this.channel.open();
-  this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+    var socket = webSockets[0];
+    socket.simulateOpenResult(false);
+  });
 
-  var message = 'hello';
-  this.channel.send(message);
+  it('register before open', function() {
+    this.channel.open();
+    this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
 
-  assertEquals(1, xhrs.length);
-  assertEquals(2, xhrs[0].readyState);
-  assertEquals(FAKE_WSS_POST_URL + '/' + FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID,
-               xhrs[0].url);
-  assertEquals('POST', xhrs[0].method);
-  assertEquals(message, xhrs[0].body);
+    var socket = webSockets[0];
+    socket.simulateOpenResult(true);
 
-  XMLHttpRequest = realXMLHttpRequest;
-};
+    expect(socket.messages.length).toEqual(1);
 
-SignalingChannelTest.prototype.testSendAfterOpen = function() {
-  this.channel.open();
-  var socket = webSockets[0];
-  socket.simulateOpenResult(true);
-  this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+    var registerMessage = {
+      cmd: 'register',
+      roomid: FAKE_ROOM_ID,
+      clientid: FAKE_CLIENT_ID
+    };
+    expect(socket.messages[0]).toEqual(JSON.stringify(registerMessage));
+  });
 
-  var message = 'hello';
-  var wsMessage = {
-    cmd: 'send',
-    msg: message
-  };
-  this.channel.send(message);
-  assertEquals(2, socket.messages.length);
-  assertEquals(JSON.stringify(wsMessage), socket.messages[1]);
-};
+  it('register after open', function() {
+    this.channel.open();
+    var socket = webSockets[0];
+    socket.simulateOpenResult(true);
+    this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
 
-SignalingChannelTest.prototype.testCloseAfterRegister = function() {
-  var realXMLHttpRequest = XMLHttpRequest;
-  XMLHttpRequest = MockXMLHttpRequest;
+    expect(socket.messages.length).toEqual(1);
 
-  this.channel.open();
-  var socket = webSockets[0];
-  socket.simulateOpenResult(true);
-  this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+    var registerMessage = {
+      cmd: 'register',
+      roomid: FAKE_ROOM_ID,
+      clientid: FAKE_CLIENT_ID
+    };
+    expect(socket.messages[0]).toEqual(JSON.stringify(registerMessage));
+  });
 
-  assertEquals(WebSocket.OPEN, socket.readyState);
-  this.channel.close();
-  assertEquals(WebSocket.CLOSED, socket.readyState);
+  it('send before open', function() {
+    this.channel.open();
+    this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+    var message = 'hello';
+    this.channel.send(message);
 
-  assertEquals(1, xhrs.length);
-  assertEquals(4, xhrs[0].readyState);
-  assertEquals(FAKE_WSS_POST_URL + '/' + FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID,
-               xhrs[0].url);
-  assertEquals('DELETE', xhrs[0].method);
+    expect(xhrs.length).toEqual(1);
+    expect(xhrs[0].readyState).toEqual(2);
+    expect(xhrs[0].url)
+        .toEqual(FAKE_WSS_POST_URL + '/' + FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID);
+    expect(xhrs[0].method).toEqual('POST');
+    expect(xhrs[0].body).toEqual(message);
+  });
 
-  XMLHttpRequest = realXMLHttpRequest;
-};
+  it('send after open', function() {
+    this.channel.open();
+    var socket = webSockets[0];
+    socket.simulateOpenResult(true);
+    this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
 
-SignalingChannelTest.prototype.testCloseBeforeRegister = function() {
-  var realXMLHttpRequest = XMLHttpRequest;
-  XMLHttpRequest = MockXMLHttpRequest;
+    var message = 'hello';
+    var wsMessage = {
+      cmd: 'send',
+      msg: message
+    };
+    this.channel.send(message);
 
-  this.channel.open();
-  this.channel.close();
+    expect(socket.messages.length).toEqual(2);
+    expect(socket.messages[1]).toEqual(JSON.stringify(wsMessage));
+  });
 
-  assertEquals(0, xhrs.length);
-  XMLHttpRequest = realXMLHttpRequest;
-};
+  it('close after register', function() {
+    this.channel.open();
+    var socket = webSockets[0];
+    socket.simulateOpenResult(true);
+    this.channel.register(FAKE_ROOM_ID, FAKE_CLIENT_ID);
+
+    expect(socket.readyState).toEqual(WebSocket.OPEN);
+    this.channel.close();
+    expect(socket.readyState).toEqual(WebSocket.CLOSED);
+
+    expect(xhrs.length).toEqual(1);
+    expect(xhrs[0].readyState).toEqual(4);
+    expect(xhrs[0].url)
+        .toEqual(FAKE_WSS_POST_URL + '/' + FAKE_ROOM_ID + '/' + FAKE_CLIENT_ID);
+    expect(xhrs[0].method).toEqual('DELETE');
+  });
+
+  it('close before register', function() {
+    this.channel.open();
+    this.channel.close();
+    expect(xhrs.length).toEqual(0);
+  });
+});

@@ -154,32 +154,32 @@ Call.prototype.hangup = function(async) {
   var steps = [];
   steps.push({
     step: function() {
-        // Send POST request to /leave.
-        var path = this.getLeaveUrl_();
-        return sendUrlRequest('POST', path, async);
-      }.bind(this),
+      // Send POST request to /leave.
+      var path = this.getLeaveUrl_();
+      return sendUrlRequest('POST', path, async);
+    }.bind(this),
     errorString: 'Error sending /leave:'
   });
   steps.push({
     step: function() {
-        // Send bye to the other client.
-        this.channel_.send(JSON.stringify({type: 'bye'}));
-      }.bind(this),
+      // Send bye to the other client.
+      this.channel_.send(JSON.stringify({type: 'bye'}));
+    }.bind(this),
     errorString: 'Error sending bye:'
   });
   steps.push({
     step: function() {
-        // Close signaling channel.
-        return this.channel_.close(async);
-      }.bind(this),
+      // Close signaling channel.
+      return this.channel_.close(async);
+    }.bind(this),
     errorString: 'Error closing signaling channel:'
   });
   steps.push({
     step: function() {
-        this.params_.previousRoomId = this.params_.roomId;
-        this.params_.roomId = null;
-        this.params_.clientId = null;
-      }.bind(this),
+      this.params_.previousRoomId = this.params_.roomId;
+      this.params_.roomId = null;
+      this.params_.clientId = null;
+    }.bind(this),
     errorString: 'Error setting params:'
   });
 
@@ -194,27 +194,26 @@ Call.prototype.hangup = function(async) {
     }
 
     return promise;
-  } else {
-    // Execute the cleanup steps.
-    var executeStep = function(executor, errorString) {
-      try {
-        executor();
-      } catch (ex) {
-        trace(errorString + ' ' + ex);
-      }
-    };
-
-    for (var j = 0; j < steps.length; ++j) {
-      executeStep(steps[j].step, steps[j].errorString);
-    }
-
-    if (this.params_.roomId !== null || this.params_.clientId !== null) {
-      trace('ERROR: sync cleanup tasks did not complete successfully.');
-    } else {
-      trace('Cleanup completed.');
-    }
-    return Promise.resolve();
   }
+  // Execute the cleanup steps.
+  var executeStep = function(executor, errorString) {
+    try {
+      executor();
+    } catch (ex) {
+      trace(errorString + ' ' + ex);
+    }
+  };
+
+  for (var j = 0; j < steps.length; ++j) {
+    executeStep(steps[j].step, steps[j].errorString);
+  }
+
+  if (this.params_.roomId !== null || this.params_.clientId !== null) {
+    trace('ERROR: sync cleanup tasks did not complete successfully.');
+  } else {
+    trace('Cleanup completed.');
+  }
+  return Promise.resolve();
 };
 
 Call.prototype.getLeaveUrl_ = function() {
@@ -304,14 +303,12 @@ Call.prototype.connectToRoom_ = function(roomId) {
         // The only difference in parameters should be clientId and isInitiator,
         // and the turn servers that we requested.
         // TODO(tkchin): clean up response format. JSHint doesn't like it.
-        /* jshint ignore:start */
-        //jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
         this.params_.clientId = roomParams.client_id;
         this.params_.roomId = roomParams.room_id;
         this.params_.roomLink = roomParams.room_link;
         this.params_.isInitiator = roomParams.is_initiator === 'true';
-        //jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-        /* jshint ignore:end */
+
         this.params_.messages = roomParams.messages;
       }.bind(this)).catch(function(error) {
         this.onError_('Room server join error: ' + error.message);
@@ -516,7 +513,8 @@ Call.prototype.joinRoom_ = function() {
         return;
       }
       if (responseObj.result !== 'SUCCESS') {
-        // TODO (chuckhays) : handle room full state by returning to room selection state.
+        // TODO (chuckhays) : handle room full state by returning to room
+        // selection state.
         // When room is full, responseObj.result === 'FULL'
         reject(Error('Registration error: ' + responseObj.result));
         return;
