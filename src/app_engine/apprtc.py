@@ -553,8 +553,7 @@ class MainPage(webapp2.RequestHandler):
 
   def get(self):
     """Renders index.html."""
-    if self.request.headers['Host'] == 'apprtc.net':
-      webapp2.redirect('https://www.apprtc.net', permanent=True)
+    checkIfRedirect(self);
     # Parse out parameters from request.
     params = get_room_parameters(self.request, None, None, None)
     # room_id/room_link will not be included in the returned parameters
@@ -569,6 +568,7 @@ class RoomPage(webapp2.RequestHandler):
 
   def get(self, room_id):
     """Renders index.html or full.html."""
+    checkIfRedirect(self)
     # Check if room is full.
     room = memcache.get(
         get_memcache_key_for_room(self.request.host_url, room_id))
@@ -590,6 +590,20 @@ class ParamsPage(webapp2.RequestHandler):
     params = get_room_parameters(self.request, None, None, None)
     self.response.write(json.dumps(params))
 
+def checkIfRedirect(self):
+  REDIRECT_DOMAINS = [
+    'apprtc.appspot.com', 'apprtc.webrtc.org', 'www.appr.tc'
+  ]
+  ARGUMENTS = self.request.arguments()
+  parsed_args = ''
+  if self.request.headers['Host'] in REDIRECT_DOMAINS:
+    webapp2.redirect('https://appr.tc', permanent=True)
+    for argument in ARGUMENTS:
+      if parsed_args == '':
+        parsed_args += '?'
+      parsed_args += argument + '&'
+    redirect_url = 'https://appr.tc' + self.request.path + parsed_args
+    webapp2.redirect(redirect_url, permanent=True, abort=True)
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
