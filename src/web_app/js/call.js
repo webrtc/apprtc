@@ -411,7 +411,7 @@ Call.prototype.maybeGetIceServers_ = function() {
         this.params_.peerConnectionConfig.iceServers =
             this.params_.turnServerOverride;
         resolve();
-      }.bind(this))
+      }.bind(this));
     }
 
   }
