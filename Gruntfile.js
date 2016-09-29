@@ -141,11 +141,10 @@ module.exports = function(grunt) {
         'build/js_test_driver.conf',
       ]},
 
-    closurecompiler: {
+    'closure-compiler': {
       debug: {
-        files: {
-          // Destination: [source files]
-          'out/app_engine/js/apprtc.debug.js': [
+        closurePath: '/root/webrtc/closure_path',
+        js: [
             'node_modules/webrtc-adapter/out/adapter.js',
             'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
@@ -163,8 +162,8 @@ module.exports = function(grunt) {
             'src/web_app/js/storage.js',
             'src/web_app/js/util.js',
             'src/web_app/js/windowport.js',
-          ]
-        },
+        ],
+        jsOutputFile: 'out/app_engine/js/apprtc.debug.js',
         options: {
           'compilation_level': 'WHITESPACE_ONLY',
           'language_in': 'ECMASCRIPT5',
@@ -181,7 +180,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
-  grunt.loadNpmTasks('grunt-closurecompiler');
+  grunt.loadNpmTasks('grunt-closure-compiler');
   grunt.loadTasks('build/grunt-chrome-build');
 
   // Set default tasks to run when grunt is called without parameters.
@@ -194,7 +193,7 @@ module.exports = function(grunt) {
                                         'shell:getPythonTestDeps',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
-  grunt.registerTask('jstests', ['shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
+  grunt.registerTask('jstests', ['shell:genJsEnums', 'closure-compiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
   // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
-  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build']);
+  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closure-compiler:debug', 'grunt-chrome-build']);
 };
