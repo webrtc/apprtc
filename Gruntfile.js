@@ -4,6 +4,7 @@
 var out_app_engine_dir = 'out/app_engine';
 
 module.exports = function(grunt) {
+  require('google-closure-compiler').grunt(grunt);
   // configure project
   grunt.initConfig({
     // make node configurations available
@@ -143,8 +144,9 @@ module.exports = function(grunt) {
 
     'closure-compiler': {
       debug: {
-        closurePath: '/root/webrtc/closure_path',
-        js: [
+        files: {
+          // Destination: [source files]
+          'out/app_engine/js/apprtc.debug.js': [
             'node_modules/webrtc-adapter/out/adapter.js',
             'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
@@ -162,8 +164,8 @@ module.exports = function(grunt) {
             'src/web_app/js/storage.js',
             'src/web_app/js/util.js',
             'src/web_app/js/windowport.js',
-        ],
-        jsOutputFile: 'out/app_engine/js/apprtc.debug.js',
+          ]
+        },
         options: {
           'compilation_level': 'WHITESPACE_ONLY',
           'language_in': 'ECMASCRIPT5',
