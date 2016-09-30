@@ -182,7 +182,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
-  grunt.loadNpmTasks('grunt-closure-compiler');
   grunt.loadTasks('build/grunt-chrome-build');
 
   // Set default tasks to run when grunt is called without parameters.
