@@ -375,7 +375,8 @@ Call.prototype.maybeGetMedia_ = function() {
 Call.prototype.maybeGetIceServers_ = function() {
   var shouldRequestIceServers =
       (this.params_.iceServerRequestUrl &&
-      this.params_.iceServerRequestUrl.length > 0);
+      this.params_.iceServerRequestUrl.length > 0 &&
+      this.params_.turnServerOverride.length === 0);
 
   var iceServerPromise = null;
   if (shouldRequestIceServers) {
@@ -401,7 +402,18 @@ Call.prototype.maybeGetIceServers_ = function() {
           trace(error.message);
         }.bind(this));
   } else {
-    iceServerPromise = Promise.resolve();
+    if (this.params_.turnServerOverride.length === 0) {
+      iceServerPromise = Promise.resolve();
+    } else {
+      // if turnServerOverride is not empty it will be used for
+      // turn/stun servers.
+      iceServerPromise = new Promise(function(resolve) {
+        this.params_.peerConnectionConfig.iceServers =
+            this.params_.turnServerOverride;
+        resolve();
+      }.bind(this));
+    }
+
   }
   return iceServerPromise;
 };
