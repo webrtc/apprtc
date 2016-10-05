@@ -591,18 +591,16 @@ class ParamsPage(webapp2.RequestHandler):
     self.response.write(json.dumps(params))
 
 def checkIfRedirect(self):
-  REDIRECT_DOMAINS = [
-    'apprtc.appspot.com', 'apprtc.webrtc.org', 'www.appr.tc'
-  ]
-  ARGUMENTS = self.request.arguments()
   parsed_args = ''
-  if self.request.headers['Host'] in REDIRECT_DOMAINS:
-    webapp2.redirect('https://appr.tc', permanent=True)
-    for argument in ARGUMENTS:
+  if self.request.headers['Host'] in constants.REDIRECT_DOMAINS:
+    for argument in self.request.arguments():
+      parameter = '=' + self.request.get(argument)
       if parsed_args == '':
         parsed_args += '?'
-      parsed_args += argument + '&'
-    redirect_url = 'https://appr.tc' + self.request.path + parsed_args
+      else:
+        parsed_args += '&'
+      parsed_args += argument + parameter
+    redirect_url = constants.REDIRECT_URL + self.request.path + parsed_args
     webapp2.redirect(redirect_url, permanent=True, abort=True)
 
 app = webapp2.WSGIApplication([
