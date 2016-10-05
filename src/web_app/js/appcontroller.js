@@ -530,10 +530,9 @@ AppController.prototype.setIconTimeout_ = function() {
   if (this.hideIconsAfterTimeout) {
     window.clearTimeout.bind(this, this.hideIconsAfterTimeout);
   }
-  this.hideIconsAfterTimeout =
-      window.setTimeout(function() {
-        this.hideIcons_();
-      }.bind(this), 5000);
+  this.hideIconsAfterTimeout = window.setTimeout(function() {
+    this.hideIcons_();
+  }.bind(this), 5000);
 };
 
 AppController.prototype.iconEventSetup_ = function() {

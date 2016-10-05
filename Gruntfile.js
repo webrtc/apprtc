@@ -48,13 +48,9 @@ module.exports = function(grunt) {
       getPythonTestDeps: {
         command: 'python build/get_python_test_deps.py'
       },
-      installPythonTestDepsOnLinux: {
-        command: 'python build/install_webtest_on_linux.py temp/webtest-master/'
-      },
       runPythonTests: {
         command: ['python', 'build/run_python_tests.py',
-                  'temp/google_appengine/', out_app_engine_dir,
-                  'temp/webtest-master/'].join(' ')
+                  'temp/google_appengine/', out_app_engine_dir].join(' ')
       },
       buildAppEnginePackage: {
         command: ['python', './build/build_app_engine_package.py', 'src',
@@ -125,15 +121,6 @@ module.exports = function(grunt) {
       }
     },
 
-    jstdPhantom: {
-      options: {
-        useLatest : true,
-        port: 9876,
-      },
-      files: [
-        'build/js_test_driver.conf',
-      ]},
-
     closurecompiler: {
       debug: {
         files: {
@@ -183,9 +170,7 @@ module.exports = function(grunt) {
   // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['csslint', 'htmlhint', 'eslint',
                                  'runPythonTests', 'build', 'runUnitTests']);
-  grunt.registerTask('travis', ['shell:getPythonTestDeps',
-                                'shell:installPythonTestDepsOnLinux',
-                                'default']);
+  grunt.registerTask('travis', ['shell:getPythonTestDeps', 'default']);
   grunt.registerTask('runPythonTests', ['shell:getPythonTestDeps',
                                         'shell:buildAppEnginePackageWithTests',
                                         'shell:runPythonTests',

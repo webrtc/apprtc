@@ -1,12 +1,12 @@
 *.pyc
 .DS_Store
-browser*
+/src/web_app/js/enums.js
 bower_components
+browser*
 firefox*
-temp/*
 node_modules
 out
 secrets.json
+temp/*
 validation-report.json
 validation-status.json
-/src/web_app/js/enums.js
