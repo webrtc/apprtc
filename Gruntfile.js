@@ -168,9 +168,9 @@ module.exports = function(grunt) {
   grunt.loadTasks('build/grunt-chrome-build');
 
   // Set default tasks to run when grunt is called without parameters.
-  grunt.registerTask('default', ['csslint', 'htmlhint', 'eslint',
-                                 'runPythonTests', 'build', 'runUnitTests']);
-  grunt.registerTask('travis', ['shell:getPythonTestDeps', 'default']);
+  grunt.registerTask('default', ['runLinting', 'runPythonTests', 'build',
+                                 'runUnitTests']);
+  grunt.registerTask('runLinting', ['csslint', 'htmlhint', 'eslint']);
   grunt.registerTask('runPythonTests', ['shell:getPythonTestDeps',
                                         'shell:buildAppEnginePackageWithTests',
                                         'shell:runPythonTests',
