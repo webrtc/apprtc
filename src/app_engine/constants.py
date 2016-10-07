@@ -6,12 +6,40 @@ This module contains the constants used in AppRTC Python modules.
 """
 import os
 
+# Deprecated domains which we should to redirect to REDIRECT_URL.
+REDIRECT_DOMAINS =  [
+  'apprtc.appspot.com', 'apprtc.webrtc.org', 'www.appr.tc', 'localhost:8080'
+]
+# URL which we should redirect to if matching in REDIRECT_DOMAINS.
+REDIRECT_URL = 'https://appr.tc'
+
 ROOM_MEMCACHE_EXPIRATION_SEC = 60 * 60 * 24
 MEMCACHE_RETRY_LIMIT = 100
 
 LOOPBACK_CLIENT_ID = 'LOOPBACK_CLIENT_ID'
 
-# TODO: Remove once clients support ICE_SERVER.
+# Turn/Stun server override. This allows AppRTC to connect to turn servers
+# directly rather than retrieving them from an ICE server provider.
+TURN_SERVER_OVERRIDE = []
+# Enable by uncomment below and comment out above, then specify turn and stun
+# servers below.
+# TURN_SERVER_OVERRIDE = [
+#   {
+#     "urls": [
+#       "turn:hostname/IpToTurnServer:19305?transport=udp",
+#       "turn:hostname/IpToTurnServer:19305?transport=tcp"
+#     ],
+#     "username": "TurnServerUsername",
+#     "credential": "TurnServerCredentials"
+#   },
+#   {
+#     "urls": [
+#       "stun:hostname/IpToStunServer:19302"
+#     ]
+#   }
+# ]
+
+# TODO(jansson): Remove once AppRTCDemo on iOS supports ICE_SERVER.
 TURN_BASE_URL = 'https://computeengineondemand.appspot.com'
 TURN_URL_TEMPLATE = '%s/turn?username=%s&key=%s'
 CEOD_KEY = '4080218913'

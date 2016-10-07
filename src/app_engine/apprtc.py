@@ -265,6 +265,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # TODO(tkchin): We want to provide a ICE request url on the initial get,
   # but we don't provide client_id until a join. For now just generate
   # a random id, but we should make this better.
+  # TODO(jansson): Remove this once CEOD is deprecated.
   username = client_id if client_id is not None else generate_random(9)
   if len(ice_server_base_url) > 0:
     ice_server_url = constants.ICE_SERVER_URL_TEMPLATE % \
@@ -272,8 +273,12 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   else:
     ice_server_base_url = ''
 
+  # TODO(jansson): Remove this once CEOD is deprecated.
   turn_url = constants.TURN_URL_TEMPLATE % \
       (constants.TURN_BASE_URL, username, constants.CEOD_KEY)
+  # If defined it will override the ICE server provider and use the specified
+  # turn servers directly.
+  turn_server_override = constants.TURN_SERVER_OVERRIDE
 
   pc_config = make_pc_config(ice_transports)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
@@ -293,6 +298,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'pc_constraints': json.dumps(pc_constraints),
     'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
+    'turn_server_override': turn_server_override,
     'turn_url': turn_url,
     'ice_server_url': ice_server_url,
     'ice_server_transports': ice_server_transports,
@@ -553,8 +559,7 @@ class MainPage(webapp2.RequestHandler):
 
   def get(self):
     """Renders index.html."""
-    if self.request.headers['Host'] == 'apprtc.net':
-      webapp2.redirect('https://www.apprtc.net', permanent=True)
+    checkIfRedirect(self);
     # Parse out parameters from request.
     params = get_room_parameters(self.request, None, None, None)
     # room_id/room_link will not be included in the returned parameters
@@ -569,6 +574,7 @@ class RoomPage(webapp2.RequestHandler):
 
   def get(self, room_id):
     """Renders index.html or full.html."""
+    checkIfRedirect(self)
     # Check if room is full.
     room = memcache.get(
         get_memcache_key_for_room(self.request.host_url, room_id))
@@ -590,6 +596,18 @@ class ParamsPage(webapp2.RequestHandler):
     params = get_room_parameters(self.request, None, None, None)
     self.response.write(json.dumps(params))
 
+def checkIfRedirect(self):
+  parsed_args = ''
+  if self.request.headers['Host'] in constants.REDIRECT_DOMAINS:
+    for argument in self.request.arguments():
+      parameter = '=' + self.request.get(argument)
+      if parsed_args == '':
+        parsed_args += '?'
+      else:
+        parsed_args += '&'
+      parsed_args += argument + parameter
+    redirect_url = constants.REDIRECT_URL + self.request.path + parsed_args
+    webapp2.redirect(redirect_url, permanent=True, abort=True)
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
