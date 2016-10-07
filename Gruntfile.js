@@ -4,6 +4,7 @@
 var out_app_engine_dir = 'out/app_engine';
 
 module.exports = function(grunt) {
+  require('google-closure-compiler').grunt(grunt);
   // configure project
   grunt.initConfig({
     // make node configurations available
@@ -141,7 +142,7 @@ module.exports = function(grunt) {
         'build/js_test_driver.conf',
       ]},
 
-    closurecompiler: {
+    'closure-compiler': {
       debug: {
         files: {
           // Destination: [source files]
@@ -181,7 +182,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-jstestdriver-phantomjs');
-  grunt.loadNpmTasks('grunt-closurecompiler');
   grunt.loadTasks('build/grunt-chrome-build');
 
   // Set default tasks to run when grunt is called without parameters.
@@ -194,7 +194,7 @@ module.exports = function(grunt) {
                                         'shell:getPythonTestDeps',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
-  grunt.registerTask('jstests', ['shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
+  grunt.registerTask('jstests', ['shell:genJsEnums', 'closure-compiler:debug', 'grunt-chrome-build', 'jstdPhantom']);
   // buildAppEnginePackage must be done before closurecompiler since buildAppEnginePackage resets out/app_engine.
-  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build']);
+  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closure-compiler:debug', 'grunt-chrome-build']);
 };
