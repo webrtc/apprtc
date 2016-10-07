@@ -410,7 +410,6 @@ Call.prototype.maybeGetIceServers_ = function() {
         resolve();
       }.bind(this));
     }
-
   }
   return iceServerPromise;
 };
