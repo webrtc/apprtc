@@ -26,12 +26,12 @@ a:hover {
 
 body {
   background-color: #333;
+  color: #fff;
   font-family: 'Roboto', 'Open Sans', 'Lucida Grande', sans-serif;
   height: 100%;
   margin: 0;
   padding: 0;
   width: 100%;
-  color: #fff;
 }
 
 #remote-canvas {
@@ -105,9 +105,9 @@ footer > div.active {
 }
 
 div#privacy {
-  position: absolute;
-  color: gray;
   bottom: 7px;
+  color: gray;
+  position: absolute;
   right: 10px;
 }
 
@@ -131,12 +131,12 @@ label {
   max-height: 100%;
   max-width: 100%;
   object-fit: cover;  /* no letterboxing */
-  transition: opacity 1s;
   -moz-transform: scale(-1, 1);
   -ms-transform: scale(-1, 1);
   -o-transform: scale(-1, 1);
   -webkit-transform: scale(-1, 1);
   transform: scale(-1, 1);
+  transition: opacity 1s;
   width: 100%;
 }
 
@@ -180,16 +180,16 @@ label {
 }
 
 #confirm-join-div {
-  z-index: 5;
   position: absolute;
+  text-align: center;
   top: 80%;
   width: 100%;
-  text-align: center;
+  z-index: 5;
 }
 
 #confirm-join-div div {
-  margin-bottom: 10px;
   font-size: 1.5em;
+  margin-bottom: 10px;
 }
 
 /*////// room selection start ///////////////////*/
@@ -202,15 +202,15 @@ button {
   background-color: #4285F4;
   border: none;
   border-radius: 2px;
-  color: white;
-  font-size: 0.8em;
-  margin: 0 5px 20px 5px;
-  width: 8em;
-  height: 2.75em;
-  padding: 0.5em 0.7em 0.5em 0.7em;
   -webkit-box-shadow: 1px 1px 5px 0 rgba(0,0,0,.5);
   -moz-box-shadow: 1px 1px 5px 0 rgba(0,0,0,.5);
   box-shadow: 1px 1px 5px 0 rgba(0,0,0,.5);
+  color: white;
+  font-size: 0.8em;
+  height: 2.75em;
+  margin: 0 5px 20px 5px;
+  padding: 0.5em 0.7em 0.5em 0.7em;
+  width: 8em;
 }
 
 button:active {
@@ -222,29 +222,29 @@ button:hover {
 }
 
 button:focus {
-  outline: none;
   -webkit-box-shadow: 0 10px 15px 0 rgba(0,0,0,.5);
   -moz-box-shadow: 0 10px 15px 0 rgba(0,0,0,.5);
   box-shadow: 0 10px 15px 0 rgba(0,0,0,.5);
+  outline: none;
 }
 
 button[disabled] {
-  color: rgb(76, 76, 76);
-  color: rgba(255, 255, 255, 0.3);
   background-color: rgb(30, 30, 30);
   background-color: rgba(255, 255, 255, 0.12);
+  color: rgb(76, 76, 76);
+  color: rgba(255, 255, 255, 0.3);
 }
 
 input[type=text] {
+  background-color: transparent;
   border: none;
   border-bottom: solid 1px #4c4c4f;
-  font-size: 1em;
-  background-color: transparent;
   color: #fff;
-  padding:.4em 0;
-  margin-right: 20px;
-  width: 100%;
   display: block;
+  font-size: 1em;
+  margin-right: 20px;
+  padding:.4em 0;
+  width: 100%;
 }
 
 input[type="text"]:focus {
@@ -279,8 +279,8 @@ h1 {
 
 div#room-selection {
   margin: 3em auto 0 auto;
-  width: 25em;
   padding: 1em 1.5em 1.3em 1.5em;
+  width: 25em;
 }
 
 p {
@@ -329,8 +329,8 @@ svg.on path.off {
 }
 
 svg {
-  box-shadow: 2px 2px 24px #444;
   border-radius: 48px;
+  box-shadow: 2px 2px 24px #444;
   display: block;
   margin: 0 0 3vh 0;
   transform: translateX(calc(-6vw - 96px));

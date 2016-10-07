@@ -46,8 +46,12 @@ def _Unzip(path, dir):
 
 
 def Install(package):
-  pip.main(['install' , package])
-  print 'Installing python package using pip: ' + package
+  try:
+    print 'Installing python package using pip: ' + package
+    pip.main(['install' , package])
+  except OSError:
+    print 'Could not install %s due to : %s' % package % OSError
+
 
 
 def DownloadAppEngineSdkIfNecessary():
