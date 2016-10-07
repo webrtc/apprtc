@@ -373,6 +373,7 @@ Call.prototype.maybeGetIceServers_ = function() {
   var shouldRequestIceServers =
       (this.params_.iceServerRequestUrl &&
       this.params_.iceServerRequestUrl.length > 0 &&
+      this.params_.turnServerOverride &&
       this.params_.turnServerOverride.length === 0);
 
   var iceServerPromise = null;
@@ -399,7 +400,8 @@ Call.prototype.maybeGetIceServers_ = function() {
           trace(error.message);
         }.bind(this));
   } else {
-    if (this.params_.turnServerOverride.length === 0) {
+    if (this.params_.turnServerOverride &&
+        this.params_.turnServerOverride.length === 0) {
       iceServerPromise = Promise.resolve();
     } else {
       // if turnServerOverride is not empty it will be used for
