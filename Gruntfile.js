@@ -69,7 +69,7 @@ module.exports = function(grunt) {
                   'src/web_app/js'].join(' ')
       },
       runUnitTests: {
-        command: './build/start-tests.sh'
+        command: 'bash ./build/start-tests.sh'
       }
     },
 
