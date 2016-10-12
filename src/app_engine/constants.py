@@ -8,7 +8,7 @@ import os
 
 # Deprecated domains which we should to redirect to REDIRECT_URL.
 REDIRECT_DOMAINS =  [
-  'apprtc.appspot.com', 'apprtc.webrtc.org', 'www.appr.tc', 'localhost:8080'
+  'apprtc.appspot.com', 'apprtc.webrtc.org', 'www.appr.tc'
 ]
 # URL which we should redirect to if matching in REDIRECT_DOMAINS.
 REDIRECT_URL = 'https://appr.tc'

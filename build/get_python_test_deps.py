@@ -1,15 +1,17 @@
 #!/usr/bin/python
 
 import os
+import pip
 import re
 import sys
 import urllib2
 import zipfile
-import pip
+
 
 
 GAE_DOWNLOAD_URL = 'https://storage.googleapis.com/appengine-sdks/featured/'
 GAE_UPDATECHECK_URL = 'https://appengine.google.com/api/updatecheck'
+TEMP_DIR = 'temp/'
 
 def _GetLatestAppEngineSdkVersion():
   response = urllib2.urlopen(GAE_UPDATECHECK_URL)
@@ -37,42 +39,39 @@ def _Download(url, to):
 
 
 def _Unzip(path, dir):
-  print 'Unzipping %s in %s...' % (path, os.getcwd())
+  print 'Unzipping %s in %s...' % (path, dir)
   zip_file = zipfile.ZipFile(path)
-  try:
+  with zipfile.ZipFile(path) as zip_file:
     zip_file.extractall(dir)
-  finally:
-    zip_file.close()
 
 
 def Install(package):
   try:
     print 'Installing python package using pip: ' + package
     pip.main(['install', '--user' , package])
-  except OSError:
-    print 'Could not install %s due to : %s' % package % OSError
-
+  except OSError as e:
+    print 'Could not install %s due to : %s' % (package, e)
 
 
 def DownloadAppEngineSdkIfNecessary():
   gae_sdk_version = _GetLatestAppEngineSdkVersion()
   gae_sdk_file = 'google_appengine_%s.zip' % gae_sdk_version
-  temp_dir = 'temp/'
-  if not os.path.exists(temp_dir):
-    os.mkdir(temp_dir)
+  if not os.path.exists(TEMP_DIR):
+    os.mkdir(TEMP_DIR)
 
-  if os.path.exists(temp_dir + gae_sdk_file):
+  if os.path.exists(TEMP_DIR + gae_sdk_file):
     print 'Already has %s, skipping' % gae_sdk_file
     return
 
-  _Download(GAE_DOWNLOAD_URL + gae_sdk_file, temp_dir + gae_sdk_file)
-  _Unzip(temp_dir + gae_sdk_file, temp_dir)
+  _Download(GAE_DOWNLOAD_URL + gae_sdk_file, TEMP_DIR+ gae_sdk_file)
+  _Unzip(TEMP_DIR + gae_sdk_file, TEMP_DIR)
+
 
 def main():
   Install('requests')
   Install('WebTest')
   DownloadAppEngineSdkIfNecessary()
-  # setUpTempDir()
+
 
 if __name__ == '__main__':
   sys.exit(main())
