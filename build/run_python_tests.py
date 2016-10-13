@@ -5,12 +5,11 @@ import optparse
 import sys
 import unittest
 
-USAGE = """%prog sdk_path test_path webtest_path
+USAGE = """%prog sdk_path test_path
 Run unit tests for App Engine apps.
 
 sdk_path     Path to the SDK installation.
-test_path    Path to package containing test modules.
-webtest_path Path to the webtest library."""
+test_path    Path to package containing test modules."""
 
 
 def _WebTestIsInstalled():
@@ -19,28 +18,21 @@ def _WebTestIsInstalled():
     return True
   except ImportError:
     print 'You need to install webtest dependencies before you can proceed '
-    print 'running the tests. To do this you need to get easy_install since '
-    print 'that is how webtest provisions its dependencies.'
-    print 'See https://pythonhosted.org/setuptools/easy_install.html.'
-    print 'Then:'
-    print 'cd webtest-master'
-    print 'python setup.py install'
-    print '(Prefix with sudo / run in admin shell as necessary).'
+    print 'running the tests. To do this you need to have pip installed.'
+    print 'Go to https://packaging.python.org/installing/ and follow the '
+    print 'instructions and then rerun the grunt command.'
     return False
 
 
-def main(sdk_path, test_path, webtest_path):
+def main(sdk_path, test_path):
   if not os.path.exists(sdk_path):
     return 'Missing %s: try grunt shell:getPythonTestDeps.' % sdk_path
   if not os.path.exists(test_path):
     return 'Missing %s: try grunt build.' % test_path
-  if not os.path.exists(webtest_path):
-    return 'Missing %s: try grunt shell:getPythonTestDeps.' % webtest_path
 
   sys.path.insert(0, sdk_path)
   import dev_appserver
   dev_appserver.fix_sys_path()
-  sys.path.append(webtest_path)
   if not _WebTestIsInstalled():
     return 1
   suite = unittest.loader.TestLoader().discover(test_path,
@@ -52,8 +44,8 @@ def main(sdk_path, test_path, webtest_path):
 if __name__ == '__main__':
   parser = optparse.OptionParser(USAGE)
   options, args = parser.parse_args()
-  if len(args) != 3:
-    parser.error('Error: Exactly 3 arguments required.')
+  if len(args) != 2:
+    parser.error('Error: Exactly 2 arguments required.')
 
-  sdk_path, test_path, webtest_path = args[0:3]
-  sys.exit(main(sdk_path, test_path, webtest_path))
+  sdk_path, test_path = args[0:2]
+  sys.exit(main(sdk_path, test_path))

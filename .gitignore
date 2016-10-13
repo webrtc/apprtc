@@ -1,11 +1,12 @@
 *.pyc
 .DS_Store
+/src/web_app/js/enums.js
 bower_components
-google_appengine*
+browser*
+firefox*
 node_modules
 out
 secrets.json
+temp/*
 validation-report.json
 validation-status.json
-webtest-master*
-/src/web_app/js/enums.js

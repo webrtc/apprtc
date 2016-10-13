@@ -26,8 +26,7 @@ apprtc.windowPort = apprtc.windowPort || {};
     var port = getPort_();
     try {
       port.postMessage(message);
-    }
-    catch (ex) {
+    } catch (ex) {
       trace('Error sending message via port: ' + ex);
     }
   };

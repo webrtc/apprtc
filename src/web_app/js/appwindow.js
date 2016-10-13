@@ -32,9 +32,6 @@ var loadingParams = {
         }
 
         // Convert from server format to expected format.
-        // TODO(tkchin): clean up response format. JSHint doesn't like it.
-        /* jshint ignore:start */
-        //jscs:disable requireCamelCaseOrUpperCaseIdentifiers
         newParams.isLoopback = serverParams.is_loopback === 'true';
         newParams.mediaConstraints = parseJSON(serverParams.media_constraints);
         newParams.offerOptions = parseJSON(serverParams.offer_options);
@@ -46,8 +43,6 @@ var loadingParams = {
         newParams.wssUrl = serverParams.wss_url;
         newParams.wssPostUrl = serverParams.wss_post_url;
         newParams.versionInfo = parseJSON(serverParams.version_info);
-        //jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-        /* jshint ignore:end */
         newParams.messages = serverParams.messages;
 
         trace('Initializing; parameters from server: ');

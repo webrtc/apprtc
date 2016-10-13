@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 import os
+import pip
 import re
 import sys
-import tarfile
 import urllib2
 import zipfile
 
 
+
 GAE_DOWNLOAD_URL = 'https://storage.googleapis.com/appengine-sdks/featured/'
 GAE_UPDATECHECK_URL = 'https://appengine.google.com/api/updatecheck'
-WEBTEST_URL = 'https://nodeload.github.com/Pylons/webtest/tar.gz/master'
-
+TEMP_DIR = 'temp/'
 
 def _GetLatestAppEngineSdkVersion():
   response = urllib2.urlopen(GAE_UPDATECHECK_URL)
@@ -38,48 +38,40 @@ def _Download(url, to):
     to_file.write(response.read())
 
 
-def _Unzip(path):
-  print 'Unzipping %s in %s...' % (path, os.getcwd())
+def _Unzip(path, dir):
+  print 'Unzipping %s in %s...' % (path, dir)
   zip_file = zipfile.ZipFile(path)
-  try:
-    zip_file.extractall()
-  finally:
-    zip_file.close()
+  with zipfile.ZipFile(path) as zip_file:
+    zip_file.extractall(dir)
 
 
-def _Untar(path):
-  print 'Untarring %s in %s...' % (path, os.getcwd())
-  tar_file = tarfile.open(path, 'r:gz')
+def Install(package):
   try:
-    tar_file.extractall()
-  finally:
-    tar_file.close()
+    print 'Installing python package using pip: ' + package
+    pip.main(['install', '--user' , package])
+  except OSError as e:
+    print 'Could not install %s due to : %s' % (package, e)
 
 
 def DownloadAppEngineSdkIfNecessary():
   gae_sdk_version = _GetLatestAppEngineSdkVersion()
   gae_sdk_file = 'google_appengine_%s.zip' % gae_sdk_version
-  if os.path.exists(gae_sdk_file):
+  if not os.path.exists(TEMP_DIR):
+    os.mkdir(TEMP_DIR)
+
+  if os.path.exists(TEMP_DIR + gae_sdk_file):
     print 'Already has %s, skipping' % gae_sdk_file
     return
 
-  _Download(GAE_DOWNLOAD_URL + gae_sdk_file, gae_sdk_file)
-  _Unzip(gae_sdk_file)
-
-
-def DownloadWebTestIfNecessary():
-  webtest_file = 'webtest-master.tar.gz'
-  if os.path.exists(webtest_file):
-    print 'Already has %s, skipping' % webtest_file
-    return
-
-  _Download(WEBTEST_URL, webtest_file)
-  _Untar(webtest_file)
+  _Download(GAE_DOWNLOAD_URL + gae_sdk_file, TEMP_DIR+ gae_sdk_file)
+  _Unzip(TEMP_DIR + gae_sdk_file, TEMP_DIR)
 
 
 def main():
+  Install('requests')
+  Install('WebTest')
   DownloadAppEngineSdkIfNecessary()
-  DownloadWebTestIfNecessary()
-  
+
+
 if __name__ == '__main__':
   sys.exit(main())

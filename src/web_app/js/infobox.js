@@ -61,7 +61,7 @@ InfoBox.prototype.pushWarningMessage = function(msg) {
 };
 
 InfoBox.prototype.setSetupTimes = function(startTime, connectTime) {
-  this.startTime_ =  startTime;
+  this.startTime_ = startTime;
   this.connectTime_ = connectTime;
 };
 
@@ -235,7 +235,7 @@ InfoBox.prototype.buildStatsSection_ = function() {
     rxAudioBitrate = computeBitrate(rxAudio, rxPrevAudio, 'bytesReceived');
     rxAudioPacketRate = computeRate(rxAudio, rxPrevAudio, 'packetsReceived');
     contents += this.buildLine_('Audio Rx', rxAudioCodec + ', ' +
-        InfoBox.formatBitrate_(rxAudioBitrate)  + ', ' +
+        InfoBox.formatBitrate_(rxAudioBitrate) + ', ' +
         InfoBox.formatPacketRate_(rxAudioPacketRate));
   }
   if (txVideo) {

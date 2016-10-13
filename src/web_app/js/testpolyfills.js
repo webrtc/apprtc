@@ -20,7 +20,9 @@ Function.prototype.bind = Function.prototype.bind || function(thisp) {
 
 if (!window.performance) {
   window.performance = function() {};
-  window.performance.now = function() { return 0; };
+  window.performance.now = function() {
+    return 0;
+  };
 }
 
 window.RTCSessionDescription = window.RTCSessionDescription || function(input) {
@@ -76,10 +78,8 @@ MyPromise.resolve = function(value) {
 };
 
 MyPromise.reject = function(error) {
-
   return new MyPromise(function(resolve, reject) {
     reject(error);
-
   });
 };
 /* jshint ignore:end */
@@ -98,6 +98,8 @@ MyPromise.prototype.then = function(onResolve, onReject) {
         onReject(this.reason_);
       }
       break;
+    default:
+      onReject(this.reason_);
   }
   return this;
 };
@@ -112,6 +114,8 @@ MyPromise.prototype.catch = function(onReject) {
     case PROMISE_STATE.REJECTED:
       onReject(this.reason_);
       break;
+    default:
+      onReject(this.reason_);
   }
   return this;
 };
@@ -180,4 +184,4 @@ var myChrome = (function() {
   };
 })();
 
-window.chrome = window.chrome || myChrome;
+window.chrome = myChrome;

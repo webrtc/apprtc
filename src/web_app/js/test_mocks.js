@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals assertEquals */
+/* globals expect */
 /* exported FAKE_WSS_POST_URL, FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
    FAKE_CLIENT_ID, MockWebSocket, MockXMLHttpRequest, webSockets, xhrs,
    MockWindowPort, FAKE_SEND_EXCEPTION, Mock */
@@ -23,7 +23,7 @@ var FAKE_SEND_EXCEPTION = 'Send exception';
 
 var webSockets = [];
 var MockWebSocket = function(url) {
-  assertEquals(FAKE_WSS_URL, url);
+  expect(url).toEqual(FAKE_WSS_URL);
 
   this.url = url;
   this.messages = [];
@@ -78,7 +78,6 @@ Mock.createSendAsyncUrlRequestMock = function() {
   var fn = function(method, url, body) {
     calls.push({method: method, url: url, body: body});
     return new Promise(function() {});
-
   };
   fn.calls = function() {
     return calls;
@@ -93,6 +92,7 @@ var MockXMLHttpRequest = function() {
   this.async = true;
   this.body = null;
   this.readyState = 0;
+  this.status = 0;
 
   xhrs.push(this);
 };
@@ -106,9 +106,15 @@ MockXMLHttpRequest.prototype.send = function(body) {
   this.body = body;
   if (this.async) {
     this.readyState = 2;
+    this.status = 200;
   } else {
     this.readyState = 4;
+    this.status = 200;
   }
+};
+// Clean up xhr queue for the next test.
+MockXMLHttpRequest.cleanQueue = function() {
+  xhrs = [];
 };
 
 var MockWindowPort = function() {

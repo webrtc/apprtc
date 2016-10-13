@@ -8,12 +8,13 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, maybePreferCodec, removeCodecParam, setCodecParam,
-   assertEquals */
+/* globals describe, expect, it, maybePreferCodec, removeCodecParam,
+   setCodecParam */
 
 'use strict';
 
-var SDP_WITH_AUDIO_CODECS =
+describe('Sdp utils test', function() {
+  var SDP_WITH_AUDIO_CODECS =
     ['v=0',
      'm=audio 9 RTP/SAVPF 111 103 104 0 9',
      'a=rtcp-mux',
@@ -25,70 +26,73 @@ var SDP_WITH_AUDIO_CODECS =
      'a=rtpmap:8 PCMA/8000',
     ].join('\r\n');
 
-var SdpUtilsTest = new TestCase('SdpUtilsTest');
+  it('moves Isac 16K to default when preferred', function() {
+    var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
+                                  'iSAC/16000');
+    var audioLine = result.split('\r\n')[1];
+    expect(audioLine).toEqual('m=audio 9 RTP/SAVPF 103 111 104 0 9');
+  });
 
-SdpUtilsTest.prototype.testMovesIsac16KToDefaultWhenPreferred = function() {
-  var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
-                                'iSAC/16000');
-  var audioLine = result.split('\r\n')[1];
-  assertEquals('iSAC 16K (of type 103) should be moved to front.',
-               'm=audio 9 RTP/SAVPF 103 111 104 0 9',
-               audioLine);
-};
+  it('does nothing if preferred codec not found', function() {
+    var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
+                                  'iSAC/123456');
+    var audioLine = result.split('\r\n')[1];
+    expect(audioLine).toEqual(SDP_WITH_AUDIO_CODECS.split('\r\n')[1]);
+  });
 
-SdpUtilsTest.prototype.testDoesNothingIfPreferredCodecNotFound = function() {
-  var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
-                                'iSAC/123456');
-  var audioLine = result.split('\r\n')[1];
-  assertEquals('SDP should be unaffected since the codec does not exist.',
-               SDP_WITH_AUDIO_CODECS.split('\r\n')[1],
-               audioLine);
-};
-
-SdpUtilsTest.prototype.testMovesCodecEvenIfPayloadTypeIsSameAsUdpPort =
-    function() {
-      var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS,
+  it('moves codec even if payload type is same as udp port', function() {
+    var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS,
                                     'audio',
                                     'send',
                                     'G722/8000');
-      var audioLine = result.split('\r\n')[1];
-      assertEquals('G722/8000 (of type 9) should be moved to front.',
-                   'm=audio 9 RTP/SAVPF 9 111 103 104 0',
-                   audioLine);
-    };
+    var audioLine = result.split('\r\n')[1];
+    expect(audioLine).toEqual('m=audio 9 RTP/SAVPF 9 111 103 104 0');
+  });
 
-SdpUtilsTest.prototype.testRemoveAndSetCodecParamModifyFmtpLine =
-    function() {
-      var result = setCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
+  it('remove and set codec param modify then fmtp line', function() {
+    var result = setCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
                                  'minptime', '20');
-      var audioLine = result.split('\r\n')[4];
-      assertEquals('minptime=10 should be modified in a=fmtp:111 line.',
-                   'a=fmtp:111 minptime=20', audioLine);
+    var audioLine = result.split('\r\n')[4];
+    expect(audioLine).toEqual('a=fmtp:111 minptime=20');
 
-      result = setCodecParam(result, 'opus/48000', 'useinbandfec', '1');
-      audioLine = result.split('\r\n')[4];
-      assertEquals('useinbandfec=1 should be added to a=fmtp:111 line.',
-                   'a=fmtp:111 minptime=20; useinbandfec=1', audioLine);
+    result = setCodecParam(result, 'opus/48000', 'useinbandfec', '1');
+    audioLine = result.split('\r\n')[4];
+    expect(audioLine).toEqual('a=fmtp:111 minptime=20; useinbandfec=1');
 
-      result = removeCodecParam(result, 'opus/48000', 'minptime');
-      audioLine = result.split('\r\n')[4];
-      assertEquals('minptime should be removed from a=fmtp:111 line.',
-                   'a=fmtp:111 useinbandfec=1', audioLine);
+    result = removeCodecParam(result, 'opus/48000', 'minptime');
+    audioLine = result.split('\r\n')[4];
+    expect(audioLine).toEqual('a=fmtp:111 useinbandfec=1');
 
-      var newResult = removeCodecParam(result, 'opus/48000', 'minptime');
-      assertEquals('removeCodecParam should not affect sdp ' +
-                   'if param did not exist', result, newResult);
-    };
+    var newResult = removeCodecParam(result, 'opus/48000', 'minptime');
+    expect(newResult).toEqual(result);
+  });
 
-SdpUtilsTest.prototype.testRemoveAndSetCodecParamRemoveAndAddFmtpLineIfNeeded =
-    function() {
-      var result = removeCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
-                                    'minptime');
-      var audioLine = result.split('\r\n')[4];
-      assertEquals('a=fmtp:111 line should be deleted.',
-                   'a=rtpmap:103 ISAC/16000', audioLine);
-      result = setCodecParam(result, 'opus/48000', 'inbandfec', '1');
-      audioLine = result.split('\r\n')[4];
-      assertEquals('a=fmtp:111 line should be added.',
-                   'a=fmtp:111 inbandfec=1', audioLine);
-    };
+  it('remove and set codec param modify fmtp line', function() {
+    var result = setCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
+                                 'minptime', '20');
+    var audioLine = result.split('\r\n')[4];
+    expect(audioLine).toEqual('a=fmtp:111 minptime=20');
+
+    result = setCodecParam(result, 'opus/48000', 'useinbandfec', '1');
+    audioLine = result.split('\r\n')[4];
+    expect(audioLine).toEqual('a=fmtp:111 minptime=20; useinbandfec=1');
+
+    result = removeCodecParam(result, 'opus/48000', 'minptime');
+    audioLine = result.split('\r\n')[4];
+    expect(audioLine).toEqual('a=fmtp:111 useinbandfec=1');
+
+    var newResult = removeCodecParam(result, 'opus/48000', 'minptime');
+    expect(newResult).toEqual(result);
+  });
+
+  it('remove and set codec param remove and add fmtp line if needed',
+      function() {
+        var result = removeCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
+            'minptime');
+        var audioLine = result.split('\r\n')[4];
+        expect(audioLine).toEqual('a=rtpmap:103 ISAC/16000');
+        result = setCodecParam(result, 'opus/48000', 'inbandfec', '1');
+        audioLine = result.split('\r\n')[4];
+        expect(audioLine).toEqual('a=fmtp:111 inbandfec=1');
+      });
+});

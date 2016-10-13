@@ -8,328 +8,251 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals UI_CONSTANTS, RoomSelection, assertMatch, assertEquals,
-   AsyncTestCase */
+/* globals describe, expect, it, beforeEach, afterEach,UI_CONSTANTS,
+   RoomSelection */
 
 'use strict';
 
-var RoomSelectionTest = new AsyncTestCase('RoomSelectionTest');
-
-RoomSelectionTest.prototype.setUp = function() {
-  var key = 'testRecentRoomsKey';
-  localStorage.removeItem(key);
-  localStorage.setItem(key, '["room1", "room2", "room3"]');
-
-  this.targetDiv_ = document.createElement('div');
-  this.targetDiv_.id = UI_CONSTANTS.roomSelectionDiv.substring(1);
-
-  this.inputBox_ = document.createElement('input');
-  this.inputBox_.id = UI_CONSTANTS.roomSelectionInput.substring(1);
-  this.inputBox_.type = 'text';
-
-  this.inputBoxLabel_ = document.createElement('label');
-  this.inputBoxLabel_.id = UI_CONSTANTS.roomSelectionInputLabel.substring(1);
-
-  this.randomButton_ = document.createElement('button');
-  this.randomButton_.id = UI_CONSTANTS.roomSelectionRandomButton.substring(1);
-
-  this.joinButton_ = document.createElement('button');
-  this.joinButton_.id = UI_CONSTANTS.roomSelectionJoinButton.substring(1);
-
-  this.recentList_ = document.createElement('ul');
-  this.recentList_.id = UI_CONSTANTS.roomSelectionRecentList.substring(1);
-
-  this.targetDiv_.appendChild(this.inputBox_);
-  this.targetDiv_.appendChild(this.inputBoxLabel_);
-  this.targetDiv_.appendChild(this.randomButton_);
-  this.targetDiv_.appendChild(this.joinButton_);
-  this.targetDiv_.appendChild(this.recentList_);
-
-  this.roomSelectionSetupCompletedPromise_ = new Promise(function(resolve) {
-    this.roomSelection_ = new RoomSelection(this.targetDiv_,
-                                            UI_CONSTANTS,
-                                            key,
-                                            function() {
-      resolve();
-    }.bind(this));
-  }.bind(this));
-};
-
-RoomSelectionTest.prototype.tearDown = function() {
-  localStorage.removeItem('testRecentRoomsKey');
-  this.roomSelection_ = null;
-};
-
-RoomSelectionTest.createUIEvent = function(type) {
-  var event = document.createEvent('UIEvent');
-  event.initUIEvent(type, true, true);
-  return event;
-};
-
-RoomSelectionTest.prototype.testInputFilter = function() {
-  var validInputs = [
-    '123123',
-    'asdfs3',
-    'room1',
-    '3254234523452345234523452345asdfasfdasdf'
-  ];
-  var invalidInputs = [
-    '',
-    ' ',
-    'abcd',
-    '123',
-    '[5afasdf',
-    'ñsaer3'
-  ];
-
-  var testInput = function(input, expectedResult) {
-    this.inputBox_.value = input;
-    this.inputBox_.dispatchEvent(RoomSelectionTest.createUIEvent('input'));
-
-    assertEquals('Incorrect result with input: "' + input + '"',
-                 expectedResult,
-                 this.joinButton_.disabled);
-  }.bind(this);
-
-  for (var i = 0; i < validInputs.length; ++i) {
-    testInput(validInputs[i], false);
-  }
-
-  for (i = 0; i < invalidInputs.length; ++i) {
-    testInput(invalidInputs[i], true);
-  }
-};
-
-RoomSelectionTest.prototype.testRandomButton = function() {
-  this.inputBox_.value = '123';
-  this.randomButton_.click();
-  assertMatch(/[0-9]{9}/, this.inputBox_.value);
-};
-
-RoomSelectionTest.prototype.testRecentListHasChildren = function(queue) {
-  queue.call('Step 1: wait for recent rooms list to be completed.',
-      function(callbacks) {
-    var onCompleted = callbacks.add(function() {});
-    this.roomSelectionSetupCompletedPromise_.then(function() {
-      onCompleted();
-    }.bind(this));
-  });
-
-  queue.call('Step 2: validate recent rooms list.', function() {
-    var children = this.recentList_.children;
-    assertEquals('There should be 3 recent links.', 3, children.length);
-    assertEquals('The text of the first should be room4.',
-                 'room1',
-                 children[0].innerText);
-    assertEquals('The first link should have 1 child.',
-                 1,
-                 children[0].children.length);
-    assertMatch('That child should be an href with a link containing room1.', /room1/, children[0].children[0].href);
-  });
-};
-
-RoomSelectionTest.prototype.testJoinButton = function() {
-  this.inputBox_.value = 'targetRoom';
-  var joinedRoom = null;
-  this.roomSelection_.onRoomSelected = function(room) {
-    joinedRoom = room;
+describe('Room selection Test', function() {
+  var createUIEvent = function(type) {
+    var event = new UIEvent(type);
+    return event;
   };
-  this.joinButton_.click();
 
-  assertEquals('targetRoom', joinedRoom);
-};
+  beforeEach(function() {
+    this.key_ = 'testRecentRoomsKey';
+    localStorage.removeItem(this.key_);
+    localStorage.setItem(this.key_, '["room1", "room2", "room3"]');
+    this.fullList_ =
+        '["room4","room5","room6","room7","room8","room9",' +
+        '"room10","room11","room12","room13"]';
+    this.tooManyList_ =
+        '["room1","room2","room3","room4","room5","room6",' +
+        '"room7","room8","room9","room10","room11","room12","room13"]';
+    this.duplicatesList_ =
+        '["room4","room4","room6","room7","room6","room9",' +
+        '"room10","room4","room6","room13"]';
+    this.noDuplicatesList_ =
+        '["room4","room6","room7","room9","room10","room13"]';
+    this.emptyList_ = '[]';
+    this.notAList_ = 'asdasd';
 
-RoomSelectionTest.prototype.testMakeClickHandler = function(queue) {
-  queue.call('Step 1: wait for recent rooms list to be completed.',
-      function(callbacks) {
-    var onCompleted = callbacks.add(function() {});
-    this.roomSelectionSetupCompletedPromise_.then(function() {
-      onCompleted();
+    this.recentlyUsedList_ = new RoomSelection.RecentlyUsedList(this.key_);
+
+    this.targetDiv_ = document.createElement('div');
+    this.targetDiv_.id = UI_CONSTANTS.roomSelectionDiv.substring(1);
+
+    this.inputBox_ = document.createElement('input');
+    this.inputBox_.id = UI_CONSTANTS.roomSelectionInput.substring(1);
+    this.inputBox_.type = 'text';
+
+    this.inputBoxLabel_ = document.createElement('label');
+    this.inputBoxLabel_.id = UI_CONSTANTS.roomSelectionInputLabel.substring(1);
+
+    this.randomButton_ = document.createElement('button');
+    this.randomButton_.id = UI_CONSTANTS.roomSelectionRandomButton.substring(1);
+
+    this.joinButton_ = document.createElement('button');
+    this.joinButton_.id = UI_CONSTANTS.roomSelectionJoinButton.substring(1);
+
+    this.recentList_ = document.createElement('ul');
+    this.recentList_.id = UI_CONSTANTS.roomSelectionRecentList.substring(1);
+
+    this.targetDiv_.appendChild(this.inputBox_);
+    this.targetDiv_.appendChild(this.inputBoxLabel_);
+    this.targetDiv_.appendChild(this.randomButton_);
+    this.targetDiv_.appendChild(this.joinButton_);
+    this.targetDiv_.appendChild(this.recentList_);
+
+    this.roomSelectionSetupCompletedPromise_ = new Promise(function(resolve) {
+      this.roomSelection_ = new RoomSelection(this.targetDiv_, UI_CONSTANTS,
+          this.key_, function() {
+            resolve();
+          }.bind(this));
     }.bind(this));
   });
 
-  queue.call('Step 2: validate that click handler works.', function() {
-    var children = this.recentList_.children;
-    var link = children[0].children[0];
+  afterEach(function() {
+    localStorage.removeItem(this.key_);
+    this.roomSelection_ = null;
+  });
 
+  it('input filter', function() {
+    var validInputs = [
+      '123123',
+      'asdfs3',
+      'room1',
+      '3254234523452345234523452345asdfasfdasdf'
+    ];
+    var invalidInputs = [
+      '',
+      ' ',
+      'abcd',
+      '123',
+      '[5afasdf',
+      'ñsaer3'
+    ];
+
+    var testInput = function(input, expectedResult) {
+      this.inputBox_.value = input;
+      this.inputBox_.dispatchEvent(createUIEvent('input'));
+      expect(this.joinButton_.disabled).toEqual(expectedResult);
+    }.bind(this);
+
+    for (var i = 0; i < validInputs.length; ++i) {
+      testInput(validInputs[i], false);
+    }
+
+    for (i = 0; i < invalidInputs.length; ++i) {
+      testInput(invalidInputs[i], true);
+    }
+  });
+
+  it('random button', function() {
+    this.inputBox_.value = '123';
+    this.randomButton_.click();
+    expect(this.inputBox_.value).toMatch(/[0-9]{9}/);
+  });
+
+  it('recent list has children', function(done) {
+    this.roomSelectionSetupCompletedPromise_.then(function() {
+      var children = this.recentList_.children;
+      expect(children.length).toEqual(3);
+      expect(children[0].innerText).toEqual('room1');
+      expect(children[0].children.length).toEqual(1);
+      expect(children[0].children[0].href).toMatch(/room1/);
+      done();
+    }.bind(this));
+  });
+
+  it('test join button', function() {
+    this.inputBox_.value = 'targetRoom';
     var joinedRoom = null;
     this.roomSelection_.onRoomSelected = function(room) {
       joinedRoom = room;
     };
+    this.joinButton_.click();
 
-    link.dispatchEvent(RoomSelectionTest.createUIEvent('click'));
-
-    assertEquals('room1', joinedRoom);
+    expect(joinedRoom).toEqual('targetRoom');
   });
-};
 
-RoomSelectionTest.prototype.testMatchRandomRoomPattern = function() {
-  var testCases = [
-    'abcdefghi',
-    '1abcdefgh',
-    '1abcdefg1',
-    '12345678',
-    '12345678a',
-    'a12345678',
-    '123456789'
-  ];
-  var expected = [
-    false, false, false, false, false, false, true
-  ];
-  for (var i = 0; i < testCases.length; ++i) {
-    assertEquals(expected[i],
-                 RoomSelection.matchRandomRoomPattern(testCases[i]));
-  }
-};
+  it('make click handler', function(done) {
+    this.roomSelectionSetupCompletedPromise_.then(function() {
+      var children = this.recentList_.children;
+      var link = children[0].children[0];
 
-RoomSelectionTest.prototype.testHitEnterInRoomIdInput = function() {
-  var joinedRoom = null;
-  this.roomSelection_.onRoomSelected = function(room) {
-    joinedRoom = room;
-  };
-  function createEnterKeyUpEvent() {
-    var e = document.createEvent('Event');
-    e.initEvent('keyup');
-    e.keyCode = 13;
-    e.which = 13;
-    return e;
-  }
+      var joinedRoom = null;
+      this.roomSelection_.onRoomSelected = function(room) {
+        joinedRoom = room;
+      };
+      link.dispatchEvent(createUIEvent('click'));
+      expect(joinedRoom).toEqual('room1');
+      done();
+    }.bind(this));
+  });
 
-  // Hitting ENTER when the room name is invalid should do nothing.
-  this.inputBox_.value = '1';
-  this.inputBox_.dispatchEvent(RoomSelectionTest.createUIEvent('input'));
-  this.inputBox_.dispatchEvent(createEnterKeyUpEvent());
-  assertEquals(null, joinedRoom);
+  it('match random room pattern', function() {
+    var testCases = [
+      'abcdefghi',
+      '1abcdefgh',
+      '1abcdefg1',
+      '12345678',
+      '12345678a',
+      'a12345678',
+      '123456789'
+    ];
+    var expected = [
+      false, false, false, false, false, false, true
+    ];
+    for (var i = 0; i < testCases.length; ++i) {
+      expect(RoomSelection.matchRandomRoomPattern(testCases[i]))
+          .toEqual(expected[i]);
+    }
+  });
 
-  // Hitting ENTER when the room name is valid should select the room.
-  this.inputBox_.value = '12345';
-  this.inputBox_.dispatchEvent(RoomSelectionTest.createUIEvent('input'));
-  assertEquals(false, this.joinButton_.disabled);
-  this.inputBox_.dispatchEvent(createEnterKeyUpEvent());
-  assertEquals(this.inputBox_.value, joinedRoom);
+  it('hit enter in room id input', function() {
+    var joinedRoom = null;
+    this.roomSelection_.onRoomSelected = function(room) {
+      joinedRoom = room;
+    };
+    function createEnterKeyUpEvent() {
+      var e = new Event('keyup');
+      e.keyCode = 13;
+      e.which = 13;
+      return e;
+    }
 
-  joinedRoom = null;
-  // Hitting other keys should not select the room.
-  var e = document.createEvent('Event');
-  e.initEvent('keyup');
-  this.inputBox_.dispatchEvent(e);
-  assertEquals(null, joinedRoom);
-};
+    // Hitting ENTER when the room name is invalid should do nothing.
+    this.inputBox_.value = '1';
+    this.inputBox_.dispatchEvent(createUIEvent('input'));
+    this.inputBox_.dispatchEvent(createEnterKeyUpEvent());
+    expect(joinedRoom).toBeNull();
 
-var RecentlyUsedListTest = new AsyncTestCase('RecentlyUsedListTest');
+    // Hitting ENTER when the room name is valid should select the room.
+    this.inputBox_.value = '12345';
+    this.inputBox_.dispatchEvent(createUIEvent('input'));
+    expect(this.joinButton_.disabled).toBeFalsy();
+    this.inputBox_.dispatchEvent(createEnterKeyUpEvent());
+    expect(joinedRoom).toEqual(this.inputBox_.value);
 
-RecentlyUsedListTest.prototype.setUp = function() {
-  this.key_ = 'testRecentRoomsKey';
+    joinedRoom = null;
+    // Hitting other keys should not select the room.
+    var e = new Event('keyup');
+    e.initEvent('keyup', true, true);
+    this.inputBox_.dispatchEvent(e);
+    expect(joinedRoom).toBeNull();
+  });
 
-  this.fullList_ =
-      '["room4","room5","room6","room7","room8","room9",' +
-      '"room10","room11","room12","room13"]';
-  this.tooManyList_ =
-      '["room1","room2","room3","room4","room5","room6",' +
-      '"room7","room8","room9","room10","room11","room12","room13"]';
-  this.duplicatesList_ =
-      '["room4","room4","room6","room7","room6","room9",' +
-      '"room10","room4","room6","room13"]';
-  this.noDuplicatesList_ =
-      '["room4","room6","room7","room9","room10","room13"]';
-  this.emptyList_ = '[]';
-  this.notAList_ = 'asdasd';
-
-  this.recentlyUsedList_ = new RoomSelection.RecentlyUsedList(this.key_);
-};
-
-RecentlyUsedListTest.prototype.tearDown = function() {
-  localStorage.removeItem(this.key_);
-  this.recentlyUsedList_ = null;
-};
-
-RecentlyUsedListTest.prototype.testPushRecentlyUsedRoomDuplicateList =
-    function(queue) {
-  queue.call('Step 1: push new value.', function(callbacks) {
-    var onCompleted = callbacks.add(function() {});
+  it('recently used list', function(done) {
     localStorage.removeItem(this.key_);
     localStorage.setItem(this.key_, this.duplicatesList_);
     this.recentlyUsedList_.pushRecentRoom('newRoom').then(function() {
-      onCompleted();
+      var result = localStorage.getItem(this.key_);
+      expect(result).toEqual(this.noDuplicatesList_.replace('"room4"',
+          '"newRoom","room4"'));
+      done();
     }.bind(this));
   });
-  queue.call('Step 2: verify results.', function() {
-    var result = localStorage.getItem(this.key_);
-    assertEquals(
-        this.noDuplicatesList_
-            .replace('"room4"', '"newRoom","room4"'),
-        result);
-  });
-};
 
-RecentlyUsedListTest.prototype.testPushRecentlyUsedRoomTooManyList =
-    function(queue) {
-  queue.call('Step 1: push new value.', function(callbacks) {
-    var onCompleted = callbacks.add(function() {});
+  it('push recently used room too many list', function(done) {
     localStorage.removeItem(this.key_);
     localStorage.setItem(this.key_, this.tooManyList_);
     this.recentlyUsedList_.pushRecentRoom('newRoom').then(function() {
-      onCompleted();
+      var result = localStorage.getItem(this.key_);
+      expect(result).toEqual(this.tooManyList_
+          .replace(',"room10","room11","room12","room13"', '')
+          .replace('"room1"', '"newRoom","room1"'));
+      done();
     }.bind(this));
   });
-  queue.call('Step 2: verify results.', function() {
-    var result = localStorage.getItem(this.key_);
-    assertEquals(
-        this.tooManyList_
-            .replace(',"room10","room11","room12","room13"', '')
-            .replace('"room1"', '"newRoom","room1"'),
-        result);
-  });
-};
 
-RecentlyUsedListTest.prototype.testPushRecentlyUsedRoomFullList =
-    function(queue) {
-  queue.call('Step 1: push new value.', function(callbacks) {
-    var onCompleted = callbacks.add(function() {});
+  it('push recently used room full list', function(done) {
     localStorage.removeItem(this.key_);
     localStorage.setItem(this.key_, this.fullList_);
     this.recentlyUsedList_.pushRecentRoom('newRoom').then(function() {
-      onCompleted();
+      var result = localStorage.getItem(this.key_);
+      expect(result).toEqual(this.fullList_
+          .replace(',"room13"', '').replace('"room4"', '"newRoom","room4"'));
+      done();
     }.bind(this));
   });
-  queue.call('Step 2: verify results.', function() {
-    var result = localStorage.getItem(this.key_);
-    assertEquals(
-        this.fullList_
-            .replace(',"room13"', '')
-            .replace('"room4"', '"newRoom","room4"'),
-        result);
-  });
-};
 
-RecentlyUsedListTest.prototype.testPushRecentlyUsedRoomNoExisting =
-    function(queue) {
-  queue.call('Step 1: push new value.', function(callbacks) {
-    var onCompleted = callbacks.add(function() {});
+  it('push recently used room no existing', function(done) {
     localStorage.removeItem(this.key_);
-
     this.recentlyUsedList_.pushRecentRoom('newRoom').then(function() {
-      onCompleted();
+      var result = localStorage.getItem(this.key_);
+      expect(result).toEqual('["newRoom"]');
+      done();
     }.bind(this));
   });
-  queue.call('Step 2: verify results.', function() {
-    var result = localStorage.getItem(this.key_);
-    assertEquals('["newRoom"]', result);
-  });
-};
 
-RecentlyUsedListTest.prototype.testPushRecentlyUsedRoomInvalidExisting =
-    function(queue) {
-      queue.call('Step 1: push new value.', function(callbacks) {
-        var onCompleted = callbacks.add(function() {});
-        localStorage.removeItem(this.key_);
-        localStorage.setItem(this.key_, this.notAList_);
-        this.recentlyUsedList_.pushRecentRoom('newRoom').then(function() {
-          onCompleted();
-        }.bind(this));
-      });
-      queue.call('Step 2: verify results.', function() {
-        var result = localStorage.getItem(this.key_);
-        assertEquals('["newRoom"]', result);
-      });
-    };
+  it('push recently used room invalid existing', function(done) {
+    localStorage.removeItem(this.key_);
+    localStorage.setItem(this.key_, this.notAList_);
+    this.recentlyUsedList_.pushRecentRoom('newRoom').then(function() {
+      var result = localStorage.getItem(this.key_);
+      expect(result).toEqual('["newRoom"]');
+      done();
+    }.bind(this));
+  });
+});

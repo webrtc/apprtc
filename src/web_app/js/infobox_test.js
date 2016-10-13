@@ -8,27 +8,24 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals TestCase, assertEquals, InfoBox */
+/* globals describe, it, expect, InfoBox */
 
 'use strict';
 
-var InfoBoxTest = new TestCase('InfoBoxTest');
+describe('Infobox test', function() {
+  it('Format bitrate', function() {
+    expect(InfoBox.formatBitrate_(789)).toEqual('789 bps');
+    expect(InfoBox.formatBitrate_(78912)).toEqual('78.9 kbps');
+    expect(InfoBox.formatBitrate_(7891234)).toEqual('7.89 Mbps');
+  });
 
-InfoBoxTest.prototype.testFormatBitrate = function() {
-  assertEquals('Format bps.', '789 bps', InfoBox.formatBitrate_(789));
-  assertEquals('Format kbps.', '78.9 kbps', InfoBox.formatBitrate_(78912));
-  assertEquals('Format Mbps.', '7.89 Mbps', InfoBox.formatBitrate_(7891234));
-};
-
-InfoBoxTest.prototype.testFormatInterval = function() {
-  assertEquals('Format 00:01', '00:01', InfoBox.formatInterval_(1999));
-  assertEquals('Format 00:12', '00:12', InfoBox.formatInterval_(12500));
-  assertEquals('Format 01:23', '01:23', InfoBox.formatInterval_(83123));
-  assertEquals('Format 12:34', '12:34', InfoBox.formatInterval_(754000));
-  assertEquals('Format 01:23:45', '01:23:45',
-      InfoBox.formatInterval_(5025000));
-  assertEquals('Format 12:34:56', '12:34:56',
-      InfoBox.formatInterval_(45296000));
-  assertEquals('Format 123:45:43', '123:45:43',
-      InfoBox.formatInterval_(445543000));
-};
+  it('Format interval', function() {
+    expect(InfoBox.formatInterval_(1999)).toEqual('00:01');
+    expect(InfoBox.formatInterval_(12500)).toEqual('00:12');
+    expect(InfoBox.formatInterval_(83123)).toEqual('01:23');
+    expect(InfoBox.formatInterval_(754000)).toEqual('12:34');
+    expect(InfoBox.formatInterval_(5025000)).toEqual('01:23:45');
+    expect(InfoBox.formatInterval_(45296000)).toEqual('12:34:56');
+    expect(InfoBox.formatInterval_(445543000)).toEqual('123:45:43');
+  });
+});
