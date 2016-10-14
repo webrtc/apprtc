@@ -356,6 +356,24 @@ Call.prototype.maybeGetMedia_ = function() {
     var mediaConstraints = this.params_.mediaConstraints;
 
     mediaPromise = navigator.mediaDevices.getUserMedia(mediaConstraints)
+    .catch(function(error) {
+      if (error.name !== 'NotFoundError') {
+        throw error;
+      }
+      return navigator.mediaDevices.enumerateDevices().then(function(devices) {
+        var cam = devices.find(function(device) {
+          return device.kind === 'videoinput';
+        });
+        var mic = devices.find(function(device) {
+          return device.kind === 'audioinput';
+        });
+        var constraints = {
+          video: cam && mediaConstraints.video,
+          audio: mic && mediaConstraints.audio
+        };
+        return navigator.mediaDevices.getUserMedia(constraints);
+      });
+    })
     .then(function(stream) {
       trace('Got access to local media with mediaConstraints:\n' +
           '  \'' + JSON.stringify(mediaConstraints) + '\'');
