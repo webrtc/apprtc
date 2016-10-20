@@ -133,8 +133,13 @@ TURN_SERVER_OVERRIDE = [
 ```
 7\. **(Only consider this if you skipped step 5 and 6)** AppRTC by default uses an ICE server provider to get TURN servers. Previously we used a [compute engine on demand service](https://github.com/juberti/computeengineondemand) (it created TURN server instances on demand in a region near the connecting users and stored them in shared memory) and web server with a REST API described in [draft-uberti-rtcweb-turn-rest-00](http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00). This has now been replaced with a Google service. It's similar from an AppRTC perspective but with a different [response format](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77). You would have to setup this yourself or hard code your TURN servers in step 6.
 
-8\. Now build AppRTC using `grunt build` and then start it using dev appserver provided by GAE
+8\. **(Running locally using the dev server (dev/testing purposes))** Build AppRTC using `grunt build` and then start it using dev appserver provided by GAE
 `pathToGAESDK/dev_appserver.py  out/app_engine/`.
 
-9\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` (`http://localhost:8080?wstls=false` if you have TLS disabled on Collider)
+9\. **(Running on Google App Engine (Production))**
+* Make sure you have a [Google cloud account and Google app engine enabled](https://cloud.google.com/appengine/docs/python/quickstart).
+* [Download the Google cloud SDK and initialize it](https://cloud.google.com/appengine/docs/python/tools/uploadinganapp).
+* Deploy your AppRTC app by executing the following the AppRTC checkout root directory `gcloud app deploy --project [YOUR_PROJECT_ID] -v [YOUR_VERSION_ID]` (You can find the [YOUR_PROJECT_ID] and [YOUR_VERSION_ID] in your Google cloud console).
+
+10\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` or `https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the URL if you have TLS disabled on Collider for dev/testing purposes).
 
