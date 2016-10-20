@@ -29,7 +29,6 @@ A websocket-based signaling server in Go.
 
         go install collidermain
 
-
 ## Running
 
     $GOPATH/bin/collidermain -port=8089 -tls=true
@@ -38,3 +37,49 @@ A websocket-based signaling server in Go.
 
     go test collider
 
+## Deployment
+
+Change [roomSrv](https://github.com/webrtc/apprtc/blob/master/src/collider/collidermain/main.go#L16) to your AppRTC server instance e.g.
+
+```go
+var roomSrv = flag.String("room-server", "https://your.apprtc.server", "The origin of the room server")
+```
+
+Then repeat step 6 in the Building section and then start it on your server by following the Running instructions.
+
+### Certificates
+If you are deploying this in production, you should use certificates so that you can use secure websockets. Place the `cert.pem` and `key.pem` files in `/cert/`. E.g. `/cert/cert.pem` and `/cert/key.pem`
+
+### Auto restart
+1\. Add a `/collider/start.sh` file:
+
+```bash
+/usr/local/bin/node /node/send_restart_alert.js $(hostname) 2>>/collider/collider.log
+/collider/collidermain 2>> /collider/collider.log
+```
+
+2\. Make it executable by running `chmod 744 start.sh`.
+
+3\. Add the following line to `/etc/inittab` to allow automatic restart of the Collider process:
+```bash
+coll:2:respawn:/collider/start.sh
+```
+4\. Run `init q` to apply the inittab change without rebooting.
+
+#### Rotating Logs
+To enable rotation of the `/collider/collider.log` file add the following contents to the `/etc/logrotate.d/collider` file:
+
+```
+/collider/collider.log {
+    daily
+    compress
+    copytruncate
+    dateext
+    missingok
+    notifempty
+    rotate 10
+    sharedscripts
+}
+```
+
+The log is rotated daily and removed after 10 days. Archived logs are in `/collider`.
