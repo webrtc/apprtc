@@ -37,6 +37,8 @@ var PeerConnectionClient = function(params, startTime) {
   // Create an RTCPeerConnection via the polyfill (adapter.js).
   this.pc_ = new RTCPeerConnection(
       params.peerConnectionConfig, params.peerConnectionConstraints);
+
+  this.setupDataChannel();
   this.pc_.onicecandidate = this.onIceCandidate_.bind(this);
   this.pc_.ontrack = this.onRemoteStreamAdded_.bind(this);
   this.pc_.onremovestream = trace.bind(null, 'Remote stream removed.');
@@ -69,6 +71,41 @@ PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_ = {
   offerToReceiveAudio: 1,
   offerToReceiveVideo: 1,
   voiceActivityDetection: false
+};
+
+PeerConnectionClient.prototype.setupDataChannel = function() {
+  if (!this.pc_) {
+    return;
+  }
+
+  this.pc_.ondatachannel = function(event) {
+    console.log("Remote peer receive Data notification label " + event.label);
+    event.channel.onmessage = function (event) {
+      console.log("Remote peer got Data Channel Message:", event.data);
+    }.bind(this);
+    event.channel.onopen = function (event) {
+      console.log("Remote peer data channel Open:", event.data);
+      this.dataChannel_.send("HELLO FROM " + this.params_.isInitiator);
+    }.bind(this);
+    event.channel.onclose = function (event) {
+      console.log("Remote peer data channel close:", event.data);
+    }.bind(this);
+    event.channel.onerror = function (error) {
+      console.log("Data Channel Error:", error);
+    }.bind(this);
+  }.bind(this);
+
+  var dataChannelOptions = {
+    ordered: true,
+  };
+  this.dataChannel_ = this.pc_.createDataChannel("sendData", dataChannelOptions);
+};
+
+PeerConnectionClient.prototype.sendData = function(data) {
+  if (!this.pc_) {
+    return;
+  }
+  this.dataChannel_.send(data);
 };
 
 PeerConnectionClient.prototype.addStream = function(stream) {
@@ -154,6 +191,11 @@ PeerConnectionClient.prototype.receiveSignalingMessage = function(message) {
 PeerConnectionClient.prototype.close = function() {
   if (!this.pc_) {
     return;
+  }
+
+  if (this.dataChannel_) {
+    this.dataChannel_.close();
+    this.dataChannel_ = null;
   }
 
   this.sendCallstatsEvents('fabricTerminated');

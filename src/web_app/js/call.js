@@ -587,3 +587,7 @@ Call.prototype.onError_ = function(message) {
     this.onerror(message);
   }
 };
+
+Call.prototype.sendData = function(message) {
+  this.pcClient_.sendData(message);
+};
