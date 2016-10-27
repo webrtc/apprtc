@@ -79,26 +79,27 @@ PeerConnectionClient.prototype.setupDataChannel = function() {
   }
 
   this.pc_.ondatachannel = function(event) {
-    console.log("Remote peer receive Data notification label " + event.label);
-    event.channel.onmessage = function (event) {
-      console.log("Remote peer got Data Channel Message:", event.data);
+    console.log('Remote peer receive Data notification label ' + event.label);
+    event.channel.onmessage = function(event) {
+      console.log('Remote peer got Data Channel Message:', event.data);
     }.bind(this);
-    event.channel.onopen = function (event) {
-      console.log("Remote peer data channel Open:", event.data);
-      this.dataChannel_.send("HELLO FROM " + this.params_.isInitiator);
+    event.channel.onopen = function(event) {
+      console.log('Remote peer data channel Open:', event.data);
+      this.dataChannel_.send('HELLO FROM ' + this.params_.isInitiator);
     }.bind(this);
-    event.channel.onclose = function (event) {
-      console.log("Remote peer data channel close:", event.data);
+    event.channel.onclose = function(event) {
+      console.log('Remote peer data channel close:', event.data);
     }.bind(this);
-    event.channel.onerror = function (error) {
-      console.log("Data Channel Error:", error);
+    event.channel.onerror = function(error) {
+      console.log('Data Channel Error:', error);
     }.bind(this);
   }.bind(this);
 
   var dataChannelOptions = {
     ordered: true,
   };
-  this.dataChannel_ = this.pc_.createDataChannel("sendData", dataChannelOptions);
+  this.dataChannel_ = this.pc_.createDataChannel('sendData',
+      dataChannelOptions);
 };
 
 PeerConnectionClient.prototype.sendData = function(data) {
