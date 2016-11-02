@@ -14,17 +14,17 @@
 'use strict';
 
 describe('Sdp utils test', function() {
-  var SDP_WITH_AUDIO_CODECS =
-    ['v=0',
-     'm=audio 9 RTP/SAVPF 111 103 104 0 9',
-     'a=rtcp-mux',
-     'a=rtpmap:111 opus/48000/2',
-     'a=fmtp:111 minptime=10',
-     'a=rtpmap:103 ISAC/16000',
-     'a=rtpmap:9 G722/8000',
-     'a=rtpmap:0 PCMU/8000',
-     'a=rtpmap:8 PCMA/8000',
-    ].join('\r\n');
+  var SDP_WITH_AUDIO_CODECS = [
+    'v=0',
+    'm=audio 9 RTP/SAVPF 111 103 104 0 9',
+    'a=rtcp-mux',
+    'a=rtpmap:111 opus/48000/2',
+    'a=fmtp:111 minptime=10',
+    'a=rtpmap:103 ISAC/16000',
+    'a=rtpmap:9 G722/8000',
+    'a=rtpmap:0 PCMU/8000',
+    'a=rtpmap:8 PCMA/8000',
+  ].join('\r\n');
 
   it('moves Isac 16K to default when preferred', function() {
     var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
