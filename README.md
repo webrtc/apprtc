@@ -106,40 +106,62 @@ bq mk -t prod.analytics bigquery/analytics_schema.json
 ```
 
 ### Deployment
-Instructions were performed on Ubuntu 14.04 using Python 2.7.9 and Go 1.6.3.
+Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 
-1. Clone the AppRTC repository on the machine you want to host it on (git clone <this repo URL>)
+1. Clone the AppRTC repository
 2. Do all the steps in the [Collider instructions](https://github.com/webrtc/apprtc/blob/master/src/collider/README.md) then continue on step 3.
-3. **(Only do this if you are using Google Cloud Engine VM's for Collider, otherwise go to step 4)** Open [src/app_engine/constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L60-L68) and change `WSS_INSTANCE_HOST_KEY WSS_`, `WSS_INSTANCE_NAME_KEY` and `WSS_INSTANCE_ZONE_KEY` to corresponding values for your VM instances in the Google Cloud Engine console.
-4. Open [src/app_engine/constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py) and change `WSS_INSTANCE_HOST_KEY` to the hostname and port Collider is listening too, e.g. when running locally: `localhost:8089` or `otherHost:443`.
-5. Install and start a Coturn TURN server according to the [instructions](https://github.com/coturn/coturn/wiki/CoturnConfig) on the project page.
-6. Open [src/app_engine/constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L23-L40) and comment out [TURN_SERVER_OVERRIDE = []](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L23) and then uncomment [TURN_SERVER_OVERRIDE = [...]](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py#L26-L40) three lines below and fill your TURN server details, e.g.
-```python
-TURN_SERVER_OVERRIDE = [
-  {
-    "urls": [
-      "turn:hostnameForYourTurnServer:19305?transport=udp",
-      "turn:hostnameForYourTurnServer:19305?transport=tcp"
-    ],
-    "username": "TurnServerUsername",
-    "credential": "TurnServerCredentials"
-  },
-  {
-    "urls": [
-      "stun:hostnameForYourStunServer:19302"
+3. Install and start a Coturn TURN server according to the [instructions](https://github.com/coturn/coturn/wiki/CoturnConfig) on the project page.
+4. Open [src/app_engine/constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py) and do the following:
+
+#### Collider
+ * **If using Google Cloud Engine VM's for Collider**
+    * Change `WSS_INSTANCE_HOST_KEY WSS_`, `WSS_INSTANCE_NAME_KEY` and `WSS_INSTANCE_ZONE_KEY` to corresponding values for your VM instances which can be found in the Google Cloud Engine management console.
+ * **Else if using other VM hosting solution**
+    *  Change `WSS_INSTANCE_HOST_KEY` to the hostname and port Collider is listening too, e.g. `localhost:8089` or `otherHost:443`.
+
+#### TURN/STUN
+ * **If using TURN and STUN servers directly**
+    * Comment out `TURN_SERVER_OVERRIDE = []` and then uncomment `TURN_SERVER_OVERRIDE = [ { "urls":...]` three lines below and fill your TURN server details, e.g.
+
+    ```python
+    TURN_SERVER_OVERRIDE = [
+      {
+        "urls": [
+          "turn:hostnameForYourTurnServer:19305?transport=udp",
+          "turn:hostnameForYourTurnServer:19305?transport=tcp"
+        ],
+        "username": "TurnServerUsername",
+        "credential": "TurnServerCredentials"
+      },
+      {
+        "urls": [
+          "stun:hostnameForYourStunServer:19302"
+        ]
+      }
     ]
-  }
-]
-```
-7\. **(Only consider this if you skipped step 5 and 6)** AppRTC by default uses an ICE server provider to get TURN servers. Previously we used a [compute engine on demand service](https://github.com/juberti/computeengineondemand) (it created TURN server instances on demand in a region near the connecting users and stored them in shared memory) and web server with a REST API described in [draft-uberti-rtcweb-turn-rest-00](http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00). This has now been replaced with a Google service. It's similar from an AppRTC perspective but with a different [response format](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77). You would have to setup this yourself or hard code your TURN servers in step 6.
+    ```
 
-8\. **(Running locally using the dev server (dev/testing purposes))** Build AppRTC using `grunt build` and then start it using dev appserver provided by GAE
-`pathToGAESDK/dev_appserver.py  out/app_engine/`.
+* **Else if using ICE Server provider [1]**
+  * Change `ICE_SERVER_BASE_URL` to your ICE server provider host.
+  * Change `ICE_SERVER_URL_TEMPLATE` to a path or empty string depending if your ICE server provider has a specific URL path or not.
+  * Change `ICE_SERVER_API_KEY` to an API key or empty string depending if your ICE server provider requires an API key to access it or not.
 
-9\. **(Running on Google App Engine (Production))**
-* Make sure you have a [Google cloud account and Google app engine enabled](https://cloud.google.com/appengine/docs/python/quickstart).
-* [Download the Google cloud SDK and initialize it](https://cloud.google.com/appengine/docs/python/tools/uploadinganapp).
-* Deploy your AppRTC app by executing the following the AppRTC checkout root directory `gcloud app deploy --project [YOUR_PROJECT_ID] -v [YOUR_VERSION_ID]` (You can find the [YOUR_PROJECT_ID] and [YOUR_VERSION_ID] in your Google cloud console).
+  ```python
+  ICE_SERVER_BASE_URL = 'https://networktraversal.googleapis.com'
+  ICE_SERVER_URL_TEMPLATE = '%s/v1alpha/iceconfig?key=%s'
+  ICE_SERVER_API_KEY = os.environ.get('ICE_SERVER_API_KEY')
+  ```
+
+8\. Build AppRTC using `grunt build` then deploy/run:
+* **If Running locally using the appengine dev server (dev/testing purposes)**
+    * Start it using dev appserver provided by the Google app engine SDK `pathToGAESDK/dev_appserver.py  out/app_engine/`.
+
+* **Else if running on Google App Engine in the cloud (Production)**
+  * Make sure you have a [Google cloud account and Google app engine enabled](https://cloud.google.com/appengine/docs/python/quickstart).
+  * [Download the Google cloud SDK and initialize it](https://cloud.google.com/appengine/docs/python/tools/uploadinganapp).
+  * Deploy your AppRTC app by executing the following in the out/app_engine directory `gcloud app deploy --project [YOUR_PROJECT_ID] -v [YOUR_VERSION_ID]` (You can find the [YOUR_PROJECT_ID] and [YOUR_VERSION_ID] in your Google cloud console).
 
 10\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` or `https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the URL if you have TLS disabled on Collider for dev/testing purposes).
 
+[1] ICE Server provider
+AppRTC by default uses an ICE server provider to get TURN servers. Previously we used a [compute engine on demand service](https://github.com/juberti/computeengineondemand) (it created TURN server instances on demand in a region near the connecting users and stored them in shared memory) and web server with a REST API described in [draft-uberti-rtcweb-turn-rest-00](http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00). This has now been replaced with a Google service. It's similar from an AppRTC perspective but with a different [response format](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77).

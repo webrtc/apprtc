@@ -38,6 +38,7 @@ A websocket-based signaling server in Go.
     go test collider
 
 ## Deployment
+These instructions assume you are using Debian 7/8 and Go 1.6.3.
 
 Change [roomSrv](https://github.com/webrtc/apprtc/blob/master/src/collider/collidermain/main.go#L16) to your AppRTC server instance e.g.
 
