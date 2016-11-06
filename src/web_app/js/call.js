@@ -548,6 +548,11 @@ Call.prototype.joinRoom_ = function() {
         // selection state.
         // When room is full, responseObj.result === 'FULL'
         reject(Error('Registration error: ' + responseObj.result));
+        if (responseObj.result === 'FULL') {
+          var getPath = this.roomServer_ + '/r/' +
+              this.params_.roomId + window.location.search;
+          window.location.assign(getPath);
+        }
         return;
       }
       trace('Joined the room.');
