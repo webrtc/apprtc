@@ -40,13 +40,19 @@ A websocket-based signaling server in Go.
 ## Deployment
 These instructions assume you are using Debian 7/8 and Go 1.6.3.
 
-Change [roomSrv](https://github.com/webrtc/apprtc/blob/master/src/collider/collidermain/main.go#L16) to your AppRTC server instance e.g.
+1. Change [roomSrv](https://github.com/webrtc/apprtc/blob/master/src/collider/collidermain/main.go#L16) to your AppRTC server instance e.g.
 
 ```go
 var roomSrv = flag.String("room-server", "https://your.apprtc.server", "The origin of the room server")
 ```
 
-Then repeat step 6 in the Building section and then start it on your server by following the Running instructions.
+2. Then repeat step 6 in the Building section.
+
+### Install Collider
+1. Login on the machine that is going to run Collider.
+2. Create a Collider directory, this guide assumes it's created in the root (`/collider`).
+3. Create a certificate directory, this guide assumes it's created in the root (`/cert`).
+4. Copy `$GOPATH/bin/collidermain ` from your development machine to the `/collider` directory on your Collider machine.
 
 ### Certificates
 If you are deploying this in production, you should use certificates so that you can use secure websockets. Place the `cert.pem` and `key.pem` files in `/cert/`. E.g. `/cert/cert.pem` and `/cert/key.pem`
@@ -61,7 +67,7 @@ If you are deploying this in production, you should use certificates so that you
 
 2\. Make it executable by running `chmod 744 start.sh`.
 
-3\. Add the following line to `/etc/inittab` to allow automatic restart of the Collider process:
+3\. Add the following line to `/etc/inittab` to allow automatic restart of the Collider process (make sure to either add `coll` as an user or replace it below with the user that should run collider):
 ```bash
 coll:2:respawn:/collider/start.sh
 ```
