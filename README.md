@@ -153,15 +153,15 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
   ```
 
 8\. Build AppRTC using `grunt build` then deploy/run:
-* **If Running locally using the appengine dev server (dev/testing purposes)**
+* **If running locally using the Google App Engine dev server (dev/testing purposes)**
     * Start it using dev appserver provided by the Google app engine SDK `pathToGAESDK/dev_appserver.py  out/app_engine/`.
 
-* **Else if running on Google App Engine in the cloud (Production)**
-  * Make sure you have a [Google cloud account and Google app engine enabled](https://cloud.google.com/appengine/docs/python/quickstart).
-  * [Download the Google cloud SDK and initialize it](https://cloud.google.com/appengine/docs/python/tools/uploadinganapp).
+* **Else if running on Google App Engine in the Google Cloud (production)**
+  * Make sure you have a [Google Cloud Account and Google App Engine enabled](https://cloud.google.com/appengine/docs/python/quickstart).
+  * [Download the Google Cloud SDK and initialize it](https://cloud.google.com/appengine/docs/python/tools/uploadinganapp).
   * Deploy your AppRTC app by executing the following in the out/app_engine directory `gcloud app deploy --project [YOUR_PROJECT_ID] -v [YOUR_VERSION_ID]` (You can find the [YOUR_PROJECT_ID] and [YOUR_VERSION_ID] in your Google cloud console).
 
-10\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` or `https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the URL if you have TLS disabled on Collider for dev/testing purposes).
+9\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` or `https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the URL if you have TLS disabled on Collider for dev/testing purposes).
 
 [1] ICE Server provider
 AppRTC by default uses an ICE server provider to get TURN servers. Previously we used a [compute engine on demand service](https://github.com/juberti/computeengineondemand) (it created TURN server instances on demand in a region near the connecting users and stored them in shared memory) and web server with a REST API described in [draft-uberti-rtcweb-turn-rest-00](http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00). This has now been replaced with a Google service. It's similar from an AppRTC perspective but with a different [response format](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77).
