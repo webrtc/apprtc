@@ -43,6 +43,14 @@ var PeerConnectionClient = function(params, startTime) {
   this.pc_.onsignalingstatechange = this.onSignalingStateChanged_.bind(this);
   this.pc_.oniceconnectionstatechange =
       this.onIceConnectionStateChanged_.bind(this);
+  window.dispatchEvent(new CustomEvent('pccreated', {
+    detail: {
+      pc: this,
+      time: new Date(),
+      userId: this.params_.roomId + (this.isInitiator_ ? '-0' : '-1'),
+      sessionId: this.params_.roomId
+    }
+  }));
 
   this.hasRemoteSdp_ = false;
   this.messageQueue_ = [];
@@ -158,6 +166,12 @@ PeerConnectionClient.prototype.close = function() {
 
   this.sendCallstatsEvents('fabricTerminated');
   this.pc_.close();
+  window.dispatchEvent(new CustomEvent('pcclosed', {
+    detail: {
+      pc: this,
+      time: new Date(),
+    }
+  }));
   this.pc_ = null;
   this.callstatsInit = false;
 };

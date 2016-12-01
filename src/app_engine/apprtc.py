@@ -16,6 +16,7 @@ import threading
 
 import jinja2
 import webapp2
+from google.appengine.api import app_identity
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
@@ -262,6 +263,13 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   else:
     include_loopback_js = ''
 
+  include_rtstats_js = ''
+  if os.environ.get('WITH_RTSTATS') is not None or \
+    (os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/') and \
+     app_identity.get_application_id() == 'apprtc'):
+    include_rtstats_js = \
+        '<script src="/js/rtstats.js"></script><script src="/pako/pako.min.js"></script>'
+
   # TODO(tkchin): We want to provide a ICE request url on the initial get,
   # but we don't provide client_id until a join. For now just generate
   # a random id, but we should make this better.
@@ -303,6 +311,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'ice_server_url': ice_server_url,
     'ice_server_transports': ice_server_transports,
     'include_loopback_js' : include_loopback_js,
+    'include_rtstats_js' : include_rtstats_js,
     'wss_url': wss_url,
     'wss_post_url': wss_post_url,
     'bypass_join_confirmation': json.dumps(bypass_join_confirmation),

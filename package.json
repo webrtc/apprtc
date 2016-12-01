@@ -32,5 +32,8 @@
     "socket.io-client": "^1.2.0",
     "webrtc-adapter": "^2.0.0",
     "travis-multirunner": "^3.0.0"
+  },
+  "dependencies": {
+    "pako": "^1.0.3"
   }
 }
