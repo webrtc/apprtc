@@ -60,6 +60,13 @@ def build_version_info_file(dest_path):
     print str(e)
 
 
+# Copy pako zlib from node_modules to third_party/pako
+def copyPako(dest_path):
+  dest_js_path = os.path.join(dest_path, 'third_party', 'pako')
+  os.makedirs(dest_js_path)
+  shutil.copy('node_modules/pako/dist/pako.min.js', dest_js_path)
+
+
 # Download callstats, copy dependencies from node_modules for serving as
 # static content on GAE.
 def downloadCallstats():
@@ -133,13 +140,13 @@ def CopyApprtcSource(src_path, dest_path):
           shutil.copy(os.path.join(dirpath, name), dest_path)
     elif dirpath.endswith('js'):
       for name in files:
-        # loopback.js is not compiled by Closure and needs to be copied
-        # separately.
-        if name == 'loopback.js':
+        # loopback.js and rtstats.js are not compiled by Closure
+        # and need to be copied separately.
+        if name in ['loopback.js', 'rtstats.js']:
           dest_js_path = os.path.join(dest_path, 'js')
-          os.makedirs(dest_js_path)
+          if not os.path.exists(dest_js_path):
+              os.makedirs(dest_js_path)
           shutil.copy(os.path.join(dirpath, name), dest_js_path)
-          break
 
   build_version_info_file(os.path.join(dest_path, 'version_info.json'))
 
@@ -154,6 +161,7 @@ def main():
 
   src_path, dest_path = args[0:2]
   CopyApprtcSource(src_path, dest_path)
+  copyPako(dest_path)
   downloadCallstats()
   if options.include_tests:
     app_engine_code = os.path.join(src_path, 'app_engine')
