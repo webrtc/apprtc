@@ -8,26 +8,16 @@ import urllib2
 import zipfile
 
 
-
 GAE_DOWNLOAD_URL = 'https://storage.googleapis.com/appengine-sdks/featured/'
-GAE_UPDATECHECK_URL = 'https://appengine.google.com/api/updatecheck'
 TEMP_DIR = 'temp/'
 
 def _GetLatestAppEngineSdkVersion():
-  response = urllib2.urlopen(GAE_UPDATECHECK_URL)
-  response_text = response.read()
-
-  match = re.search('(\d*\.\d*\.\d*)', response_text)
-  if not match:
-    raise Exception('Could not determine latest GAE SDK version from '
-                    'response %s.' % response_text)
-  gae_sdk_version = match.group(1)
-  if gae_sdk_version == '1.9.15':
-    # TODO(phoglund): remove when updatecheck returns the right thing.
-    gae_sdk_version = '1.9.17'
-  if gae_sdk_version == '1.9.19':
-    # TODO(phoglund): remove when updatecheck returns the right thing.
-    gae_sdk_version = '1.9.21'
+  # Since https://appengine.google.com/api/updatecheck has started returning
+  # version 0.0.0 we will hard code the version instead. Historically its been
+  # really flaky returning incorrect versions but now it's unusable. This is
+  # most likely due to migrating to the new gcloud sdk.
+  # TODO: Update to use the gcloud sdk.
+  gae_sdk_version = '1.9.49'
   return gae_sdk_version
 
 
@@ -63,7 +53,7 @@ def DownloadAppEngineSdkIfNecessary():
     print 'Already has %s, skipping' % gae_sdk_file
     return
 
-  _Download(GAE_DOWNLOAD_URL + gae_sdk_file, TEMP_DIR+ gae_sdk_file)
+  _Download(GAE_DOWNLOAD_URL + gae_sdk_file, TEMP_DIR + gae_sdk_file)
   _Unzip(TEMP_DIR + gae_sdk_file, TEMP_DIR)
 
 

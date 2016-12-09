@@ -263,8 +263,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   else:
     include_loopback_js = ''
 
-  include_rtstats_js = ''
-  if os.environ.get('WITH_RTSTATS') is not None or \
+  if str(os.environ.get('WITH_RTSTATS')) != 'none' or \
     (os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/') and \
      app_identity.get_application_id() == 'apprtc'):
     include_rtstats_js = \
