@@ -4,9 +4,9 @@ import os
 import pip
 import re
 import sys
-import urllib2
+import urllib3
+import urllib3.contrib.pyopenssl
 import zipfile
-
 
 GAE_DOWNLOAD_URL = 'https://storage.googleapis.com/appengine-sdks/featured/'
 TEMP_DIR = 'temp/'
@@ -23,7 +23,7 @@ def _GetLatestAppEngineSdkVersion():
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  response = urllib2.urlopen(url)
+  response = urllib3.urlopen(url)
   with open(to, 'w') as to_file:
     to_file.write(response.read())
 
@@ -58,6 +58,13 @@ def DownloadAppEngineSdkIfNecessary():
 
 
 def main():
+  # Workaround for using SSL with SNI extensions on older python 2.x versions.
+  # Must do this due to the python version used on Google AppEngine.
+  Install('urllib3[secure]')
+  Install('pyopenssl')
+  Install('ndg-httpsclient')
+  urllib3.contrib.pyopenssl.inject_into_urllib3()
+
   Install('requests')
   Install('WebTest')
   DownloadAppEngineSdkIfNecessary()
