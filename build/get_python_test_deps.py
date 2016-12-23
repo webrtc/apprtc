@@ -43,7 +43,7 @@ def _Unzip(path, dir):
 def Install(package):
   try:
     print 'Installing python package using pip: ' + package
-    pip.main(['install', '--user' , package])
+    pip.main(['install', '--user', '--verbose', package])
   except OSError as e:
     print 'Could not install %s due to : %s' % (package, e)
 
