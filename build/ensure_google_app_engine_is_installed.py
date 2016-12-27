@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 import os
-import pip
-import re
 import sys
-import urllib2
 import zipfile
+import urllib3
+import certifi
+import urllib3.contrib.pyopenssl
 
 
 GAE_DOWNLOAD_URL = 'https://storage.googleapis.com/appengine-sdks/featured/'
@@ -39,15 +39,6 @@ def _Unzip(path, dir):
   with zipfile.ZipFile(path) as zip_file:
     zip_file.extractall(dir)
 
-
-def Install(package):
-  try:
-    print 'Installing python package using pip: ' + package
-    pip.main(['install', '--user', '--verbose', package])
-  except OSError as e:
-    print 'Could not install %s due to : %s' % (package, e)
-
-
 def DownloadAppEngineSdkIfNecessary():
   gae_sdk_version = _GetLatestAppEngineSdkVersion()
   gae_sdk_file = 'google_appengine_%s.zip' % gae_sdk_version
@@ -62,25 +53,10 @@ def DownloadAppEngineSdkIfNecessary():
   _Unzip(TEMP_DIR + gae_sdk_file, TEMP_DIR)
 
 
-# Workaround for using SSL with SNI extensions on older python 2.x versions.
-# Must do this due to the python version used on Google AppEngine.
-def fixPython2SslIssue():
-  Install('urllib3[secure]')
-  Install('certifi')
-  global urllib3
-  import urllib3
-  global certifi
-  import certifi
-  urllib3.contrib.pyopenssl.inject_into_urllib3()
-
-
 def main():
-  # Make sure this is before install and download requests.
-  fixPython2SslIssue()
-  Install('requests')
-  Install('WebTest')
   DownloadAppEngineSdkIfNecessary()
 
 
 if __name__ == '__main__':
+  urllib3.contrib.pyopenssl.inject_into_urllib3()
   sys.exit(main())
