@@ -5,6 +5,7 @@ import sys
 import zipfile
 import urllib3
 import urllib3.contrib.pyopenssl
+import certifi
 
 
 GAE_DOWNLOAD_URL = 'https://storage.googleapis.com/appengine-sdks/featured/'
@@ -22,7 +23,10 @@ def _GetLatestAppEngineSdkVersion():
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  http = urllib3.PoolManager()
+  http = urllib3.PoolManager(
+      cert_reqs='CERT_REQUIRED',
+      ca_certs=certifi.where()
+  )
   response = http.request('GET', url, preload_content=False)
   with open(to, 'w') as to_file:
     for chunk in response.stream(1024):
