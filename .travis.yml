@@ -26,3 +26,10 @@ before_script:
 
 script:
   - grunt --verbose
+
+notifications:
+  email:
+    recipients:
+      webrtc-github@webrtc.org
+    on_success: always
+    on_failure: always
