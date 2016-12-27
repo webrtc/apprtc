@@ -4,7 +4,6 @@ import os
 import sys
 import zipfile
 import urllib3
-import certifi
 import urllib3.contrib.pyopenssl
 
 
@@ -23,9 +22,7 @@ def _GetLatestAppEngineSdkVersion():
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  http = urllib3.PoolManager(
-      cert_reqs='CERT_REQUIRED',
-      ca_certs=certifi.where())
+  http = urllib3.PoolManager()
   response = http.request('GET', url, preload_content=False)
   with open(to, 'w') as to_file:
     for chunk in response.stream(1024):
