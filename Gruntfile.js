@@ -45,8 +45,11 @@ module.exports = function(grunt) {
     },
 
     shell: {
-      getPythonTestDeps: {
-        command: 'python build/get_python_test_deps.py'
+      pipInstall : {
+        command: 'pip install --user --requirement requirements.txt'
+      },
+      ensureGoogleAppEngineIsInstalled: {
+        command: 'python build/ensure_google_app_engine_is_installed.py'
       },
       runPythonTests: {
         command: ['python', 'build/run_python_tests.py',
@@ -171,7 +174,8 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['runLinting', 'runPythonTests', 'build',
                                  'runUnitTests']);
   grunt.registerTask('runLinting', ['csslint', 'htmlhint', 'eslint']);
-  grunt.registerTask('runPythonTests', ['shell:getPythonTestDeps',
+  grunt.registerTask('runPythonTests', ['shell:pipInstall',
+                                        'shell:ensureGoogleAppEngineIsInstalled',
                                         'shell:buildAppEnginePackageWithTests',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
