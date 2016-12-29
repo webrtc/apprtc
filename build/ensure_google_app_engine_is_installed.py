@@ -23,6 +23,8 @@ def _GetLatestAppEngineSdkVersion():
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
+  # Using certifi.old_where() because old versions of OpenSSL sometimes fails
+  # to validate certificate chains that use the strong roots [certifi.where()].
   http = urllib3.PoolManager(
       cert_reqs='CERT_REQUIRED',
       ca_certs=certifi.old_where()
@@ -59,5 +61,7 @@ def main():
 
 
 if __name__ == '__main__':
+  # Workaround for using SSL with SNI extensions on older python 2.x versions.
+  # Must do this due to the python version used on Google AppEngine.
   urllib3.contrib.pyopenssl.inject_into_urllib3()
   sys.exit(main())
