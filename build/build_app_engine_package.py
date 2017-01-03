@@ -103,13 +103,13 @@ def downloadCallstats():
 
   # Verify that files in |deps| has been copied else fail build.
   for dirpath, unused_dirnames, files in os.walk(path):
-    for subdir in deps:
-      if os.path.isfile(os.path.join(path, deps[subdir])):
-        print 'File found %s' % deps[subdir]
+    for file_name in deps.values():
+      file_path = os.path.join(path, file_name)
+      if os.path.isfile(file_path):
+        print 'File found %s' % file_name
       else:
-        raise NameError('Could not find: %s' + ', please try \
-            "npm update/install."' \
-            % os.path.join('node_modules', dirpath, deps[dirpath]))
+        raise NameError("Could not find: %s please try npm update/install."
+                        % file_path)
 
 
 def CopyApprtcSource(src_path, dest_path):
