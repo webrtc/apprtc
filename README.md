@@ -8,45 +8,17 @@ Detailed information on developing in the [webrtc](https://github.com/webrtc) gi
 
 The development AppRTC server can be accessed by visiting [http://localhost:8080](http://localhost:8080).
 
-Running AppRTC locally requires the [Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python) and [Grunt](http://gruntjs.com/).
+Running AppRTC locally requires [Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python),
+[Node.js](https://nodejs.org) and [Grunt](http://gruntjs.com/).
 
-Detailed instructions for running on Ubuntu Linux are provided below.
+Follow the instructions on [Node.js website](https://nodejs.org)
+and on [Grunt website](http://gruntjs.com/) to install them.
 
-### Running on Ubuntu Linux
+When Node.js and Grunt are available you can install the required dependencies
+running `npm install` from the project root folder.
 
-Install grunt by first installing [npm](https://www.npmjs.com/). npm is
-distributed as part of nodejs.
-
-```
-sudo apt-get install nodejs
-sudo npm install -g npm
-```
-
-On Ubuntu 14.04 the default packages installs `/usr/bin/nodejs` but the `/usr/bin/node` executable is required for grunt. This is installed on some Ubuntu package sets; if it is missing, you can add this by installing the `nodejs-legacy` package,
-
-```
-sudo apt-get install nodejs-legacy
-```
-
-It is easiest to install a shared version of `grunt-cli` from `npm` using the `-g` flag. This will allow you access the `grunt` command from `/usr/local/bin`. More information can be found on [`gruntjs` Getting Started](http://gruntjs.com/getting-started).
-
-```
-sudo npm -g install grunt-cli
-```
-
-*Omitting the `-g` flag will install `grunt-cli` to the current directory under the `node_modules` directory.*
-
-Finally, you will want to install grunt and required grunt dependencies. *This can be done from any directory under your checkout of the [webrtc/apprtc](https://github.com/webrtc/apprtc) repository.*
-
-```
-npm install
-```
-
-Before you start the AppRTC dev server and *everytime you update the source code you need to recompile the App Engine package by running,
-
-```
-grunt build
-```
+Before you start the AppRTC dev server and everytime you update the source code
+you need to recompile the App Engine package by running `grunt build`.
 
 Start the AppRTC dev server from the `out/app_engine` directory by running the Google App Engine SDK dev server,
 
@@ -55,9 +27,9 @@ Start the AppRTC dev server from the `out/app_engine` directory by running the G
 ```
 Then navigate to http://localhost:8080 in your browser (given it's on the same machine).
 
-### Testing
+## Testing
 
-All tests by running `grunt`.
+You can run all tests by running `grunt`.
 
 To run only the Python tests you can call,
 
@@ -65,47 +37,7 @@ To run only the Python tests you can call,
 grunt runPythonTests
 ```
 
-### Enabling Local Logging
-
-*Note that logging is automatically enabled when running on Google App Engine using an implicit service account.*
-
-By default, logging to a BigQuery from the development server is disabled. Log information is presented on the console. Unless you are modifying the analytics API you will not need to enable remote logging.
-
-Logging to BigQuery when running LOCALLY requires a `secrets.json` containing Service Account credentials to a Google Developer project where BigQuery is enabled. DO NOT COMMIT `secrets.json` TO THE REPOSITORY.
-
-To generate a `secrets.json` file in the Google Developers Console for your project:
-1. Go to the project page.
-1. Under *APIs & auth* select *Credentials*.
-1. Confirm a *Service Account* already exists or create it by selecting *Create new Client ID*.
-1. Select *Generate new JSON key* from the *Service Account* area to create and download JSON credentials.
-1. Rename the downloaded file to `secrets.json` and place in the directory containing `analytics.py`.
-
-When the `Analytics` class detects that AppRTC is running locally, all data is logged to `analytics` table in the `dev` dataset. You can bootstrap the `dev` dataset by following the instructions in the [Bootstrapping/Updating BigQuery](#bootstrappingupdating-bigquery).
-
-## BigQuery
-
-When running on App Engine the `Analytics` class will log to `analytics` table in the `prod` dataset for whatever project is defined in `app.yaml`.
-
-### Schema
-
-`bigquery/analytics_schema.json` contains the fields used in the BigQuery table. New fields can be added to the schema and the table updated. However, fields *cannot* be renamed or removed. *Caution should be taken when updating the production table as reverting schema updates is difficult.*
-
-Update the BigQuery table from the schema by running,
-
-```
-bq update -t prod.analytics bigquery/analytics_schema.json
-```
-
-### Bootstrapping
-
-Initialize the required BigQuery datasets and tables with the following,
-
-```
-bq mk prod
-bq mk -t prod.analytics bigquery/analytics_schema.json
-```
-
-### Deployment
+## Deployment
 Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 
 1. Clone the AppRTC repository
@@ -113,13 +45,13 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 3. Install and start a Coturn TURN server according to the [instructions](https://github.com/coturn/coturn/wiki/CoturnConfig) on the project page.
 4. Open [src/app_engine/constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py) and do the following:
 
-#### Collider
+### Collider
  * **If using Google Cloud Engine VM's for Collider**
     * Change `WSS_INSTANCE_HOST_KEY WSS_`, `WSS_INSTANCE_NAME_KEY` and `WSS_INSTANCE_ZONE_KEY` to corresponding values for your VM instances which can be found in the Google Cloud Engine management console.
  * **Else if using other VM hosting solution**
     *  Change `WSS_INSTANCE_HOST_KEY` to the hostname and port Collider is listening too, e.g. `localhost:8089` or `otherHost:443`.
 
-#### TURN/STUN
+### TURN/STUN
  * **If using TURN and STUN servers directly**
     * Comment out `TURN_SERVER_OVERRIDE = []` and then uncomment `TURN_SERVER_OVERRIDE = [ { "urls":...]` three lines below and fill your TURN server details, e.g.
 
@@ -161,7 +93,52 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
   * [Download the Google Cloud SDK and initialize it](https://cloud.google.com/appengine/docs/python/tools/uploadinganapp).
   * Deploy your AppRTC app by executing the following in the out/app_engine directory `gcloud app deploy --project [YOUR_PROJECT_ID] -v [YOUR_VERSION_ID]` (You can find the [YOUR_PROJECT_ID] and [YOUR_VERSION_ID] in your Google cloud console).
 
-9\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` or `https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the URL if you have TLS disabled on Collider for dev/testing purposes).
+9\. Open a WebRTC enabled browser and navigate to `http://localhost:8080` or
+`https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the
+URL if you have TLS disabled on Collider for dev/testing purposes).
+
+## Advanced Topics
+### Enabling Local Logging
+
+*Note that logging is automatically enabled when running on Google App Engine using an implicit service account.*
+
+By default, logging to a BigQuery from the development server is disabled. Log information is presented on the console. Unless you are modifying the analytics API you will not need to enable remote logging.
+
+Logging to BigQuery when running LOCALLY requires a `secrets.json` containing Service Account credentials to a Google Developer project where BigQuery is enabled. DO NOT COMMIT `secrets.json` TO THE REPOSITORY.
+
+To generate a `secrets.json` file in the Google Developers Console for your
+project:
+
+1. Go to the project page.
+2. Under *APIs & auth* select *Credentials*.
+3. Confirm a *Service Account* already exists or create it by selecting *Create new Client ID*.
+4. Select *Generate new JSON key* from the *Service Account* area to create and download JSON credentials.
+5. Rename the downloaded file to `secrets.json` and place in the directory containing `analytics.py`.
+
+When the `Analytics` class detects that AppRTC is running locally, all data is logged to `analytics` table in the `dev` dataset. You can bootstrap the `dev` dataset by following the instructions in the [Bootstrapping/Updating BigQuery](#bootstrappingupdating-bigquery).
+
+### BigQuery
+
+When running on App Engine the `Analytics` class will log to `analytics` table in the `prod` dataset for whatever project is defined in `app.yaml`.
+
+#### Schema
+
+`bigquery/analytics_schema.json` contains the fields used in the BigQuery table. New fields can be added to the schema and the table updated. However, fields *cannot* be renamed or removed. *Caution should be taken when updating the production table as reverting schema updates is difficult.*
+
+Update the BigQuery table from the schema by running,
+
+```
+bq update -t prod.analytics bigquery/analytics_schema.json
+```
+
+#### Bootstrapping
+
+Initialize the required BigQuery datasets and tables with the following,
+
+```
+bq mk prod
+bq mk -t prod.analytics bigquery/analytics_schema.json
+```
 
 [1] ICE Server provider
 AppRTC by default uses an ICE server provider to get TURN servers. Previously we used a [compute engine on demand service](https://github.com/juberti/computeengineondemand) (it created TURN server instances on demand in a region near the connecting users and stored them in shared memory) and web server with a REST API described in [draft-uberti-rtcweb-turn-rest-00](http://tools.ietf.org/html/draft-uberti-rtcweb-turn-rest-00). This has now been replaced with a Google service. It's similar from an AppRTC perspective but with a different [response format](https://github.com/webrtc/apprtc/blob/master/src/web_app/js/util.js#L77).
