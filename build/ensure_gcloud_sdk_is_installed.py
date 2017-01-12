@@ -8,7 +8,13 @@ import certifi
 import tarfile
 import subprocess
 
-# TODO(mbonadei): check if it is possible to use a /latest version URL
+# We are downloading a specific version of the Gcloud SDK because we have not
+# found a URL to fetch the "latest" version.
+# The installation updates the SDK so there is no need to update the downloaded
+# version too often.
+# If it is needed to update the downloaded version please refer to:
+# https://cloud.google.com/sdk/downloads#versioned
+
 GCLOUD_DOWNLOAD_URL = 'https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/'
 GCLOUD_SDK_FILE = 'google-cloud-sdk-138.0.0-linux-x86_64.tar.gz'
 GCLOUD_SDK_INSTALL_FOLDER = 'google-cloud-sdk'
@@ -41,6 +47,8 @@ def _EnsureAppEngineIsInstalled(path_to_gcloud_sdk):
   gcloud_exec = os.path.join(path_to_gcloud_sdk, 'bin', 'gcloud')
   subprocess.call([gcloud_exec, '--quiet',
                    'components', 'install', 'app-engine-python'])
+  subprocess.call([gcloud_exec, '--quiet',
+                   'components', 'update'])
 
 
 def _Cleanup(file_paths_to_remove):
