@@ -86,7 +86,7 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 
 8\. Build AppRTC using `grunt build` then deploy/run:
 * **If running locally using the Google App Engine dev server (dev/testing purposes)**
-    * Start it using dev appserver provided by the Google app engine SDK `pathToGAESDK/dev_appserver.py  out/app_engine/`.
+    * Start it using dev appserver provided by the Google app engine SDK `pathToGcloudSDK/platform/google_appengine/dev_appserver.py  out/app_engine/`.
 
 * **Else if running on Google App Engine in the Google Cloud (production)**
   * Make sure you have a [Google Cloud Account and Google App Engine enabled](https://cloud.google.com/appengine/docs/python/quickstart).

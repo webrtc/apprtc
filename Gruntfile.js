@@ -2,6 +2,7 @@
 
 /* globals module */
 var out_app_engine_dir = 'out/app_engine';
+var app_engine_path = 'temp/google-cloud-sdk/platform/google_appengine'
 
 module.exports = function(grunt) {
   // configure project
@@ -48,12 +49,12 @@ module.exports = function(grunt) {
       pipInstall : {
         command: 'pip install --user --requirement requirements.txt'
       },
-      ensureGoogleAppEngineIsInstalled: {
-        command: 'python build/ensure_google_app_engine_is_installed.py'
+      ensureGcloudSDKIsInstalled: {
+        command: 'python build/ensure_gcloud_sdk_is_installed.py'
       },
       runPythonTests: {
         command: ['python', 'build/run_python_tests.py',
-                  'temp/google_appengine/', out_app_engine_dir].join(' ')
+                  app_engine_path, out_app_engine_dir].join(' ')
       },
       buildAppEnginePackage: {
         command: ['python', './build/build_app_engine_package.py', 'src',
@@ -175,7 +176,7 @@ module.exports = function(grunt) {
                                  'runUnitTests']);
   grunt.registerTask('runLinting', ['csslint', 'htmlhint', 'eslint']);
   grunt.registerTask('runPythonTests', ['shell:pipInstall',
-                                        'shell:ensureGoogleAppEngineIsInstalled',
+                                        'shell:ensureGcloudSDKIsInstalled',
                                         'shell:buildAppEnginePackageWithTests',
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
