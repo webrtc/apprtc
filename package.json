@@ -30,7 +30,7 @@
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
     "socket.io-client": "^1.2.0",
-    "webrtc-adapter": "^2.0.0",
+    "webrtc-adapter": "^3.0.0",
     "travis-multirunner": "^3.0.0"
   },
   "dependencies": {
