@@ -43,9 +43,9 @@ function extractStat(stats, statObj, statName) {
 // |statName| (if specified), and value |statVal| (if specified). Return
 // undef if not present.
 function getStatsReport(stats, statObj, statName, statVal) {
+  var result = null;
   if (stats) {
-    for (var stat in stats) {
-      var report = stats[stat];
+    stats.forEach(function(report, stat) {
       if (report.type === statObj) {
         var found = true;
         // If |statName| is present, ensure |report| has that stat.
@@ -55,11 +55,12 @@ function getStatsReport(stats, statObj, statName, statVal) {
           found = (statVal !== undefined) ? (val === statVal) : val;
         }
         if (found) {
-          return report;
+          result = report;
         }
       }
-    }
+    });
   }
+  return result;
 }
 
 // Takes two stats reports and determines the rate based on two counter readings
