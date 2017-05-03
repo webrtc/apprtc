@@ -279,7 +279,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     ice_server_url = constants.ICE_SERVER_URL_TEMPLATE % \
         (ice_server_base_url, constants.ICE_SERVER_API_KEY)
   else:
-    ice_server_base_url = ''
+    ice_server_url = ''
 
   # TODO(jansson): Remove this once CEOD is deprecated.
   turn_url = constants.TURN_URL_TEMPLATE % \
