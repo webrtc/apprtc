@@ -320,7 +320,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   }
 
   if room_id is not None:
-    room_link = request.host_url + '/r/' + room_id
+    room_link = "//"+request.host + '/r/' + room_id
     room_link = append_url_arguments(request, room_link)
     params['room_id'] = room_id
     params['room_link'] = room_link
