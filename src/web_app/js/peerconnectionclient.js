@@ -365,6 +365,11 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
 
 // Return false if the candidate should be dropped, true if not.
 PeerConnectionClient.prototype.filterIceCandidate_ = function(candidateObj) {
+  // Not a properly formatted or a null candidate object.
+  if (typeof candidateObj !== 'object' || !candidateObj.candidate) {
+    return false;
+  }
+
   var candidateStr = candidateObj.candidate;
 
   // Always eat TCP candidates. Not needed in this context.

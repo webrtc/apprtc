@@ -6,6 +6,7 @@ browser*
 firefox*
 node_modules
 out
+rtstats.js
 secrets.json
 temp/*
 validation-report.json
