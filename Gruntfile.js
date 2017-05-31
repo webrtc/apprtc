@@ -18,15 +18,13 @@ module.exports = function(grunt) {
         options: {
           import: 2
         },
-        src: ['src/**/*.css'
-        ]
+        src: ['src/**/*.css']
       },
       lax: {
         options: {
           import: false
         },
-        src: ['src/**/*.css'
-        ]
+        src: ['src/**/*.css']
       }
     },
 
@@ -42,7 +40,7 @@ module.exports = function(grunt) {
       options: {
         configFile: 'build/.eslintrc'
       },
-      target: ['src/**/*.js', '!src/**/enums.js', '!src/**/adapter.js' ]
+      target: ['src/**/*.js']
     },
 
     shell: {
@@ -132,8 +130,6 @@ module.exports = function(grunt) {
           'out/app_engine/js/apprtc.debug.js': [
             'node_modules/webrtc-adapter/out/adapter.js',
             'src/web_app/js/analytics.js',
-            'src/web_app/js/enums.js',
-            'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',
             'src/web_app/js/call.js',
             'src/web_app/js/constants.js',
