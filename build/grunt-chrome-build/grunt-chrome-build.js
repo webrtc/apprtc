@@ -3,7 +3,7 @@
 module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-compress');
-  grunt.loadNpmTasks('grunt-jinja');
+  grunt.loadNpmTasks('grunt-jinja-new-grunt');
 
   grunt.registerMultiTask('grunt-chrome-build', 'Build packaged Chrome app from sources.', function () {
     grunt.log.writeln('Chrome packaged app build.');
@@ -26,8 +26,10 @@ module.exports = function (grunt) {
     // 3. Copy sources to build dir.
     grunt.log.writeln('Copying resources to buildDir: ' + buildDir);
     this.files.forEach(function (f) {
+      grunt.log.writeln(typeof f.src);
+      grunt.log.writeln(f.dest);
       grunt.log.writeln(f.src + '-->' + f.dest);
-      grunt.file.copy(f.src, f.dest);
+      grunt.file.copy(f.src.toString(), f.dest.toString());
     });
 
     grunt.option('grunt-chrome-build-options', options);
