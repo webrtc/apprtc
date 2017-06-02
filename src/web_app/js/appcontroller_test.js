@@ -83,7 +83,9 @@ describe('AppControllerTest', function() {
   it('Hide UI after clicking the join button', function() {
     // Verifies that the UI is hidden after clicking the button.
     $(UI_CONSTANTS.confirmJoinButton).click();
-    expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
+    $(UI_CONSTANTS.confirmJoinButton).addEventListener('click', function() {
+      expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
         .toBeTruthy();
+    });
   });
 });
