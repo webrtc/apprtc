@@ -51,8 +51,7 @@ describe('AppControllerTest', function() {
     document.body.insertBefore(mainElem, document.body.firstChild);
     for (var key in UI_CONSTANTS) {
       var elem;
-      console.log(key);
-      if (key === 'confirmJoinButton') {
+      if (key.toLowerCase().includes('button')) {
         elem = document.createElement('button');
       } else {
         elem = document.createElement('div');
