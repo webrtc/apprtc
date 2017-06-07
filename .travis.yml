@@ -1,9 +1,16 @@
-sudo: false
+dist: trusty
 language: node_js
 node_js:
-  - 4.1
+  - 6
+
+addons:
+  apt:
+    packages:
+      - pulseaudio
 
 env:
+  global:
+    - DISPLAY=:99.0
   matrix:
     - BROWSER=chrome  BVER=stable
     - BROWSER=chrome  BVER=beta
@@ -21,8 +28,8 @@ before_install:
 
 before_script:
   - npm install
-  - export DISPLAY=:99.0
   - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/cucumber_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1600x1200x16
+  - pulseaudio --start
 
 script:
   - grunt --verbose

@@ -50,7 +50,12 @@ describe('AppControllerTest', function() {
     mainElem = document.createElement('div');
     document.body.insertBefore(mainElem, document.body.firstChild);
     for (var key in UI_CONSTANTS) {
-      var elem = document.createElement('div');
+      var elem;
+      if (key.toLowerCase().includes('button')) {
+        elem = document.createElement('button');
+      } else {
+        elem = document.createElement('div');
+      }
       elem.id = UI_CONSTANTS[key].substr(1);
       mainElem.appendChild(elem);
     }
@@ -80,10 +85,19 @@ describe('AppControllerTest', function() {
         .toBeFalsy();
   });
 
-  it('Hide UI after clicking the join button', function() {
+  it('Hide UI after clicking the join button', function(done) {
     // Verifies that the UI is hidden after clicking the button.
-    $(UI_CONSTANTS.confirmJoinButton).click();
-    expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
-        .toBeTruthy();
+    // There seems to be a delay for the beforeEach() to update the DOM tree,
+    // need to wait a few seconds before clicking the button as it calls upon
+    // a method that adds a 'hidden' class to an element which we then try to
+    // find.
+    setTimeout(function() {
+      $(UI_CONSTANTS.confirmJoinButton).addEventListener('click', function() {
+        expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
+          .toBeTruthy();
+        done();
+      });
+      $(UI_CONSTANTS.confirmJoinButton).click();
+    }, 2000);
   });
 });

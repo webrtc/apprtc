@@ -167,7 +167,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-htmlhint');
   grunt.loadNpmTasks('grunt-shell');
-  grunt.loadNpmTasks('grunt-closurecompiler');
+  grunt.loadNpmTasks('grunt-closurecompiler-new-grunt');
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadTasks('build/grunt-chrome-build');
 
