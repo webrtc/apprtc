@@ -87,7 +87,10 @@ describe('AppControllerTest', function() {
 
   it('Hide UI after clicking the join button', function(done) {
     // Verifies that the UI is hidden after clicking the button.
-    // Need to wait a few seconds for the element to update it's class list.
+    // There seems to be a delay for the beforeEach() to update the DOM tree,
+    // need to wait a few seconds before clicking the button as it calls upon
+    // a method that adds a 'hidden' class to an element which we then try to
+    // find.
     setTimeout(function() {
       $(UI_CONSTANTS.confirmJoinButton).addEventListener('click', function() {
         expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
