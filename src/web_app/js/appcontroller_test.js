@@ -50,7 +50,13 @@ describe('AppControllerTest', function() {
     mainElem = document.createElement('div');
     document.body.insertBefore(mainElem, document.body.firstChild);
     for (var key in UI_CONSTANTS) {
-      var elem = document.createElement('div');
+      var elem;
+      console.log(key);
+      if (key === 'confirmJoinButton') {
+        elem = document.createElement('button');
+      } else {
+        elem = document.createElement('div');
+      }
       elem.id = UI_CONSTANTS[key].substr(1);
       mainElem.appendChild(elem);
     }
@@ -80,12 +86,16 @@ describe('AppControllerTest', function() {
         .toBeFalsy();
   });
 
-  it('Hide UI after clicking the join button', function() {
+  it('Hide UI after clicking the join button', function(done) {
     // Verifies that the UI is hidden after clicking the button.
-    $(UI_CONSTANTS.confirmJoinButton).click();
-    $(UI_CONSTANTS.confirmJoinButton).addEventListener('click', function() {
-      expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
-        .toBeTruthy();
-    });
+    // Need to wait a few seconds for the element to update it's class list.
+    setTimeout(function() {
+      $(UI_CONSTANTS.confirmJoinButton).addEventListener('click', function() {
+        expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
+          .toBeTruthy();
+        done();
+      });
+      $(UI_CONSTANTS.confirmJoinButton).click();
+    }, 2000);
   });
 });
