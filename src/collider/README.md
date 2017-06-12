@@ -61,17 +61,39 @@ If you are deploying this in production, you should use certificates so that you
 1\. Add a `/collider/start.sh` file:
 
 ```bash
-/usr/local/bin/node /node/send_restart_alert.js $(hostname) 2>>/collider/collider.log
+#!/bin/sh -
 /collider/collidermain 2>> /collider/collider.log
 ```
 
 2\. Make it executable by running `chmod 744 start.sh`.
+
+#### If using inittab otherwise jump to step 5:
 
 3\. Add the following line to `/etc/inittab` to allow automatic restart of the Collider process (make sure to either add `coll` as an user or replace it below with the user that should run collider):
 ```bash
 coll:2:respawn:/collider/start.sh
 ```
 4\. Run `init q` to apply the inittab change without rebooting.
+
+#### If using systemd:
+
+5\. Create a service by doing `sudo nano /lib/systemd/system/collider.service` and adding the following:
+
+```
+[Unit]
+Description=AppRTC signalling server (Collider)
+ 
+[Service]
+ExecStart=/collider/start.sh
+StandardOutput=null
+ 
+[Install]
+WantedBy=multi-user.target
+Alias=collider.service
+```
+6\. Enable the service: `sudo systemctl enable collider.service`
+7\. Verify it's up and running: `sudo systemctl status collider.service`
+
 
 #### Rotating Logs
 To enable rotation of the `/collider/collider.log` file add the following contents to the `/etc/logrotate.d/collider` file:
