@@ -29,7 +29,7 @@ def is_prober_enabled():
 def send_alert_email(tag, message):
   """Send an alert email to apprtc-alert@google.com."""
   receiver = 'apprtc-alert@google.com'
-  sender_address = 'AppRTC Notification <jiayl@google.com>'
+  sender_address = 'AppRTC Notification <apprtc@webrtc.org>'
   subject = 'AppRTC Prober Alert: ' + tag
   body = """
   AppRTC Prober detected an error:
