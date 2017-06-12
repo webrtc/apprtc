@@ -92,6 +92,7 @@ WantedBy=multi-user.target
 Alias=collider.service
 ```
 6\. Enable the service: `sudo systemctl enable collider.service`
+
 7\. Verify it's up and running: `sudo systemctl status collider.service`
 
 
