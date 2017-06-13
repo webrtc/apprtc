@@ -147,9 +147,7 @@ AppController.prototype.createCall_ = function() {
   this.hide_(privacyLinks);
   this.call_ = new Call(this.loadingParams_);
   this.infoBox_ = new InfoBox($(UI_CONSTANTS.infoDiv),
-                              this.remoteVideo_,
-                              this.call_,
-                              this.loadingParams_.versionInfo);
+      this.remoteVideo_, this.call_, this.loadingParams_.versionInfo);
 
   var roomErrors = this.loadingParams_.errorMessages;
   var roomWarnings = this.loadingParams_.warningMessages;
@@ -275,7 +273,7 @@ AppController.prototype.onRemoteSdpSet_ = function(hasRemoteVideo) {
 AppController.prototype.waitForRemoteVideo_ = function() {
   // Wait for the actual video to start arriving before moving to the active
   // call state.
-  if (this.remoteVideo_.readyState >= 2) {  // i.e. can play
+  if (this.remoteVideo_.readyState >= 2) { // i.e. can play
     trace('Remote video started; currentTime: ' +
           this.remoteVideo_.currentTime);
     this.transitionToActive_();
@@ -436,9 +434,8 @@ AppController.prototype.onKeyPress_ = function(event) {
 
 AppController.prototype.pushCallNavigation_ = function(roomId, roomLink) {
   if (!isChromeApp()) {
-    window.history.pushState({'roomId': roomId, 'roomLink': roomLink},
-                             roomId,
-                             roomLink);
+    window.history.pushState({'roomId': roomId, 'roomLink': roomLink}, roomId,
+        roomLink);
   }
 };
 

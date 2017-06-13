@@ -14,7 +14,7 @@
 'use strict';
 
 var RoomSelection = function(roomSelectionDiv,
-    uiConstants, recentRoomsKey, setupCompletedCallback) {
+  uiConstants, recentRoomsKey, setupCompletedCallback) {
   this.roomSelectionDiv_ = roomSelectionDiv;
 
   this.setupCompletedCallback_ = setupCompletedCallback;

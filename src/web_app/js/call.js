@@ -190,7 +190,7 @@ Call.prototype.hangup = function(async) {
     var promise = Promise.resolve();
     for (var i = 0; i < steps.length; ++i) {
       promise = promise.then(steps[i].step).catch(
-        errorHandler.bind(this, steps[i].errorString));
+          errorHandler.bind(this, steps[i].errorString));
     }
 
     return promise;
@@ -353,33 +353,34 @@ Call.prototype.maybeGetMedia_ = function() {
     var mediaConstraints = this.params_.mediaConstraints;
 
     mediaPromise = navigator.mediaDevices.getUserMedia(mediaConstraints)
-    .catch(function(error) {
-      if (error.name !== 'NotFoundError') {
-        throw error;
-      }
-      return navigator.mediaDevices.enumerateDevices().then(function(devices) {
-        var cam = devices.find(function(device) {
-          return device.kind === 'videoinput';
-        });
-        var mic = devices.find(function(device) {
-          return device.kind === 'audioinput';
-        });
-        var constraints = {
-          video: cam && mediaConstraints.video,
-          audio: mic && mediaConstraints.audio
-        };
-        return navigator.mediaDevices.getUserMedia(constraints);
-      });
-    })
-    .then(function(stream) {
-      trace('Got access to local media with mediaConstraints:\n' +
+        .catch(function(error) {
+          if (error.name !== 'NotFoundError') {
+            throw error;
+          }
+          return navigator.mediaDevices.enumerateDevices()
+              .then(function(devices) {
+                var cam = devices.find(function(device) {
+                  return device.kind === 'videoinput';
+                });
+                var mic = devices.find(function(device) {
+                  return device.kind === 'audioinput';
+                });
+                var constraints = {
+                  video: cam && mediaConstraints.video,
+                  audio: mic && mediaConstraints.audio
+                };
+                return navigator.mediaDevices.getUserMedia(constraints);
+              });
+        })
+        .then(function(stream) {
+          trace('Got access to local media with mediaConstraints:\n' +
           '  \'' + JSON.stringify(mediaConstraints) + '\'');
 
-      this.onUserMediaSuccess_(stream);
-    }.bind(this)).catch(function(error) {
-      this.onError_('Error getting user media: ' + error.message);
-      this.onUserMediaError_(error);
-    }.bind(this));
+          this.onUserMediaSuccess_(stream);
+        }.bind(this)).catch(function(error) {
+          this.onError_('Error getting user media: ' + error.message);
+          this.onUserMediaError_(error);
+        }.bind(this));
   } else {
     mediaPromise = Promise.resolve();
   }
@@ -399,11 +400,11 @@ Call.prototype.maybeGetIceServers_ = function() {
     var requestUrl = this.params_.iceServerRequestUrl;
     iceServerPromise =
         requestIceServers(requestUrl, this.params_.iceServerTransports).then(
-        function(iceServers) {
-          var servers = this.params_.peerConnectionConfig.iceServers;
-          this.params_.peerConnectionConfig.iceServers =
+            function(iceServers) {
+              var servers = this.params_.peerConnectionConfig.iceServers;
+              this.params_.peerConnectionConfig.iceServers =
               servers.concat(iceServers);
-        }.bind(this)).catch(function(error) {
+            }.bind(this)).catch(function(error) {
           if (this.onstatusmessage) {
             // Error retrieving ICE servers.
             var subject =
@@ -454,7 +455,7 @@ Call.prototype.onUserMediaError_ = function(error) {
 Call.prototype.maybeReportGetUserMediaErrors_ = function() {
   if (this.errorMessageQueue_.length > 0) {
     for (var errorMsg = 0;
-        errorMsg < this.errorMessageQueue_.length; errorMsg++) {
+      errorMsg < this.errorMessageQueue_.length; errorMsg++) {
       this.pcClient_.reportErrorToCallstats('getUserMedia',
           this.errorMessageQueue_[errorMsg]);
     }
@@ -471,16 +472,16 @@ Call.prototype.maybeCreatePcClientAsync_ = function() {
     if (typeof RTCPeerConnection.generateCertificate === 'function') {
       var certParams = {name: 'ECDSA', namedCurve: 'P-256'};
       RTCPeerConnection.generateCertificate(certParams)
-      .then(function(cert) {
-        trace('ECDSA certificate generated successfully.');
-        this.params_.peerConnectionConfig.certificates = [cert];
-        this.createPcClient_();
-        resolve();
-      }.bind(this))
-      .catch(function(error) {
-        trace('ECDSA certificate generation failed.');
-        reject(error);
-      });
+          .then(function(cert) {
+            trace('ECDSA certificate generated successfully.');
+            this.params_.peerConnectionConfig.certificates = [cert];
+            this.createPcClient_();
+            resolve();
+          }.bind(this))
+          .catch(function(error) {
+            trace('ECDSA certificate generation failed.');
+            reject(error);
+          });
     } else {
       this.createPcClient_();
       resolve();
@@ -510,22 +511,22 @@ Call.prototype.startSignaling_ = function() {
   this.startTime = window.performance.now();
 
   this.maybeCreatePcClientAsync_()
-  .then(function() {
-    if (this.localStream_) {
-      trace('Adding local stream.');
-      this.pcClient_.addStream(this.localStream_);
-    }
-    if (this.params_.isInitiator) {
-      this.pcClient_.startAsCaller(this.params_.offerOptions);
-    } else {
-      this.pcClient_.startAsCallee(this.params_.messages);
-    }
-    this.maybeReportGetUserMediaErrors_();
-  }.bind(this))
-  .catch(function(e) {
-    this.onError_('Create PeerConnection exception: ' + e);
-    alert('Cannot create RTCPeerConnection: ' + e.message);
-  }.bind(this));
+      .then(function() {
+        if (this.localStream_) {
+          trace('Adding local stream.');
+          this.pcClient_.addStream(this.localStream_);
+        }
+        if (this.params_.isInitiator) {
+          this.pcClient_.startAsCaller(this.params_.offerOptions);
+        } else {
+          this.pcClient_.startAsCallee(this.params_.messages);
+        }
+        this.maybeReportGetUserMediaErrors_();
+      }.bind(this))
+      .catch(function(e) {
+        this.onError_('Create PeerConnection exception: ' + e);
+        alert('Cannot create RTCPeerConnection: ' + e.message);
+      }.bind(this));
 };
 
 // Join the room and returns room parameters.
@@ -566,7 +567,7 @@ Call.prototype.joinRoom_ = function() {
 
 Call.prototype.onRecvSignalingChannelMessage_ = function(msg) {
   this.maybeCreatePcClientAsync_()
-  .then(this.pcClient_.receiveSignalingMessage(msg));
+      .then(this.pcClient_.receiveSignalingMessage(msg));
 };
 
 Call.prototype.sendSignalingMessage_ = function(message) {
