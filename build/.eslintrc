@@ -11,7 +11,12 @@
         "indent": [
             2,
             2,
-            { "SwitchCase": 1, "VariableDeclarator": 1 }
+            {
+                "SwitchCase": 1,
+                "VariableDeclarator": 2,
+                "MemberExpression": 2,
+                "CallExpression": {"arguments": 2}
+            }
         ],
         "key-spacing": [2, {"beforeColon": false, "afterColon": true}],
         "max-len": [2, 80, 2, {"ignoreUrls": true}],

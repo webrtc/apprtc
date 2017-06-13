@@ -14,7 +14,7 @@ Function.prototype.bind = Function.prototype.bind || function(thisp) {
   var suppliedArgs = Array.prototype.slice.call(arguments, 1);
   return function() {
     return fn.apply(thisp,
-                    suppliedArgs.concat(Array.prototype.slice.call(arguments)));
+        suppliedArgs.concat(Array.prototype.slice.call(arguments)));
   };
 };
 
