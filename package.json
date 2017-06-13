@@ -12,8 +12,6 @@
     "test": "grunt"
   },
   "devDependencies": {
-    "eslint": "^4.0.0",
-    "eslint-config-google": "^0.8.0",
     "eslint-config-webrtc": ">=1.0.0",
     "grunt": ">=1.0.0",
     "grunt-cli": ">=0.1.9",
