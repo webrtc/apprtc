@@ -89,7 +89,7 @@ InfoBox.prototype.refreshStats_ = function() {
 };
 
 InfoBox.prototype.updateInfoDiv = function() {
-  var contents = '<pre id=\"info-box-stats\" style=\"line-height: initial\">';
+  var contents = '<pre id="info-box-stats" style="line-height: initial">';
 
   if (this.stats_) {
     var states = this.call_.getPeerConnectionStates();

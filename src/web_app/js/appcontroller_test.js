@@ -66,9 +66,9 @@ describe('AppControllerTest', function() {
     // Needed due to a race where the textContent node is not updated in the div
     //  before testing it.
     $(UI_CONSTANTS.confirmJoinRoomSpan)
-      .addEventListener('DOMSubtreeModified', function() {
-        done();
-      });
+        .addEventListener('DOMSubtreeModified', function() {
+          done();
+        });
   });
 
   afterEach(function() {
@@ -94,7 +94,7 @@ describe('AppControllerTest', function() {
     setTimeout(function() {
       $(UI_CONSTANTS.confirmJoinButton).addEventListener('click', function() {
         expect($(UI_CONSTANTS.confirmJoinDiv).classList.contains('hidden'))
-          .toBeTruthy();
+            .toBeTruthy();
         done();
       });
       $(UI_CONSTANTS.confirmJoinButton).click();

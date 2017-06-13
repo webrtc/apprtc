@@ -69,8 +69,8 @@ Analytics.prototype.sendEventRequest_ = function(eventObj) {
   request[enums.RequestField.EVENT] = eventObj;
 
   sendAsyncUrlRequest('POST', this.analyticsPath_,
-      JSON.stringify(request)).then(function() {
-      }.bind(this), function(error) {
+      JSON.stringify(request))
+      .then(function() {}.bind(this), function(error) {
         trace('Failed to send event request: ' + error.message);
       }.bind(this));
 };

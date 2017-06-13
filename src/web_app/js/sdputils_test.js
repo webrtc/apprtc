@@ -28,30 +28,30 @@ describe('Sdp utils test', function() {
 
   it('moves Isac 16K to default when preferred', function() {
     var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
-                                  'iSAC/16000');
+        'iSAC/16000');
     var audioLine = result.split('\r\n')[1];
     expect(audioLine).toEqual('m=audio 9 RTP/SAVPF 103 111 104 0 9');
   });
 
   it('does nothing if preferred codec not found', function() {
     var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS, 'audio', 'send',
-                                  'iSAC/123456');
+        'iSAC/123456');
     var audioLine = result.split('\r\n')[1];
     expect(audioLine).toEqual(SDP_WITH_AUDIO_CODECS.split('\r\n')[1]);
   });
 
   it('moves codec even if payload type is same as udp port', function() {
     var result = maybePreferCodec(SDP_WITH_AUDIO_CODECS,
-                                    'audio',
-                                    'send',
-                                    'G722/8000');
+        'audio',
+        'send',
+        'G722/8000');
     var audioLine = result.split('\r\n')[1];
     expect(audioLine).toEqual('m=audio 9 RTP/SAVPF 9 111 103 104 0');
   });
 
   it('remove and set codec param modify then fmtp line', function() {
     var result = setCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
-                                 'minptime', '20');
+        'minptime', '20');
     var audioLine = result.split('\r\n')[4];
     expect(audioLine).toEqual('a=fmtp:111 minptime=20');
 
@@ -69,7 +69,7 @@ describe('Sdp utils test', function() {
 
   it('remove and set codec param modify fmtp line', function() {
     var result = setCodecParam(SDP_WITH_AUDIO_CODECS, 'opus/48000',
-                                 'minptime', '20');
+        'minptime', '20');
     var audioLine = result.split('\r\n')[4];
     expect(audioLine).toEqual('a=fmtp:111 minptime=20');
 

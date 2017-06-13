@@ -230,7 +230,7 @@ function removeCodecByName(sdpLines, codec) {
     return sdpLines;
   }
   sdpLines[mLineIndex] = removePayloadTypeFromMline(sdpLines[mLineIndex],
-    payloadType);
+      payloadType);
   return sdpLines;
 }
 
@@ -247,7 +247,7 @@ function removeCodecByPayloadType(sdpLines, payloadType) {
     return sdpLines;
   }
   sdpLines[mLineIndex] = removePayloadTypeFromMline(sdpLines[mLineIndex],
-    payloadType);
+      payloadType);
   return sdpLines;
 }
 

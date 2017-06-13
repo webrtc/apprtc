@@ -99,12 +99,12 @@ PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
   this.setupCallstats_();
   this.started_ = true;
   var constraints = mergeConstraints(
-    PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
+      PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
   trace('Sending offer to peer, with constraints: \n\'' +
       JSON.stringify(constraints) + '\'.');
   this.pc_.createOffer(constraints)
-  .then(this.setLocalSdpAndNotify_.bind(this))
-  .catch(this.onError_.bind(this, 'createOffer'));
+      .then(this.setLocalSdpAndNotify_.bind(this))
+      .catch(this.onError_.bind(this, 'createOffer'));
 
   return true;
 };
@@ -192,36 +192,36 @@ PeerConnectionClient.prototype.getPeerConnectionStats = function(callback) {
     return;
   }
   this.pc_.getStats(null)
-  .then(callback);
+      .then(callback);
 };
 
 PeerConnectionClient.prototype.doAnswer_ = function() {
   trace('Sending answer to peer.');
   this.pc_.createAnswer()
-  .then(this.setLocalSdpAndNotify_.bind(this))
-  .catch(this.onError_.bind(this, 'createAnswer'));
+      .then(this.setLocalSdpAndNotify_.bind(this))
+      .catch(this.onError_.bind(this, 'createAnswer'));
 };
 
 PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
     function(sessionDescription) {
       sessionDescription.sdp = maybePreferAudioReceiveCodec(
-        sessionDescription.sdp,
-        this.params_);
+          sessionDescription.sdp,
+          this.params_);
       sessionDescription.sdp = maybePreferVideoReceiveCodec(
-        sessionDescription.sdp,
-        this.params_);
+          sessionDescription.sdp,
+          this.params_);
       sessionDescription.sdp = maybeSetAudioReceiveBitRate(
-        sessionDescription.sdp,
-        this.params_);
+          sessionDescription.sdp,
+          this.params_);
       sessionDescription.sdp = maybeSetVideoReceiveBitRate(
-        sessionDescription.sdp,
-        this.params_);
+          sessionDescription.sdp,
+          this.params_);
       sessionDescription.sdp = maybeRemoveVideoFec(
-        sessionDescription.sdp,
-        this.params_);
+          sessionDescription.sdp,
+          this.params_);
       this.pc_.setLocalDescription(sessionDescription)
-    .then(trace.bind(null, 'Set session description success.'))
-    .catch(this.onError_.bind(this, 'setLocalDescription'));
+          .then(trace.bind(null, 'Set session description success.'))
+          .catch(this.onError_.bind(this, 'setLocalDescription'));
 
       if (this.onsignalingmessage) {
         // Chrome version of RTCSessionDescription can't be serialized directly
@@ -244,8 +244,8 @@ PeerConnectionClient.prototype.setRemoteSdp_ = function(message) {
   message.sdp = maybeSetVideoSendInitialBitRate(message.sdp, this.params_);
   message.sdp = maybeRemoveVideoFec(message.sdp, this.params_);
   this.pc_.setRemoteDescription(new RTCSessionDescription(message))
-  .then(this.onSetRemoteDescriptionSuccess_.bind(this))
-  .catch(this.onError_.bind(this, 'setRemoteDescription'));
+      .then(this.onSetRemoteDescriptionSuccess_.bind(this))
+      .catch(this.onError_.bind(this, 'setRemoteDescription'));
 };
 
 PeerConnectionClient.prototype.onSetRemoteDescriptionSuccess_ = function() {
@@ -283,8 +283,8 @@ PeerConnectionClient.prototype.processSignalingMessage_ = function(message) {
     });
     this.recordIceCandidate_('Remote', candidate);
     this.pc_.addIceCandidate(candidate)
-    .then(trace.bind(null, 'Remote candidate added successfully.'))
-    .catch(this.onError_.bind(this, 'addIceCandidate'));
+        .then(trace.bind(null, 'Remote candidate added successfully.'))
+        .catch(this.onError_.bind(this, 'addIceCandidate'));
   } else {
     trace('WARNING: unexpected message: ' + JSON.stringify(message));
   }
@@ -449,8 +449,8 @@ PeerConnectionClient.prototype.reportErrorToCallstats =
         // property/getter.
         var filteredError = (funcName === 'getUserMedia' ? error.name : error);
         this.callstats.reportError(this.pc_, this.conferenceId,
-          supportedWebrtcFuncNames[funcName], new DOMException(filteredError),
-          localSdp, remoteSdp);
+            supportedWebrtcFuncNames[funcName], new DOMException(filteredError),
+            localSdp, remoteSdp);
       }
     };
 
