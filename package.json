@@ -12,6 +12,8 @@
     "test": "grunt"
   },
   "devDependencies": {
+    "eslint": "^4.0.0",
+    "eslint-config-google": "^0.8.0",
     "eslint-config-webrtc": ">=1.0.0",
     "grunt": ">=1.0.0",
     "grunt-cli": ">=0.1.9",
@@ -29,9 +31,8 @@
     "karma-eslint": ">=2.1.0",
     "karma-firefox-launcher": ">=1.0.0",
     "karma-jasmine": ">=1.0.2",
-    "socket.io-client": "^1.2.0",
-    "webrtc-adapter": ">=3.0.0",
-    "travis-multirunner": ">=3.0.0"
+    "travis-multirunner": ">=3.0.0",
+    "webrtc-adapter": ">=3.0.0"
   },
   "dependencies": {
     "pako": "^1.0.3"
