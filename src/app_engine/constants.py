@@ -20,24 +20,18 @@ LOOPBACK_CLIENT_ID = 'LOOPBACK_CLIENT_ID'
 
 # Turn/Stun server override. This allows AppRTC to connect to turn servers
 # directly rather than retrieving them from an ICE server provider.
-TURN_SERVER_OVERRIDE = []
+ICE_SERVER_OVERRIDE = []
 # Enable by uncomment below and comment out above, then specify turn and stun
 # servers below.
-# TURN_SERVER_OVERRIDE = [
-#   {
-#     "urls": [
-#       "turn:hostname/IpToTurnServer:19305?transport=udp",
-#       "turn:hostname/IpToTurnServer:19305?transport=tcp"
-#     ],
-#     "username": "TurnServerUsername",
-#     "credential": "TurnServerCredentials"
-#   },
-#   {
-#     "urls": [
-#       "stun:hostname/IpToStunServer:19302"
-#     ]
-#   }
-# ]
+ICE_SERVER_OVERRIDE = [
+  {
+    "urls": "turn:<your turn username>@<your turn server ip>",
+    "credential": "<your turn user password>"
+  },
+  {
+    "urls": "<your stun server address>"
+  }
+]
 
 # TODO(jansson): Remove once AppRTCDemo on iOS supports ICE_SERVER.
 TURN_BASE_URL = 'https://computeengineondemand.appspot.com'
