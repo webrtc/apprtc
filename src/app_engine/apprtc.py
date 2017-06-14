@@ -44,10 +44,10 @@ def get_hd_default(user_agent):
 # iceServers will be filled in by the TURN HTTP request.
 def make_pc_config(ice_transports):
   config = {
-  'iceServers': [],
+  'iceServers': constants.ICE_SERVER_OVERRIDE,
   'bundlePolicy': 'max-bundle',
   'rtcpMuxPolicy': 'require'
-  };
+  }
   if ice_transports:
     config['iceTransports'] = ice_transports
   return config
@@ -262,7 +262,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     include_loopback_js = '<script src="/js/loopback.js"></script>'
   else:
     include_loopback_js = ''
-  
+
   include_rtstats_js = ''
   if str(os.environ.get('WITH_RTSTATS')) != 'none' or \
     (os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/') and \
@@ -284,9 +284,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # TODO(jansson): Remove this once CEOD is deprecated.
   turn_url = constants.TURN_URL_TEMPLATE % \
       (constants.TURN_BASE_URL, username, constants.CEOD_KEY)
-  # If defined it will override the ICE server provider and use the specified
-  # turn servers directly.
-  turn_server_override = constants.TURN_SERVER_OVERRIDE
 
   pc_config = make_pc_config(ice_transports)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
@@ -306,7 +303,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'pc_constraints': json.dumps(pc_constraints),
     'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
-    'turn_server_override': turn_server_override,
     'turn_url': turn_url,
     'ice_server_url': ice_server_url,
     'ice_server_transports': ice_server_transports,
