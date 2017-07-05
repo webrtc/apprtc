@@ -462,11 +462,7 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
     trace('Could not init callstats due to missing App ID and/or API key');
     return;
   }
-  // Check dependencies.
-  if (typeof io !== 'function' || typeof jsSHA !== 'function') {
-    trace('Callstats dependencies missing, stats will not be setup.');
-    return;
-  }
+
   // eslint-disable-next-line new-cap
   this.callstats = new callstats(null, io, jsSHA);
 
