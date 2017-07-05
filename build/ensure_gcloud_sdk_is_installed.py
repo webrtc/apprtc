@@ -62,7 +62,7 @@ def main():
   if not os.path.exists(TEMP_DIR):
     os.mkdir(TEMP_DIR)
 
-  if os.path.exists(GCLOUD_SDK_PATH):
+  if os.path.isfile(os.path.join(GCLOUD_SDK_PATH, 'bin', 'gcloud')):
     print 'Already has %s, skipping the download' % GCLOUD_SDK_INSTALL_FOLDER
     _EnsureAppEngineIsInstalled(GCLOUD_SDK_PATH)
     _Cleanup([os.path.join(TEMP_DIR, GCLOUD_SDK_TAR_FILE)])
