@@ -464,7 +464,7 @@ PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
   }
 
   // eslint-disable-next-line new-cap
-  this.callstats = new callstats(null, io, jsSHA);
+  this.callstats = new callstats();
 
   this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
   var statsCallback = null;
