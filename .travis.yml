@@ -3,6 +3,13 @@ language: node_js
 node_js:
   - 6
 
+cache:
+  directories:
+    - node_modules
+    - temp/google-cloud-sdk
+    - browsers
+    - $HOME/.cache/pip
+
 addons:
   apt:
     packages:
