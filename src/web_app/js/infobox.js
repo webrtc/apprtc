@@ -177,11 +177,11 @@ InfoBox.prototype.updateInfoDiv = function() {
         localTypePref = connectionStats.localPriority >> 24;
       }
       contents += this.buildLine_('LocalAddr', localAddr +
-          ' (' + localAddrType + (typeof localTypePref !== undefined ?
-          '' + formatTypePreference(localTypePref) : '') + ')');
+          ' (' + localAddrType + (typeof localTypePref !== undefined ? '' +
+          formatTypePreference(localTypePref) : '') + ')');
       contents += this.buildLine_('LocalPort', localPort);
-      contents += this.buildLine_('RemoteAddr', remoteAddr +
-          ' (' + remoteAddrType + ')');
+      contents += this.buildLine_('RemoteAddr', remoteAddr + ' (' +
+          remoteAddrType + ')');
       contents += this.buildLine_('RemotePort', remotePort);
     }
     contents += this.buildLine_();
