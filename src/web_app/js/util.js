@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* exported setUpFullScreen, fullScreenElement, isFullScreen,
+/* exported calculateFps, setUpFullScreen, fullScreenElement, isFullScreen,
    requestIceServers, sendAsyncUrlRequest, sendSyncUrlRequest,
    randomString, trace, $, queryStringToDictionary */
 /* globals chrome */
@@ -204,6 +204,26 @@ function isChromeApp() {
   return (typeof chrome !== 'undefined' &&
           typeof chrome.storage !== 'undefined' &&
           typeof chrome.storage.local !== 'undefined');
+}
+
+// Calculcates FPS for the provided video elements and calls on a callback which
+// is used to update the necessary stats for either remote or local videos.
+// Adapted from https://cs.chromium.org/chromium/src/chrome/test/data/media/html/media_stat_perf.html
+function calculateFps(videoElement, decodedFrames, startTime, remoteOrLocal,
+  callback) {
+  var fps = 0;
+  if (videoElement &&
+      typeof videoElement.webkitDecodedFrameCount !== undefined) {
+    if (videoElement.readyState >= videoElement.HAVE_CURRENT_DATA) {
+      var currentTime = new Date().getTime();
+      var deltaTime = (currentTime - startTime) / 1000;
+      var startTimeToReturn = currentTime;
+      fps = (videoElement.webkitDecodedFrameCount - decodedFrames) / deltaTime;
+      callback(videoElement.webkitDecodedFrameCount, startTimeToReturn,
+          remoteOrLocal);
+    }
+  }
+  return parseInt(fps);
 }
 
 function trace(text) {

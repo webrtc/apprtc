@@ -146,8 +146,8 @@ AppController.prototype.createCall_ = function() {
   var privacyLinks = $(UI_CONSTANTS.privacyLinks);
   this.hide_(privacyLinks);
   this.call_ = new Call(this.loadingParams_);
-  this.infoBox_ = new InfoBox($(UI_CONSTANTS.infoDiv),
-      this.remoteVideo_, this.call_, this.loadingParams_.versionInfo);
+  this.infoBox_ = new InfoBox($(UI_CONSTANTS.infoDiv), this.call_,
+      this.loadingParams_.versionInfo);
 
   var roomErrors = this.loadingParams_.errorMessages;
   var roomWarnings = this.loadingParams_.warningMessages;
@@ -286,6 +286,8 @@ AppController.prototype.onRemoteStreamAdded_ = function(stream) {
   this.deactivate_(this.sharingDiv_);
   trace('Remote stream added.');
   this.remoteVideo_.srcObject = stream;
+  this.infoBox_.getRemoteTrackIds(stream);
+
 
   if (this.remoteVideoResetTimer_) {
     clearTimeout(this.remoteVideoResetTimer_);
@@ -296,6 +298,7 @@ AppController.prototype.onRemoteStreamAdded_ = function(stream) {
 AppController.prototype.onLocalStreamAdded_ = function(stream) {
   trace('User has granted access to local media.');
   this.localStream_ = stream;
+  this.infoBox_.getLocalTrackIds(this.localStream_);
 
   if (!this.roomSelection_) {
     this.attachLocalStream_();
