@@ -133,7 +133,6 @@ module.exports = function(grunt) {
             'node_modules/webrtc-adapter/out/adapter.js',
             'src/web_app/js/analytics.js',
             'src/web_app/js/enums.js',
-            'src/web_app/js/adapter.js',
             'src/web_app/js/appcontroller.js',
             'src/web_app/js/call.js',
             'src/web_app/js/constants.js',
