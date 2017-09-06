@@ -57,7 +57,7 @@ describe('Sdp utils test', function() {
 
     result = setCodecParam(result, 'opus/48000', 'useinbandfec', '1');
     audioLine = result.split('\r\n')[4];
-    expect(audioLine).toEqual('a=fmtp:111 minptime=20; useinbandfec=1');
+    expect(audioLine).toEqual('a=fmtp:111 minptime=20;useinbandfec=1');
 
     result = removeCodecParam(result, 'opus/48000', 'minptime');
     audioLine = result.split('\r\n')[4];
@@ -75,7 +75,7 @@ describe('Sdp utils test', function() {
 
     result = setCodecParam(result, 'opus/48000', 'useinbandfec', '1');
     audioLine = result.split('\r\n')[4];
-    expect(audioLine).toEqual('a=fmtp:111 minptime=20; useinbandfec=1');
+    expect(audioLine).toEqual('a=fmtp:111 minptime=20;useinbandfec=1');
 
     result = removeCodecParam(result, 'opus/48000', 'minptime');
     audioLine = result.split('\r\n')[4];
