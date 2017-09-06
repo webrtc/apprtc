@@ -170,18 +170,17 @@ function preferBitRate(sdp, bitrate, mediaType) {
 // is specified. We'll also add a x-google-min-bitrate value, since the max
 // must be >= the min.
 function maybeSetVideoSendInitialBitRate(sdp, params) {
-  var initialBitrate = params.videoSendInitialBitrate;
+  var initialBitrate = parseInt(params.videoSendInitialBitrate);
   if (!initialBitrate) {
     return sdp;
   }
 
   // Validate the initial bitrate value.
-  var maxBitrate = initialBitrate;
-  var bitrate = params.videoSendBitrate;
+  var maxBitrate = parseInt(initialBitrate);
+  var bitrate = parseInt(params.videoSendBitrate);
   if (bitrate) {
     if (initialBitrate > bitrate) {
-      trace('Clamping initial bitrate to max bitrate of ' +
-                   bitrate + ' kbps.');
+      trace('Clamping initial bitrate to max bitrate of ' + bitrate + ' kbps.');
       initialBitrate = bitrate;
       params.videoSendInitialBitrate = initialBitrate;
     }
@@ -386,7 +385,7 @@ function removeCodecParam(sdp, codec, param) {
 function parseFmtpLine(fmtpLine) {
   var fmtpObj = {};
   var spacePos = fmtpLine.indexOf(' ');
-  var keyValues = fmtpLine.substring(spacePos + 1).split('; ');
+  var keyValues = fmtpLine.substring(spacePos + 1).split(';');
 
   var pattern = new RegExp('a=fmtp:(\\d+)');
   var result = fmtpLine.match(pattern);
@@ -424,7 +423,7 @@ function writeFmtpLine(fmtpObj) {
   if (i === 0) {
     return null;
   }
-  return 'a=fmtp:' + pt.toString() + ' ' + keyValues.join('; ');
+  return 'a=fmtp:' + pt.toString() + ' ' + keyValues.join(';');
 }
 
 // Find fmtp attribute for |codec| in |sdpLines|.
