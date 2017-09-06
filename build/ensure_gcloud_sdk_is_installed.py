@@ -2,8 +2,7 @@
 
 import os
 import sys
-import urllib3
-import urllib3.contrib.pyopenssl
+import requests
 import certifi
 import tarfile
 import subprocess
@@ -23,18 +22,15 @@ GCLOUD_SDK_PATH = os.path.join(TEMP_DIR, GCLOUD_SDK_INSTALL_FOLDER)
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  # Using certifi.old_where() because old versions of OpenSSL sometimes fails
-  # to validate certificate chains that use the strong roots [certifi.where()].
-  urllib3.contrib.pyopenssl.inject_into_urllib3()
-  http = urllib3.PoolManager(
-      cert_reqs='CERT_REQUIRED',
-      ca_certs=certifi.old_where()
-  )
-  response = http.request('GET', url, preload_content=False)
-  with open(to, 'w') as to_file:
-    for chunk in response.stream(1024):
-      to_file.write(chunk)
-  response.release_conn()
+  response = requests.get(url, stream=True)
+  if response.status_code == 200:
+    print 'Downloading %s to %s...' % (url, to)
+    with open(to, 'w') as to_file:
+      for chunk in response.iter_content(chunk_size=1024):
+        to_file.write(chunk)
+  else:
+    raise NameError('Could not download: %s Error: %s' % (to,
+        str(response.status_code)))
 
 
 def _Extract(file_to_extract_path, destination_path):
