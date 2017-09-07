@@ -195,8 +195,15 @@ function maybeSetVideoSendInitialBitRate(sdp, params) {
     trace('Failed to find video m-line');
     return sdp;
   }
+  // Figure out the first codec payload type on the m=video SDP line.
+  var videoMLine = sdpLines[mLineIndex]
+  var pattern = new RegExp('m=video\\s\\d+\\s[A-Z\/]+\\s')
+  var sendPayloadType = videoMLine.split(pattern)[1].split(' ')[0]
+  var fmtpLine = sdpLines[findLine(sdpLines, 'a=rtpmap', sendPayloadType)]
+  var codecName = fmtpLine.split('a=rtpmap:' + sendPayloadType)[1].split('/')[0]
 
-  var codec = params.videoRecvCodec;
+  // Use codec from params if specified via URL param, otherwise use from SDP.
+  var codec = params.videoSendCodec || codecName;
   sdp = setCodecParam(sdp, codec, 'x-google-min-bitrate',
       params.videoSendInitialBitrate.toString());
   sdp = setCodecParam(sdp, codec, 'x-google-max-bitrate',
@@ -204,6 +211,7 @@ function maybeSetVideoSendInitialBitRate(sdp, params) {
 
   return sdp;
 }
+
 
 function removePayloadTypeFromMline(mLine, payloadType) {
   mLine = mLine.split(' ');
