@@ -212,7 +212,6 @@ function maybeSetVideoSendInitialBitRate(sdp, params) {
   return sdp;
 }
 
-
 function removePayloadTypeFromMline(mLine, payloadType) {
   mLine = mLine.split(' ');
   for (var i = 0; i < mLine.length; ++i) {
