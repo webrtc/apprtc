@@ -35,9 +35,18 @@ describe('PeerConnectionClient Test', function() {
 
     peerConnections.push(this);
   };
+
   MockRTCPeerConnection.prototype.addStream = function(stream) {
     this.streams.push(stream);
   };
+
+  MockRTCPeerConnection.prototype.addTrack = function(track, stream) {
+    // TODO: improve mock.
+    if (this.streams.indexOf(stream) !== -1) {
+      this.streams.push(stream);
+    }
+  };
+
   MockRTCPeerConnection.prototype.createOffer = function(constraints) {
     var self = this;
     return new Promise(function(resolve, reject) {
