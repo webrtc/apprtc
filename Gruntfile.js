@@ -3,6 +3,10 @@
 /* globals module */
 var out_app_engine_dir = 'out/app_engine';
 var app_engine_path = 'temp/google-cloud-sdk/platform/google_appengine'
+// Check if running on travis, if so do not install in User due to using
+// pythonEnv.
+var isTravis = ('TRAVIS' in process.env && 'CI' in process.env) ?
+    '' : '--user';
 
 module.exports = function(grunt) {
   // configure project
@@ -47,7 +51,8 @@ module.exports = function(grunt) {
 
     shell: {
       pipInstall : {
-        command: 'pip install --user --requirement requirements.txt'
+        command: ['pip install', isTravis, '--requirement requirements.txt']
+            .join(' ')
       },
       ensureGcloudSDKIsInstalled: {
         command: 'python build/ensure_gcloud_sdk_is_installed.py'
