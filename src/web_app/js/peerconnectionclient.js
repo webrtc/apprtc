@@ -82,7 +82,9 @@ PeerConnectionClient.prototype.addStream = function(stream) {
   if (!this.pc_) {
     return;
   }
-  this.pc_.addStream(stream);
+  stream.getTracks().forEach(function(track) {
+    this.pc_.addTrack(track, stream);
+  });
 };
 
 PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
