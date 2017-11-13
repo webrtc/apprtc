@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals  describe, Call, expect, it, beforeEach, afterEach,
+/* globals  describe, Call, expect, FAKE_ICE_SERVER, beforeEach, afterEach,
    SignalingChannel:true, MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
    FAKE_CLIENT_ID, apprtc, Constants, xhrs, MockXMLHttpRequest,
    XMLHttpRequest:true */
@@ -64,7 +64,8 @@ describe('Call test', function() {
         audio: true, video: true
       },
       roomId: FAKE_ROOM_ID,
-      clientId: FAKE_CLIENT_ID
+      clientId: FAKE_CLIENT_ID,
+      peerConnectionConfig: {iceServers: FAKE_ICE_SERVER}
     };
 
     XMLHttpRequest = MockXMLHttpRequest;
