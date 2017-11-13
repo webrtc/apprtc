@@ -8,8 +8,8 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals describe, done, expect, jasmine, it, beforeEach, afterEach,
-   PeerConnectionClient */
+/* globals describe, done, expect, FAKE_CANDIDATE, FAKE_SDP, jasmine, it,
+   beforeEach, afterEach, PeerConnectionClient */
 
 'use strict';
 
@@ -139,7 +139,6 @@ describe('PeerConnectionClient Test', function() {
     this.realRTCPeerConnection = window.RTCPeerConnection;
     window.RTCPeerConnection = MockRTCPeerConnection;
 
-    peerConnections.length = 0;
     this.pcClient = new PeerConnectionClient(
         getParams(FAKEPCCONFIG, FAKEPCCONSTRAINTS), window.performance.now());
   });
@@ -147,8 +146,8 @@ describe('PeerConnectionClient Test', function() {
   afterEach(function() {
     peerConnections = [];
     window.RTCPeerConnection = this.realRTCPeerConnection;
-    // this.pcClient.close();
-    // this.pcClient = null;
+    this.pcClient.close();
+    this.pcClient = null;
   });
 
   it('Constructor', function() {
@@ -165,59 +164,12 @@ describe('PeerConnectionClient Test', function() {
   });
 
   it('Start as a caller', function(done) {
-    var fakeCandidate = 'fake candidate';
-    var pc = peerConnections[0];
-    var event = {
-      candidate: {
-        sdpMLineIndex: 0,
-        sdpMid: '1',
-        candidate: fakeCandidate
-      }
-    };
-    var expectedMessage = {
-      type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate
-    };
-    // Verify the input to setLocalDesciption.
-    pc.onlocaldescription = function() {
-      expect(pc.localDescriptions.length).toEqual(1);
-      expect(pc.localDescriptions[0].description.type).toEqual('offer');
-      expect(pc.localDescriptions[0].description.sdp).toEqual(fakeSdp);
-    };
-
-    this.pcClient.onsignalingmessage = function(msg) {
-      // Verify the output signaling message for the offer.
-      if (msg.type === 'offer') {
-        expect(msg.sdp).toEqual(fakeSdp);
-        // Trigger the candidate event test.
-        pc.onicecandidate(event);
-      // Verify the output signaling messages for the ICE candidates.
-      } else {
-        expect(msg.type).toEqual('candidate');
-        expect(msg).toEqual(expectedMessage);
-        done();
-      }
-    };
-
-    expect(this.pcClient.startAsCaller(null)).toBeTruthy();
-
-    expect(pc.createSdpRequests.length).toEqual(1);
-    var request = pc.createSdpRequests[0];
-    expect(request.type).toEqual('offer');
-
-    var fakeSdp = 'fake sdp';
-    pc.resolveLastCreateSdpRequest(fakeSdp);
-  });
-
-  it('Caller receive signaling message', function(done) {
     var pc = peerConnections[0];
     var self = this;
     var candidate = {
       type: 'candidate',
       label: 0,
-      candidate: 'fake candidate'
+      candidate: FAKE_CANDIDATE
     };
     var remoteAnswer = {
       type: 'answer',
@@ -258,12 +210,12 @@ describe('PeerConnectionClient Test', function() {
 
     var remoteOffer = {
       type: 'offer',
-      sdp: 'fake sdp'
+      sdp: FAKE_SDP
     };
     var candidate = {
       type: 'candidate',
       label: 0,
-      candidate: 'fake candidate'
+      candidate: FAKE_CANDIDATE
     };
     var initialMsgs = [
       JSON.stringify(candidate),
@@ -307,7 +259,7 @@ describe('PeerConnectionClient Test', function() {
   it('Receive remote offer before started', function() {
     var remoteOffer = {
       type: 'offer',
-      sdp: 'fake sdp'
+      sdp: FAKE_CANDIDATE
     };
     this.pcClient.receiveSignalingMessage(JSON.stringify(remoteOffer));
     this.pcClient.startAsCallee(null);
@@ -338,7 +290,7 @@ describe('PeerConnectionClient Test', function() {
 
     var remoteOffer = {
       type: 'offer',
-      sdp: 'fake sdp'
+      sdp: FAKE_SDP
     };
     var initialMsgs = [JSON.stringify(remoteOffer)];
     expect(this.pcClient.startAsCallee(initialMsgs)).toBeTruthy();

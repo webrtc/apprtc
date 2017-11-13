@@ -9,9 +9,10 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals expect */
-/* exported FAKE_WSS_POST_URL, FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
+/* exported FAKE_CANDIDATE, FAKE_SDP,  FAKE_ICE_SERVER, FAKE_SEND_EXCEPTION,
+   FAKE_WSS_POST_URL, FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
    FAKE_CLIENT_ID, MockWebSocket, MockXMLHttpRequest, webSockets, xhrs,
-   MockWindowPort, FAKE_SEND_EXCEPTION, Mock */
+   MockWindowPort,  Mock */
 
 'use strict';
 
@@ -20,6 +21,40 @@ var FAKE_WSS_POST_URL = 'https://foo.com';
 var FAKE_ROOM_ID = 'bar';
 var FAKE_CLIENT_ID = 'barbar';
 var FAKE_SEND_EXCEPTION = 'Send exception';
+var FAKE_ICE_SERVER = [
+  {
+    credential: 'foobar',
+    urls: ['turn:192.168.1.200:19305?transport:udp'],
+    username: 'barfoo',
+  },
+  {urls: ['stun:stun.l.google.com:19302']}
+];
+
+var FAKE_CANDIDATE = 'candidate:702786350 2 udp 41819902 8.8.8.8 60769 ' +
+  'typ relay raddr 8.8.8.8 rport 1234 ' +
+  'tcptype active ' +
+  'ufrag abc ' +
+  'generation 0';
+
+var FAKE_SDP = 'v=0\r\n' +
+  'o=- 166855176514521964 2 IN IP4 127.0.0.1\r\n' +
+  's=-\r\n' +
+  't=0 0\r\n' +
+  'a=msid-semantic:WMS *\r\n' +
+  'm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n' +
+  'c=IN IP4 0.0.0.0\r\n' +
+  'a=rtcp:9 IN IP4 0.0.0.0\r\n' +
+  'a=ice-ufrag:someufrag\r\n' +
+  'a=ice-pwd:somelongpwdwithenoughrandomness\r\n' +
+  'a=fingerprint:sha-256 8C:71:B3:8D:A5:38:FD:8F:A4:2E:A2:65:6C:86:52' +
+  ':BC:E0:6E:94:F2:9F:7C:4D:B5:DF:AF:AA:6F:44:90:8D:F4\r\n' +
+  'a=setup:actpass\r\n' +
+  'a=rtcp-mux\r\n' +
+  'a=mid:mid1\r\n' +
+  'a=sendonly\r\n' +
+  'a=rtpmap:111 opus/48000/2\r\n' +
+  'a=msid:stream1 track1\r\n' +
+  'a=ssrc:1001 cname:some\r\n';
 
 var webSockets = [];
 var MockWebSocket = function(url) {
