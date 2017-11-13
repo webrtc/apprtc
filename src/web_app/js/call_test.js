@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals  describe, Call, expect, FAKE_ICE_SERVER, beforeEach, afterEach,
+/* globals  describe, Call, expect, it, FAKE_ICE_SERVER, beforeEach, afterEach,
    SignalingChannel:true, MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
    FAKE_CLIENT_ID, apprtc, Constants, xhrs, MockXMLHttpRequest,
    XMLHttpRequest:true */
