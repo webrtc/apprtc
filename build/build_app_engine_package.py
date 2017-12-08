@@ -67,29 +67,6 @@ def copyPako(dest_path):
   shutil.copy('node_modules/pako/dist/pako.min.js', dest_js_path)
 
 
-# Download callstats.
-def downloadCallstats():
-  print 'Downloading and copying callstats dependencies...'
-  path = 'out/app_engine/third_party/callstats/'
-  if os.path.exists(path):
-    shutil.rmtree(path)
-  os.makedirs(path)
-
-  urls =  {
-    'callstats.min.js': 'https://api.callstats.io/static/callstats.min.js',
-  }
-
-  for fileName in urls:
-    response = requests.get(urls[fileName])
-    if response.status_code == 200:
-      print 'Downloading %s to %s...' % (urls[fileName], path)
-      with open(path + fileName, 'w') as to_file:
-        to_file.write(response.text)
-    else:
-      raise NameError('Could not download: ' + filename + ' Error:' + \
-        str(response.status_code))
-
-
 def CopyApprtcSource(src_path, dest_path):
   if os.path.exists(dest_path):
     shutil.rmtree(dest_path)
@@ -140,7 +117,6 @@ def main():
   src_path, dest_path = args[0:2]
   CopyApprtcSource(src_path, dest_path)
   copyPako(dest_path)
-  downloadCallstats()
   if options.include_tests:
     app_engine_code = os.path.join(src_path, 'app_engine')
     test_file_herder.CopyTests(os.path.join(src_path, 'app_engine'), dest_path)

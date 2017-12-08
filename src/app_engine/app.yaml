@@ -15,9 +15,6 @@ handlers:
   static_files: html/robot.txt
   upload: html/robots.txt
 
-- url: /callstats
-  static_dir: third_party/callstats
-
 - url: /pako
   static_dir: third_party/pako
 
@@ -53,11 +50,7 @@ libraries:
 env_variables:
   BYPASS_JOIN_CONFIRMATION: false
   # Only change these while developing, do not commit to source!
-  # Use appcfg.py --env_variable=CALLSTATS_APP_ID:ID  \
-  #               --env_variable=CALLSTATS_APP_SECRET:SECRET \
-  #               --env_variable=ICE_SERVER_API_KEY:KEY \
+  # Use appcfg.py --env_variable=ICE_SERVER_API_KEY:KEY \
   # in order to replace variables when deploying.
-  CALLSTATS_APP_ID: none
-  CALLSTATS_APP_SECRET: none
   ICE_SERVER_API_KEY: none
   WITH_RTSTATS: none
