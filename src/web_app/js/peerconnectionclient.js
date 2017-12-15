@@ -14,7 +14,7 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeRemoveVideoFec, maybeSetOpusOptions, callstats, DOMException */
+   maybeRemoveVideoFec, maybeSetOpusOptions, DOMException */
 
 /* exported PeerConnectionClient */
 
@@ -66,8 +66,6 @@ var PeerConnectionClient = function(params, startTime) {
   this.onremotestreamadded = null;
   this.onsignalingmessage = null;
   this.onsignalingstatechange = null;
-
-  this.callstatsInit = false;
 };
 
 // Set up audio and video regardless of what devices are present.
@@ -95,7 +93,6 @@ PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
   }
 
   this.isInitiator_ = true;
-  this.setupCallstats_();
   this.started_ = true;
   var constraints = mergeConstraints(
       PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
@@ -118,7 +115,6 @@ PeerConnectionClient.prototype.startAsCallee = function(initialMessages) {
   }
 
   this.isInitiator_ = false;
-  this.setupCallstats_();
   this.started_ = true;
 
   if (initialMessages && initialMessages.length > 0) {
@@ -163,7 +159,6 @@ PeerConnectionClient.prototype.close = function() {
     return;
   }
 
-  this.sendCallstatsEvents('fabricTerminated');
   this.pc_.close();
   window.dispatchEvent(new CustomEvent('pcclosed', {
     detail: {
@@ -172,7 +167,6 @@ PeerConnectionClient.prototype.close = function() {
     }
   }));
   this.pc_ = null;
-  this.callstatsInit = false;
 };
 
 PeerConnectionClient.prototype.getPeerConnectionStates = function() {
@@ -354,12 +348,6 @@ PeerConnectionClient.prototype.onIceConnectionStateChanged_ = function() {
   if (this.oniceconnectionstatechange) {
     this.oniceconnectionstatechange();
   }
-
-  if (this.pc_.iceConnectionState === 'connected' && !this.isInitiator_ ||
-      this.pc_.iceConnectionState === 'completed') {
-    this.callStatsCommandQueue_
-        .addToQueue(this.bindMstToUserIdForCallstats_.bind(this));
-  }
 };
 
 // Return false if the candidate should be dropped, true if not.
@@ -396,232 +384,5 @@ PeerConnectionClient.prototype.onRemoteStreamAdded_ = function(event) {
 PeerConnectionClient.prototype.onError_ = function(tag, error) {
   if (this.onerror) {
     this.onerror(tag + ': ' + error.toString());
-    this.reportErrorToCallstats(tag, error);
   }
-};
-
-PeerConnectionClient.prototype.isCallstatsInitialized_ = function() {
-  if (!this.callstats || !this.callstatsInit) {
-    trace('Callstats not initilized.');
-    return false;
-  }
-  return true;
-};
-
-// Cue for commands to send to callStats after the SDK has been authenticated.
-PeerConnectionClient.prototype.callStatsCommandQueue_ = {
-  queue: [],
-  addToQueue: function(command) {
-    if (typeof command === 'function') {
-      this.queue.push(command);
-    }
-  },
-  processQueue: function() {
-    for (var i = 0; i < this.queue.length; i++) {
-      var command = this.queue.pop();
-      command();
-    }
-  }
-};
-
-PeerConnectionClient.prototype.reportErrorToCallstats =
-    function(funcName, error) {
-      if (!this.isCallstatsInitialized_()) {
-        return;
-      }
-      var localSdp = this.pc_.localDescription.sdp || null;
-      var remoteSdp = this.pc_.remoteDescription.sdp || null;
-      // Enumerate supported callstats error types.
-      // http://www.callstats.io/api/#enumeration-of-wrtcfuncnames
-      var supportedWebrtcFuncNames = {
-        getUserMedia: 'getUserMedia',
-        createOffer: 'createOffer',
-        createAnswer: 'createAnswer',
-        setLocalDescription: 'setLocalDescription',
-        setRemoteDescription: 'setRemoteDescription',
-        addIceCandidate: 'addIceCandidate'
-      };
-
-      // Only report supported error types to the callstats backend.
-      if (supportedWebrtcFuncNames[funcName]) {
-        // Some error objects (gUM) have meaningful info in the name
-        // property/getter.
-        var filteredError = (funcName === 'getUserMedia' ? error.name : error);
-        this.callstats.reportError(this.pc_, this.conferenceId,
-            supportedWebrtcFuncNames[funcName], new DOMException(filteredError),
-            localSdp, remoteSdp);
-      }
-    };
-
-PeerConnectionClient.prototype.initCallstats_ = function(successCallback) {
-  trace('Init callstats.');
-  var appId = this.params_.callstatsParams.appId;
-  var appSecret = this.params_.callstatsParams.appSecret;
-  if (!appId || appId === 'none' || !appSecret || appSecret === 'none') {
-    trace('Could not init callstats due to missing App ID and/or API key');
-    return;
-  }
-
-  // eslint-disable-next-line new-cap
-  this.callstats = new callstats();
-
-  this.userId = this.params_.roomId + (this.isInitiator_ ? '-0' : '-1');
-  var statsCallback = null;
-  var configParams = {
-    applicationVersion: this.params_.versionInfo.gitHash
-  };
-  var callback = function(status, msg) {
-    if (!this.callstatsInit) {
-      if (status === 'httpError') {
-        trace('Callstats could not be set up: ' + msg);
-        return;
-      }
-      successCallback();
-    }
-    trace('Init status: ' + status + ' msg: ' + msg);
-  }.bind(this);
-
-  this.callstats.initialize(appId, appSecret, this.userId, callback,
-      statsCallback, configParams);
-};
-
-// Setup the callstats api and attach it to the peerconnection.
-PeerConnectionClient.prototype.setupCallstats_ = function() {
-  // Need to catch the error otherwise the peerConnection creation
-  // will fail.
-  try {
-    // Authenticate with the callstats backend.
-    var successCallback = function() {
-      trace('Set up callstats.');
-      this.conferenceId = this.params_.roomId;
-      this.remoteUserId = this.params_.roomId +
-          (this.isInitiator_ ? '-1' : '-0');
-      // Multiplex should be used when sending audio and video on a
-      // peerConnection. http://www.callstats.io/api/#enumeration-of-fabricusage
-      // TODO: Might need to change this dynamically if an audio/video only
-      // call.
-      var usage = this.callstats.fabricUsage.multiplex;
-      var callback = function(status, msg) {
-        // Check if there are any commands to process.
-        this.callStatsCommandQueue_.processQueue();
-        trace('Callstats status: ' + status + ' msg: ' + msg);
-      }.bind(this);
-      // Hookup the callstats api to the peerConnection object.
-      this.callstats.addNewFabric(this.pc_, this.remoteUserId, usage,
-          this.conferenceId, callback);
-      this.callstatsInit = true;
-    }.bind(this);
-    this.initCallstats_(successCallback);
-  } catch (error) {
-    trace('Callstats could not be set up: ' + error);
-  }
-};
-
-// Associate device labels, media stream tracks to user Id in the callstats
-// backend.
-PeerConnectionClient.prototype.bindMstToUserIdForCallstats_ = function() {
-  if (!this.isCallstatsInitialized_() || !this.pc_ &&
-      !this.pc_.getLocalStreams && this.pc_.getLocalStreams().length === 0) {
-    trace('Cannot associateMstWithUserID.');
-    return;
-  }
-
-  // Local.
-  // Local video tag changes from local-video to mini-video when the call is
-  // established.
-  var localVideoTagId = 'mini-video';
-
-  // Determine local video track id, label and SSRC.
-  if (this.pc_.getLocalStreams()[0].getVideoTracks().length > 0 &&
-      this.pc_.localDescription) {
-    var videoSendTrackId =
-      this.pc_.getLocalStreams()[0].getVideoTracks()[0].id;
-    var videoSendTrackLabel =
-        this.pc_.getLocalStreams()[0].getVideoTracks()[0].label;
-    var videoSendSsrcLine = this.pc_.localDescription.sdp.match('a=ssrc:.*.' +
-        videoSendTrackId);
-
-    // Only send if SSRC has been found.
-    if (videoSendSsrcLine !== null) {
-      var videoSendSsrc = videoSendSsrcLine[0].match('[0-9]+');
-      this.callstats.associateMstWithUserID(this.pc_, this.userId,
-          this.conferenceId, videoSendSsrc[0], videoSendTrackLabel,
-          localVideoTagId);
-    }
-  }
-
-  if (this.pc_.getLocalStreams()[0].getAudioTracks().length > 0 &&
-      this.pc_.localDescription) {
-    // Determine local audio track id, label and SSRC.
-    var audioSendTrackId =
-        this.pc_.getLocalStreams()[0].getAudioTracks()[0].id;
-    var audioSendTrackLabel =
-        this.pc_.getLocalStreams()[0].getAudioTracks()[0].label;
-    var audioSendSsrcLine = this.pc_.localDescription.sdp.match('a=ssrc:.*.' +
-        audioSendTrackId);
-
-    // Only send if SSRC has been found.
-    if (audioSendSsrcLine !== null) {
-      var audioSendSsrc = audioSendSsrcLine[0].match('[0-9]+');
-      this.callstats.associateMstWithUserID(this.pc_, this.userId,
-          this.conferenceId, audioSendSsrc[0], audioSendTrackLabel,
-          localVideoTagId);
-    }
-  }
-
-  // Remote.
-  var remoteVideoTagId = 'remote-video';
-
-  if (this.pc_.getRemoteStreams()[0].getVideoTracks.length > 0 &&
-      this.pc_.remoteDescription) {
-    // Determine remote video track id, label and SSRC.
-    var videoReceiveTrackId =
-        this.pc_.getRemoteStreams()[0].getVideoTracks()[0].id;
-    var videoReceiveTrackLabel =
-        this.pc_.getRemoteStreams()[0].getVideoTracks()[0].label;
-    var videoReceiveSsrcLine =
-        this.pc_.remoteDescription.sdp.match('a=ssrc:.*.' +
-        videoReceiveTrackId);
-
-    // Firefox does not use SSRC.
-    if (videoReceiveSsrcLine !== null) {
-      var videoReceiveSsrc = videoReceiveSsrcLine[0].match('[0-9]+');
-      this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
-          this.conferenceId, videoReceiveSsrc[0], videoReceiveTrackLabel,
-          remoteVideoTagId);
-    }
-  }
-
-  if (this.pc_.getRemoteStreams()[0].getAudioTracks.length > 0 &&
-      this.pc_.remoteDescription) {
-    // Determine remote audio track id, label and SSRC.
-    var audioReceiveTrackId =
-        this.pc_.getRemoteStreams()[0].getAudioTracks()[0].id;
-    var audioReceiveTrackLabel =
-        this.pc_.getRemoteStreams()[0].getAudioTracks()[0].label;
-    var audioReceiveSsrcLine =
-        this.pc_.remoteDescription.sdp.match('a=ssrc:.*.' +
-        audioReceiveTrackId);
-
-    // Only send if SSRC has been found.
-    if (audioReceiveSsrcLine !== null) {
-      var audioReceiveSsrc = audioReceiveSsrcLine[0].match('[0-9]+');
-      this.callstats.associateMstWithUserID(this.pc_, this.remoteUserId,
-          this.conferenceId, audioReceiveSsrc[0], audioReceiveTrackLabel,
-          remoteVideoTagId);
-    }
-  }
-};
-
-// Send events to callstats backend.
-// http://www.callstats.io/api/#enumeration-of-fabricevent
-PeerConnectionClient.prototype.sendCallstatsEvents = function(fabricEvent) {
-  if (!this.isCallstatsInitialized_()) {
-    return;
-  } else if (!fabricEvent) {
-    trace('Must provide a fabricEvent.');
-    return;
-  }
-
-  this.callstats.sendFabricEvent(this.pc_, fabricEvent, this.conferenceId);
 };
