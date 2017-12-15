@@ -139,18 +139,15 @@
       roomId: '{{ room_id }}',
       roomLink: '{{ room_link }}',
 {% endif %}
-
       mediaConstraints: {{ media_constraints | safe }},
       offerOptions: {{ offer_options | safe }},
       peerConnectionConfig: {{ pc_config | safe }},
       peerConnectionConstraints: {{ pc_constraints | safe }},
-      turnRequestUrl: '{{ turn_url }}',
       iceServerRequestUrl: '{{ ice_server_url }}',
       iceServerTransports: '{{ ice_server_transports }}',
       wssUrl: '{{ wss_url }}',
       wssPostUrl: '{{ wss_post_url }}',
       bypassJoinConfirmation: {{ bypass_join_confirmation }},
-      turnServerOverride: {{ turn_server_override }},
       versionInfo: {{ version_info }},
     };
 

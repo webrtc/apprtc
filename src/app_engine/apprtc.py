@@ -42,12 +42,14 @@ def get_hd_default(user_agent):
   return 'true'
 
 # iceServers will be filled in by the TURN HTTP request.
-def make_pc_config(ice_transports):
+def make_pc_config(ice_transports, ice_server_override):
   config = {
   'iceServers': [],
   'bundlePolicy': 'max-bundle',
   'rtcpMuxPolicy': 'require'
   };
+  if ice_server_override:
+    config['iceServers'] = ice_server_override
   if ice_transports:
     config['iceTransports'] = ice_transports
   return config
@@ -260,7 +262,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # TODO(tkchin): We want to provide a ICE request url on the initial get,
   # but we don't provide client_id until a join. For now just generate
   # a random id, but we should make this better.
-  # TODO(jansson): Remove this once CEOD is deprecated.
   username = client_id if client_id is not None else generate_random(9)
   if len(ice_server_base_url) > 0:
     ice_server_url = constants.ICE_SERVER_URL_TEMPLATE % \
@@ -268,14 +269,11 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   else:
     ice_server_url = ''
 
-  # TODO(jansson): Remove this once CEOD is deprecated.
-  turn_url = constants.TURN_URL_TEMPLATE % \
-      (constants.TURN_BASE_URL, username, constants.CEOD_KEY)
   # If defined it will override the ICE server provider and use the specified
   # turn servers directly.
-  turn_server_override = constants.TURN_SERVER_OVERRIDE
+  ice_server_override = constants.ICE_SERVER_OVERRIDE
 
-  pc_config = make_pc_config(ice_transports)
+  pc_config = make_pc_config(ice_transports, ice_server_override)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
   offer_options = {};
   media_constraints = make_media_stream_constraints(audio, video,
@@ -293,8 +291,6 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'pc_constraints': json.dumps(pc_constraints),
     'offer_options': json.dumps(offer_options),
     'media_constraints': json.dumps(media_constraints),
-    'turn_server_override': turn_server_override,
-    'turn_url': turn_url,
     'ice_server_url': ice_server_url,
     'ice_server_transports': ice_server_transports,
     'include_loopback_js' : include_loopback_js,

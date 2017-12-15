@@ -2,7 +2,7 @@
 
 """AppRTC Probers.
 
-This module implements CEOD and collider probers.
+This module implements collider prober.
 """
 
 import json
@@ -23,7 +23,7 @@ PROBER_FETCH_DEADLINE = 30
 
 def is_prober_enabled():
   """Check the application ID so that other projects hosting AppRTC code does
-  not hit CEOD/Collider unnecessarily."""
+  not hit Collider unnecessarily."""
   return app_identity.get_application_id() == 'apprtc'
 
 def send_alert_email(tag, message):
@@ -59,70 +59,6 @@ def has_non_empty_array_value(dictionary, key):
 def get_collider_probe_success_key(instance_host):
   """Returns the memcache key for the last collider instance probing result."""
   return 'last_collider_probe_success_' + instance_host
-
-
-class ProbeCEODPage(webapp2.RequestHandler):
-  """Page to probe CEOD server."""
-
-  def handle_ceod_response(self, error_message, status_code):
-    self.response.set_status(status_code)
-    if error_message is not None:
-      send_alert_email('CEOD Error', error_message)
-
-      logging.warning('CEOD prober error: ' + error_message)
-      self.response.out.write(error_message)
-    else:
-      self.response.out.write('Success!')
-
-  def probe_ceod(self):
-    ceod_url = (constants.TURN_URL_TEMPLATE
-                % (constants.TURN_BASE_URL, 'prober', constants.CEOD_KEY))
-    sanitized_url = (constants.TURN_URL_TEMPLATE %
-                     (constants.TURN_BASE_URL, 'prober', '<obscured>'))
-
-    error_message = None
-    result = None
-    try:
-      result = urlfetch.fetch(
-          url=ceod_url, method=urlfetch.GET, deadline=PROBER_FETCH_DEADLINE)
-    except urlfetch.Error as e:
-      error_message = ('urlfetch throws exception: %s' % str(e))
-      return (error_message, 500)
-
-    status_code = result.status_code
-    if status_code != 200:
-      error_message = ('Unexpected CEOD response: %d, requested URL: %s'
-                       % (result.status_code, sanitized_url))
-    else:
-      try:
-        turn_server = json.loads(result.content)
-        if (not has_non_empty_string_value(turn_server, 'username') or
-            not has_non_empty_string_value(turn_server, 'password') or
-            not has_non_empty_array_value(turn_server, 'uris')):
-          error_message = ('CEOD response does not contain valid '
-                           'username/password/uris: response = %s, url = %s'
-                           % (result.content, sanitized_url))
-          status_code = 500
-      except ValueError as e:
-        error_message = """
-        CEOD response cannot be decoded as JSON:
-        exception = %s,
-        response = %s,
-        url = %s
-        """ % (str(e), result.content, sanitized_url)
-        status_code = 500
-    return (error_message, status_code)
-
-  def get(self):
-    if not is_prober_enabled():
-      return
-
-    error_message, status_code = self.probe_ceod()
-    if error_message is not None:
-      logging.info("Retry probing CEOD.")
-      error_message, status_code = self.probe_ceod()
-
-    self.handle_ceod_response(error_message, status_code)
 
 
 class ProbeColliderPage(webapp2.RequestHandler):
@@ -264,6 +200,5 @@ class ProbeColliderPage(webapp2.RequestHandler):
         error_message, status_code, collider_instance)
 
 app = webapp2.WSGIApplication([
-    ('/probe/ceod', ProbeCEODPage),
     ('/probe/collider', ProbeColliderPage),
 ], debug=True)
