@@ -14,7 +14,7 @@ import subprocess
 # https://cloud.google.com/sdk/downloads#versioned
 
 GCLOUD_DOWNLOAD_URL = 'https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/'
-GCLOUD_SDK_TAR_FILE = 'google-cloud-sdk-138.0.0-linux-x86_64.tar.gz'
+GCLOUD_SDK_TAR_FILE = 'google-cloud-sdk-183.0.0-linux-x86_64.tar.gz'
 GCLOUD_SDK_INSTALL_FOLDER = 'google-cloud-sdk'
 TEMP_DIR = 'temp'
 GCLOUD_SDK_PATH = os.path.join(TEMP_DIR, GCLOUD_SDK_INSTALL_FOLDER)
