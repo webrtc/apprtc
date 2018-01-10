@@ -26,6 +26,14 @@ module.exports = function(config) {
     }
     return filteredFiles;
   }
+  
+  let chromeFlags = [
+    '--use-fake-device-for-media-stream',
+    '--use-fake-ui-for-media-stream',
+    '--no-sandbox',
+    '--headless', '--disable-gpu', '--remote-debugging-port=9222'
+  ];
+  
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -91,6 +99,13 @@ module.exports = function(config) {
     // start these browsers
     // available browser launchers:
     // https://npmjs.org/browse/keyword/karma-launcher
+    customLaunchers: {
+      chrome: {
+        base: 'Chrome',
+        flags: chromeFlags
+      },
+    },
+    
     browsers: [browser[0].toUpperCase() + browser.substr(1)],
 
     // Continuous Integration mode
