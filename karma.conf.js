@@ -105,8 +105,6 @@ module.exports = function(config) {
         flags: chromeFlags
       },
     },
-    
-    browsers: [browser[0].toUpperCase() + browser.substr(1)],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
