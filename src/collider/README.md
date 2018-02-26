@@ -4,8 +4,11 @@ A websocket-based signaling server in Go.
 
 ## Building
 
-1. Install the Go tools and workspaces as documented at http://golang.org/doc/install and http://golang.org/doc/code.html
-
+1. Install the Go tools and workspaces as documented at http://golang.org/doc/install and http://golang.org/doc/code.html (Note: Currently support Go <= 1.6)  
+On Ubuntu, `go` can be installed using:
+        
+        apt-get install golang-go
+        
 2. Checkout the `apprtc` repository
 
         git clone https://github.com/webrtc/apprtc.git
@@ -23,10 +26,12 @@ A websocket-based signaling server in Go.
 
 5. Install dependencies
 
-        go get collidermain
+        go get golang.org/x/net/websocket
+        go install golang.org/x/net/websocket
 
 6. Install `collidermain`
 
+        go get collidermain
         go install collidermain
 
 ## Running
