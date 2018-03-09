@@ -1,6 +1,7 @@
 // Karma configuration
 module.exports = function(config) {
-  var browser = process.env.BROWSER || 'chrome';
+  var browser = (process.env.BROWSER === '' || process.env.BROWSER === 'chrome')
+      ? 'Chrome_no_sandbox' : process.env.BROWSER
   var travis = process.env.TRAVIS;
   var files = function() {
     // List of tests that can run in "any" browser.
@@ -26,6 +27,13 @@ module.exports = function(config) {
     }
     return filteredFiles;
   }
+
+  let chromeFlags = [
+    '--use-fake-device-for-media-stream',
+    '--use-fake-ui-for-media-stream',
+    '--no-sandbox',
+    '--headless', '--disable-gpu', '--remote-debugging-port=9222'
+  ];
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -92,6 +100,13 @@ module.exports = function(config) {
     // available browser launchers:
     // https://npmjs.org/browse/keyword/karma-launcher
     browsers: [browser[0].toUpperCase() + browser.substr(1)],
+
+    customLaunchers: {
+      Chrome_no_sandbox: {
+        base: 'Chrome',
+        flags: chromeFlags
+      }
+    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
