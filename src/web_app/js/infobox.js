@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals calculateFps, computeBitrate, enumerateStats, formatTypePreference,
+/* globals calculateFps, computeBitrate, enumerateStats,
     iceCandidateType, computeRate */
 /* exported InfoBox */
 
@@ -171,14 +171,10 @@ InfoBox.prototype.updateInfoDiv = function() {
       remotePort = connectionStats.remotePort;
     }
     if (localAddr && remoteAddr) {
-      var localCandId = connectionStats.localCandidateId;
-      var localTypePref;
-      if (localCandId) {
-        localTypePref = connectionStats.localPriority >> 24;
-      }
+      var relayProtocol = connectionStats.localRelayProtocol;
       contents += this.buildLine_('LocalAddr', localAddr +
-          ' (' + localAddrType + (typeof localTypePref !== undefined ? '' +
-          formatTypePreference(localTypePref) : '') + ')');
+          ' (' + localAddrType + (typeof relayProtocol !== undefined ? '' +
+          'TURN/' + relayProtocol.toUpperCase() : '') + ')');
       contents += this.buildLine_('LocalPort', localPort);
       contents += this.buildLine_('RemoteAddr', remoteAddr + ' (' +
           remoteAddrType + ')');

@@ -150,6 +150,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
       localPort: 0,
       localPriority: 0,
       localProtocol: '',
+      localRelayProtocol: undefined,
       remoteCandidateId: '',
       remoteCandidateType: '',
       remoteIp: '',
@@ -308,6 +309,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
               statsObject.connection.localPriority = report.priority;
               statsObject.connection.localProtocol = report.protocol;
               statsObject.connection.localType = report.candidateType;
+              statsObject.connection.localRelayProtocol = report.relayProtocol;
             }
           }
           break;
