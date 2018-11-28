@@ -18,6 +18,9 @@ handlers:
 - url: /pako
   static_dir: third_party/pako
 
+- url: /wasm
+  static_dir: wasm
+
 - url: /images
   static_dir: images
 

@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace, InfoBox, setUpFullScreen, isFullScreen,
+/* globals trace, InfoBox, setUpFullScreen, isFullScreen, LibWebP,
    RoomSelection, isChromeApp, $ */
 /* exported AppController, remoteVideo */
 
@@ -28,12 +28,14 @@ var UI_CONSTANTS = {
   icons: '#icons',
   infoDiv: '#info-div',
   localVideo: '#local-video',
+  miniCanvas: '#mini-canvas',
   miniVideo: '#mini-video',
   muteAudioSvg: '#mute-audio',
   muteVideoSvg: '#mute-video',
   newRoomButton: '#new-room-button',
   newRoomLink: '#new-room-link',
   privacyLinks: '#privacy',
+  remoteCanvas: '#remote-canvas',
   remoteVideo: '#remote-video',
   rejoinButton: '#rejoin-button',
   rejoinDiv: '#rejoin-div',
@@ -58,9 +60,11 @@ var AppController = function(loadingParams) {
   this.hangupSvg_ = $(UI_CONSTANTS.hangupSvg);
   this.icons_ = $(UI_CONSTANTS.icons);
   this.localVideo_ = $(UI_CONSTANTS.localVideo);
+  this.miniCanvas_ = $(UI_CONSTANTS.miniCanvas);
   this.miniVideo_ = $(UI_CONSTANTS.miniVideo);
   this.sharingDiv_ = $(UI_CONSTANTS.sharingDiv);
   this.statusDiv_ = $(UI_CONSTANTS.statusDiv);
+  this.remoteCanvas_ = $(UI_CONSTANTS.remoteCanvas);
   this.remoteVideo_ = $(UI_CONSTANTS.remoteVideo);
   this.videosDiv_ = $(UI_CONSTANTS.videosDiv);
   this.roomLinkHref_ = $(UI_CONSTANTS.roomLinkHref);
@@ -69,6 +73,10 @@ var AppController = function(loadingParams) {
   this.newRoomLink_ = $(UI_CONSTANTS.newRoomLink);
   this.rejoinButton_ = $(UI_CONSTANTS.rejoinButton);
   this.newRoomButton_ = $(UI_CONSTANTS.newRoomButton);
+
+  this.deactivate_(this.miniCanvas_);
+  this.deactivate_(this.remoteCanvas_);
+  this.libwebp_ = new LibWebP();
 
   this.newRoomButton_.addEventListener('click',
       this.onNewRoomClick_.bind(this), false);
@@ -343,6 +351,34 @@ AppController.prototype.transitionToActive_ = function() {
   this.activate_(this.videosDiv_);
   this.show_(this.hangupSvg_);
   this.displayStatus_('');
+
+  this.deactivate_(this.miniVideo_);
+  this.deactivate_(this.remoteVideo_);
+  this.activate_(this.miniCanvas_);
+  this.activate_(this.remoteCanvas_);
+
+  const miniCtx2d = this.miniCanvas_.getContext('2d');
+  const remoteCtx2d = this.remoteCanvas_.getContext('2d');
+
+  setInterval(() => {
+    const {width, height} = this.miniCanvas_;
+    miniCtx2d.drawImage(this.miniVideo_, 0, 0, width, height);
+    const frame = miniCtx2d.getImageData(0, 0, width, height);
+    console.warn('video frame', frame);
+    const encoded = this.libwebp_.encode(frame);
+    console.warn('encoded', encoded.length);
+    dc.send(encoded); // 64 KB max
+  }, 1500);
+
+  dc.onmessage = event => {
+    const encoded = new Uint8Array(event.data);
+    console.warn('encoded remote frame:', encoded);
+    const {data, width, height} = this.libwebp_.decode(encoded);
+    console.warn('decoded remote frame:', width, height, data);
+    const frame = remoteCtx2d.createImageData(width, height);
+    frame.data.set(data, 0);
+    remoteCtx2d.putImageData(frame, 0, 0);
+  };
 };
 
 AppController.prototype.transitionToWaiting_ = function() {
