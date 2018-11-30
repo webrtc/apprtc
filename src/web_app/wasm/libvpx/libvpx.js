@@ -1834,7 +1834,7 @@ var ASM_CONSTS = [];
 
 STATIC_BASE = GLOBAL_BASE;
 
-STATICTOP = STATIC_BASE + 133664;
+STATICTOP = STATIC_BASE + 133920;
 /* global initializers */  __ATINIT__.push();
 
 
@@ -1843,7 +1843,7 @@ STATICTOP = STATIC_BASE + 133664;
 
 
 
-var STATIC_BUMP = 133664;
+var STATIC_BUMP = 133920;
 Module["STATIC_BASE"] = STATIC_BASE;
 Module["STATIC_BUMP"] = STATIC_BUMP;
 
@@ -5645,6 +5645,12 @@ var real__vpx_js_rgba_to_yuv420 = asm["_vpx_js_rgba_to_yuv420"]; asm["_vpx_js_rg
   return real__vpx_js_rgba_to_yuv420.apply(null, arguments);
 };
 
+var real__vpx_js_yuv420_to_rgba = asm["_vpx_js_yuv420_to_rgba"]; asm["_vpx_js_yuv420_to_rgba"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real__vpx_js_yuv420_to_rgba.apply(null, arguments);
+};
+
 var real_establishStackSpace = asm["establishStackSpace"]; asm["establishStackSpace"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -5759,6 +5765,10 @@ var _vpx_js_rgba_to_yuv420 = Module["_vpx_js_rgba_to_yuv420"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["_vpx_js_rgba_to_yuv420"].apply(null, arguments) };
+var _vpx_js_yuv420_to_rgba = Module["_vpx_js_yuv420_to_rgba"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["_vpx_js_yuv420_to_rgba"].apply(null, arguments) };
 var establishStackSpace = Module["establishStackSpace"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');

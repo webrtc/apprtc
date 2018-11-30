@@ -33,23 +33,12 @@ class LibVPX {
 
   _loadWasm(src) {
     console.warn('loading wasm module:', src);
-    const script = document.createElement('script');
-    script.src = src;
-
-    script.onerror = () => {
-      console.warn('failed to load the script');
-    };
-
-    script.onload = () => {
-      console.log('script loaded, waiting for wasm...');
-
+    loadScript(src).then(() => {
       Module.onRuntimeInitialized = () => {
         console.warn('libvpx.wasm loaded');
         console.log('wasm module:', Module);
       };
-    };
-
-    document.body.appendChild(script);
+    });
   }
 
   encode(videoElement) {
@@ -71,7 +60,7 @@ class LibVPX {
     const context2d = canvas.getContext('2d');
     context2d.drawImage(videoElement, 0, 0, width, height);
     const {data:rgbaData} = context2d.getImageData(0, 0, width, height);
-    console.log('RGB data:', rgbaData.length, 'bytes');
+    console.log('RGB data:', strbuf(rgbaData));
     const rgbaSize = width * height * 4;
     const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
     const rgbaPtr = _malloc(rgbaSize);
@@ -79,7 +68,7 @@ class LibVPX {
     HEAP8.set(rgbaData, rgbaPtr);
     _vpx_js_rgba_to_yuv420(yuvPtr, rgbaPtr, width, height);
     const yuvData = new Uint8Array(HEAP8.buffer, yuvPtr, yuvSize);
-    console.log('YUV data:', yuvData.length, 'bytes');
+    console.log('YUV data:', strbuf(yuvData));
     FS.writeFile(YUV_FILE, yuvData); // in-memory memfs emscripten file
     _free(rgbaPtr);
     _free(yuvPtr);
@@ -100,6 +89,9 @@ class LibVPX {
   }
 
   decode() {
+    const width = this.width;
+    const height = this.height;
+
     console.warn('initializing vpx decoder');
     _vpx_js_encoder_close();
     this._initialized = false;
@@ -110,5 +102,56 @@ class LibVPX {
     console.log('frames decoded in', Date.now() - time, 'ms');
     _vpx_js_encoder_close();
     console.log('YUV file size:', FS.lstat(YUV_FILE).size);
+
+    const rgbaSize = width * height * 4;
+    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
+    const yuvFrames = FS.readFile(YUV_FILE); // UInt8Array
+    console.log('YUV frames:', strbuf(yuvFrames));
+    if (yuvFrames.length % yuvSize != 0)
+      console.warn('Wrong YUV size:', yuvFrames.length, '%', yuvSize, '!= 0');
+    const rgbaPtr = _malloc(rgbaSize);
+    const yuvPtr = _malloc(yuvSize);
+
+    for (let frameId = 0; frameId < yuvFrames.length / yuvSize; frameId++) {
+      const yuvData = yuvFrames.slice(
+        frameId * yuvSize, (frameId + 1) * yuvSize);
+      HEAP8.set(yuvData, yuvPtr);
+      _vpx_js_yuv420_to_rgba(rgbaPtr, yuvPtr, width, height);
+      const rgbaData = new Uint8Array(HEAP8.buffer, rgbaPtr, rgbaSize);
+      console.log('RGB data:', strbuf(rgbaData));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context2d = canvas.getContext('2d');
+      const imageData = context2d.getImageData(0, 0, width, height);
+      imageData.data.set(rgbaData);
+      context2d.putImageData(imageData, 0, 0);
+      const dataUrl = canvas.toDataURL();
+      console.log('%c       ',
+        `font-size: ${height}px; background: url(${dataUrl}) no-repeat;`);
+    }
+
+    _free(rgbaPtr);
+    _free(yuvPtr);
   }
+}
+
+function strbuf(array, count = 10) {
+  let s = '';
+
+  for (let i = 0; i < count; i++)
+    s += ('00' + array[i].toString(16)).slice(-2);
+
+  return (array.length >> 10) + ' KB [' + s + '...]';
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onerror = reject;
+    script.onload = resolve;
+    document.body.appendChild(script);
+  });
 }
