@@ -111,9 +111,13 @@ var AppController = function(loadingParams) {
     this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
     this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
 
-    console.log('click somewhere to call libvpx.wasm');
-    document.body.addEventListener('click', () => {
-      this.libvpx_.encode(this.localVideo_);
+    console.log('click somewhere to run VPX encoder');
+    console.log('ctrl+click somewhere to run VPX decoder');
+    document.body.addEventListener('click', event => {
+      if (event.ctrlKey)
+        this.libvpx_.decode();
+      else
+        this.libvpx_.encode(this.localVideo_);
     });
   } else {
     console.warn('Use ?libvpx=1 to load libvpx.wasm instead.');

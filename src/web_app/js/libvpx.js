@@ -12,10 +12,13 @@
 
 'use strict';
 
-const Encoders = {
+const Codecs = {
   VP8: 0x30385056,
   VP9: 0x30395056,
 };
+
+const YUV_FILE = '/vpx-yuv';
+const IVF_FILE = '/vpx-ivf';
 
 class LibVPX {
   constructor() {
@@ -53,7 +56,7 @@ class LibVPX {
     const codec = this.codec;
     const width = this.width;
     const height = this.height;
-    const fourcc = Encoders[codec];
+    const fourcc = Codecs[codec];
 
     console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
 
@@ -77,23 +80,35 @@ class LibVPX {
     _vpx_js_rgba_to_yuv420(yuvPtr, rgbaPtr, width, height);
     const yuvData = new Uint8Array(HEAP8.buffer, yuvPtr, yuvSize);
     console.log('YUV data:', yuvData.length, 'bytes');
-    FS.writeFile('/vpx-yuv', yuvData); // in-memory memfs emscripten file
+    FS.writeFile(YUV_FILE, yuvData); // in-memory memfs emscripten file
     _free(rgbaPtr);
     _free(yuvPtr);
 
     if (!this._initialized) {
-      console.warn('initializing libvpx');
-      _vpx_js_encoder_init(fourcc, width, height);
+      console.warn('initializing vpx encoder');
+      _vpx_js_encoder_open(fourcc, width, height);
       this._initialized = true;
     }
 
     const time = Date.now();
-    _vpx_js_encoder_process();
+    _vpx_js_encoder_run();
     console.log('frame encoded in', Date.now() - time, 'ms');
-    // _vpx_js_encoder_exit(); // flushes all memory buffers, etc.
 
-    const ivfData = FS.readFile('/vpx-ivf');
-    console.log('IVF data:', ivfData.length - this._previvfsize);
-    this._previvfsize = ivfData.length;
+    const ivfSize = FS.lstat(IVF_FILE).size;
+    console.log('IVF file size delta:', ivfSize - this._previvfsize);
+    this._previvfsize = ivfSize;
+  }
+
+  decode() {
+    console.warn('initializing vpx decoder');
+    _vpx_js_encoder_close();
+    this._initialized = false;
+    console.log('IVF file size:', FS.lstat(IVF_FILE).size);
+    _vpx_js_decoder_open();
+    const time = Date.now();
+    _vpx_js_decoder_run();
+    console.log('frames decoded in', Date.now() - time, 'ms');
+    _vpx_js_encoder_close();
+    console.log('YUV file size:', FS.lstat(YUV_FILE).size);
   }
 }

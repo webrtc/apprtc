@@ -1834,7 +1834,7 @@ var ASM_CONSTS = [];
 
 STATIC_BASE = GLOBAL_BASE;
 
-STATICTOP = STATIC_BASE + 129296;
+STATICTOP = STATIC_BASE + 133664;
 /* global initializers */  __ATINIT__.push();
 
 
@@ -1843,7 +1843,7 @@ STATICTOP = STATIC_BASE + 129296;
 
 
 
-var STATIC_BUMP = 129296;
+var STATIC_BUMP = 133664;
 Module["STATIC_BASE"] = STATIC_BASE;
 Module["STATIC_BUMP"] = STATIC_BUMP;
 
@@ -5285,6 +5285,8 @@ function nullFunc_iiiiiiiiiiii(x) { err("Invalid function pointer called with si
 
 function nullFunc_iiiiiiiiiiiiiiiiii(x) { err("Invalid function pointer called with signature 'iiiiiiiiiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
+function nullFunc_iiiij(x) { err("Invalid function pointer called with signature 'iiiij'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
+
 function nullFunc_iiiijj(x) { err("Invalid function pointer called with signature 'iiiijj'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
 function nullFunc_iiijiii(x) { err("Invalid function pointer called with signature 'iiijiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
@@ -5315,9 +5317,9 @@ function nullFunc_viiiiiiii(x) { err("Invalid function pointer called with signa
 
 function nullFunc_viiiiiiiiiii(x) { err("Invalid function pointer called with signature 'viiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");  err("Build with ASSERTIONS=2 for more info.");abort(x) }
 
-Module['wasmTableSize'] = 11456;
+Module['wasmTableSize'] = 13184;
 
-Module['wasmMaxTableSize'] = 11456;
+Module['wasmMaxTableSize'] = 13184;
 
 function invoke_i(index) {
   var sp = stackSave();
@@ -5363,10 +5365,43 @@ function invoke_iiii(index,a1,a2,a3) {
   }
 }
 
+function invoke_iiiii(index,a1,a2,a3,a4) {
+  var sp = stackSave();
+  try {
+    return Module["dynCall_iiiii"](index,a1,a2,a3,a4);
+  } catch(e) {
+    stackRestore(sp);
+    if (typeof e !== 'number' && e !== 'longjmp') throw e;
+    Module["setThrew"](1, 0);
+  }
+}
+
+function invoke_iiiiii(index,a1,a2,a3,a4,a5) {
+  var sp = stackSave();
+  try {
+    return Module["dynCall_iiiiii"](index,a1,a2,a3,a4,a5);
+  } catch(e) {
+    stackRestore(sp);
+    if (typeof e !== 'number' && e !== 'longjmp') throw e;
+    Module["setThrew"](1, 0);
+  }
+}
+
 function invoke_iiiiiiii(index,a1,a2,a3,a4,a5,a6,a7) {
   var sp = stackSave();
   try {
     return Module["dynCall_iiiiiiii"](index,a1,a2,a3,a4,a5,a6,a7);
+  } catch(e) {
+    stackRestore(sp);
+    if (typeof e !== 'number' && e !== 'longjmp') throw e;
+    Module["setThrew"](1, 0);
+  }
+}
+
+function invoke_iiiij(index,a1,a2,a3,a4,a5) {
+  var sp = stackSave();
+  try {
+    return Module["dynCall_iiiij"](index,a1,a2,a3,a4,a5);
   } catch(e) {
     stackRestore(sp);
     if (typeof e !== 'number' && e !== 'longjmp') throw e;
@@ -5473,9 +5508,31 @@ function invoke_viiiii(index,a1,a2,a3,a4,a5) {
   }
 }
 
+function invoke_viiiiii(index,a1,a2,a3,a4,a5,a6) {
+  var sp = stackSave();
+  try {
+    Module["dynCall_viiiiii"](index,a1,a2,a3,a4,a5,a6);
+  } catch(e) {
+    stackRestore(sp);
+    if (typeof e !== 'number' && e !== 'longjmp') throw e;
+    Module["setThrew"](1, 0);
+  }
+}
+
+function invoke_viiiiiii(index,a1,a2,a3,a4,a5,a6,a7) {
+  var sp = stackSave();
+  try {
+    Module["dynCall_viiiiiii"](index,a1,a2,a3,a4,a5,a6,a7);
+  } catch(e) {
+    stackRestore(sp);
+    if (typeof e !== 'number' && e !== 'longjmp') throw e;
+    Module["setThrew"](1, 0);
+  }
+}
+
 Module.asmGlobalArg = {};
 
-Module.asmLibraryArg = { "abort": abort, "assert": assert, "enlargeMemory": enlargeMemory, "getTotalMemory": getTotalMemory, "setTempRet0": setTempRet0, "getTempRet0": getTempRet0, "abortOnCannotGrowMemory": abortOnCannotGrowMemory, "abortStackOverflow": abortStackOverflow, "nullFunc_i": nullFunc_i, "nullFunc_ii": nullFunc_ii, "nullFunc_iii": nullFunc_iii, "nullFunc_iiii": nullFunc_iiii, "nullFunc_iiiii": nullFunc_iiiii, "nullFunc_iiiiii": nullFunc_iiiiii, "nullFunc_iiiiiiii": nullFunc_iiiiiiii, "nullFunc_iiiiiiiii": nullFunc_iiiiiiiii, "nullFunc_iiiiiiiiii": nullFunc_iiiiiiiiii, "nullFunc_iiiiiiiiiii": nullFunc_iiiiiiiiiii, "nullFunc_iiiiiiiiiiii": nullFunc_iiiiiiiiiiii, "nullFunc_iiiiiiiiiiiiiiiiii": nullFunc_iiiiiiiiiiiiiiiiii, "nullFunc_iiiijj": nullFunc_iiiijj, "nullFunc_iiijiii": nullFunc_iiijiii, "nullFunc_ji": nullFunc_ji, "nullFunc_jij": nullFunc_jij, "nullFunc_v": nullFunc_v, "nullFunc_vi": nullFunc_vi, "nullFunc_vid": nullFunc_vid, "nullFunc_vii": nullFunc_vii, "nullFunc_viii": nullFunc_viii, "nullFunc_viiii": nullFunc_viiii, "nullFunc_viiiii": nullFunc_viiiii, "nullFunc_viiiiii": nullFunc_viiiiii, "nullFunc_viiiiiii": nullFunc_viiiiiii, "nullFunc_viiiiiiii": nullFunc_viiiiiiii, "nullFunc_viiiiiiiiiii": nullFunc_viiiiiiiiiii, "invoke_i": invoke_i, "invoke_ii": invoke_ii, "invoke_iii": invoke_iii, "invoke_iiii": invoke_iiii, "invoke_iiiiiiii": invoke_iiiiiiii, "invoke_iiiijj": invoke_iiiijj, "invoke_ji": invoke_ji, "invoke_jij": invoke_jij, "invoke_vi": invoke_vi, "invoke_vid": invoke_vid, "invoke_vii": invoke_vii, "invoke_viii": invoke_viii, "invoke_viiii": invoke_viiii, "invoke_viiiii": invoke_viiiii, "___lock": ___lock, "___setErrNo": ___setErrNo, "___syscall140": ___syscall140, "___syscall145": ___syscall145, "___syscall146": ___syscall146, "___syscall221": ___syscall221, "___syscall5": ___syscall5, "___syscall54": ___syscall54, "___syscall6": ___syscall6, "___unlock": ___unlock, "__exit": __exit, "_emscripten_memcpy_big": _emscripten_memcpy_big, "_exit": _exit, "_gettimeofday": _gettimeofday, "_llvm_log10_f32": _llvm_log10_f32, "_llvm_log10_f64": _llvm_log10_f64, "_longjmp": _longjmp, "DYNAMICTOP_PTR": DYNAMICTOP_PTR, "tempDoublePtr": tempDoublePtr, "STACKTOP": STACKTOP, "STACK_MAX": STACK_MAX };
+Module.asmLibraryArg = { "abort": abort, "assert": assert, "enlargeMemory": enlargeMemory, "getTotalMemory": getTotalMemory, "setTempRet0": setTempRet0, "getTempRet0": getTempRet0, "abortOnCannotGrowMemory": abortOnCannotGrowMemory, "abortStackOverflow": abortStackOverflow, "nullFunc_i": nullFunc_i, "nullFunc_ii": nullFunc_ii, "nullFunc_iii": nullFunc_iii, "nullFunc_iiii": nullFunc_iiii, "nullFunc_iiiii": nullFunc_iiiii, "nullFunc_iiiiii": nullFunc_iiiiii, "nullFunc_iiiiiiii": nullFunc_iiiiiiii, "nullFunc_iiiiiiiii": nullFunc_iiiiiiiii, "nullFunc_iiiiiiiiii": nullFunc_iiiiiiiiii, "nullFunc_iiiiiiiiiii": nullFunc_iiiiiiiiiii, "nullFunc_iiiiiiiiiiii": nullFunc_iiiiiiiiiiii, "nullFunc_iiiiiiiiiiiiiiiiii": nullFunc_iiiiiiiiiiiiiiiiii, "nullFunc_iiiij": nullFunc_iiiij, "nullFunc_iiiijj": nullFunc_iiiijj, "nullFunc_iiijiii": nullFunc_iiijiii, "nullFunc_ji": nullFunc_ji, "nullFunc_jij": nullFunc_jij, "nullFunc_v": nullFunc_v, "nullFunc_vi": nullFunc_vi, "nullFunc_vid": nullFunc_vid, "nullFunc_vii": nullFunc_vii, "nullFunc_viii": nullFunc_viii, "nullFunc_viiii": nullFunc_viiii, "nullFunc_viiiii": nullFunc_viiiii, "nullFunc_viiiiii": nullFunc_viiiiii, "nullFunc_viiiiiii": nullFunc_viiiiiii, "nullFunc_viiiiiiii": nullFunc_viiiiiiii, "nullFunc_viiiiiiiiiii": nullFunc_viiiiiiiiiii, "invoke_i": invoke_i, "invoke_ii": invoke_ii, "invoke_iii": invoke_iii, "invoke_iiii": invoke_iiii, "invoke_iiiii": invoke_iiiii, "invoke_iiiiii": invoke_iiiiii, "invoke_iiiiiiii": invoke_iiiiiiii, "invoke_iiiij": invoke_iiiij, "invoke_iiiijj": invoke_iiiijj, "invoke_ji": invoke_ji, "invoke_jij": invoke_jij, "invoke_vi": invoke_vi, "invoke_vid": invoke_vid, "invoke_vii": invoke_vii, "invoke_viii": invoke_viii, "invoke_viiii": invoke_viiii, "invoke_viiiii": invoke_viiiii, "invoke_viiiiii": invoke_viiiiii, "invoke_viiiiiii": invoke_viiiiiii, "___lock": ___lock, "___setErrNo": ___setErrNo, "___syscall140": ___syscall140, "___syscall145": ___syscall145, "___syscall146": ___syscall146, "___syscall221": ___syscall221, "___syscall5": ___syscall5, "___syscall54": ___syscall54, "___syscall6": ___syscall6, "___unlock": ___unlock, "__exit": __exit, "_emscripten_memcpy_big": _emscripten_memcpy_big, "_exit": _exit, "_gettimeofday": _gettimeofday, "_llvm_log10_f32": _llvm_log10_f32, "_llvm_log10_f64": _llvm_log10_f64, "_longjmp": _longjmp, "DYNAMICTOP_PTR": DYNAMICTOP_PTR, "tempDoublePtr": tempDoublePtr, "STACKTOP": STACKTOP, "STACK_MAX": STACK_MAX };
 // EMSCRIPTEN_START_ASM
 var asm =Module["asm"]// EMSCRIPTEN_END_ASM
 (Module.asmGlobalArg, Module.asmLibraryArg, buffer);
@@ -5546,22 +5603,40 @@ var real__testSetjmp = asm["_testSetjmp"]; asm["_testSetjmp"] = function() {
   return real__testSetjmp.apply(null, arguments);
 };
 
-var real__vpx_js_encoder_exit = asm["_vpx_js_encoder_exit"]; asm["_vpx_js_encoder_exit"] = function() {
+var real__vpx_js_decoder_close = asm["_vpx_js_decoder_close"]; asm["_vpx_js_decoder_close"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return real__vpx_js_encoder_exit.apply(null, arguments);
+  return real__vpx_js_decoder_close.apply(null, arguments);
 };
 
-var real__vpx_js_encoder_init = asm["_vpx_js_encoder_init"]; asm["_vpx_js_encoder_init"] = function() {
+var real__vpx_js_decoder_open = asm["_vpx_js_decoder_open"]; asm["_vpx_js_decoder_open"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return real__vpx_js_encoder_init.apply(null, arguments);
+  return real__vpx_js_decoder_open.apply(null, arguments);
 };
 
-var real__vpx_js_encoder_process = asm["_vpx_js_encoder_process"]; asm["_vpx_js_encoder_process"] = function() {
+var real__vpx_js_decoder_run = asm["_vpx_js_decoder_run"]; asm["_vpx_js_decoder_run"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return real__vpx_js_encoder_process.apply(null, arguments);
+  return real__vpx_js_decoder_run.apply(null, arguments);
+};
+
+var real__vpx_js_encoder_close = asm["_vpx_js_encoder_close"]; asm["_vpx_js_encoder_close"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real__vpx_js_encoder_close.apply(null, arguments);
+};
+
+var real__vpx_js_encoder_open = asm["_vpx_js_encoder_open"]; asm["_vpx_js_encoder_open"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real__vpx_js_encoder_open.apply(null, arguments);
+};
+
+var real__vpx_js_encoder_run = asm["_vpx_js_encoder_run"]; asm["_vpx_js_encoder_run"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real__vpx_js_encoder_run.apply(null, arguments);
 };
 
 var real__vpx_js_rgba_to_yuv420 = asm["_vpx_js_rgba_to_yuv420"]; asm["_vpx_js_rgba_to_yuv420"] = function() {
@@ -5656,18 +5731,30 @@ var _testSetjmp = Module["_testSetjmp"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["_testSetjmp"].apply(null, arguments) };
-var _vpx_js_encoder_exit = Module["_vpx_js_encoder_exit"] = function() {
+var _vpx_js_decoder_close = Module["_vpx_js_decoder_close"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["_vpx_js_encoder_exit"].apply(null, arguments) };
-var _vpx_js_encoder_init = Module["_vpx_js_encoder_init"] = function() {
+  return Module["asm"]["_vpx_js_decoder_close"].apply(null, arguments) };
+var _vpx_js_decoder_open = Module["_vpx_js_decoder_open"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["_vpx_js_encoder_init"].apply(null, arguments) };
-var _vpx_js_encoder_process = Module["_vpx_js_encoder_process"] = function() {
+  return Module["asm"]["_vpx_js_decoder_open"].apply(null, arguments) };
+var _vpx_js_decoder_run = Module["_vpx_js_decoder_run"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["_vpx_js_encoder_process"].apply(null, arguments) };
+  return Module["asm"]["_vpx_js_decoder_run"].apply(null, arguments) };
+var _vpx_js_encoder_close = Module["_vpx_js_encoder_close"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["_vpx_js_encoder_close"].apply(null, arguments) };
+var _vpx_js_encoder_open = Module["_vpx_js_encoder_open"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["_vpx_js_encoder_open"].apply(null, arguments) };
+var _vpx_js_encoder_run = Module["_vpx_js_encoder_run"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["_vpx_js_encoder_run"].apply(null, arguments) };
 var _vpx_js_rgba_to_yuv420 = Module["_vpx_js_rgba_to_yuv420"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -5744,6 +5831,10 @@ var dynCall_iiiiiiiiiiiiiiiiii = Module["dynCall_iiiiiiiiiiiiiiiiii"] = function
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["dynCall_iiiiiiiiiiiiiiiiii"].apply(null, arguments) };
+var dynCall_iiiij = Module["dynCall_iiiij"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["dynCall_iiiij"].apply(null, arguments) };
 var dynCall_iiiijj = Module["dynCall_iiiijj"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
