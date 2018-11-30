@@ -94,6 +94,23 @@ var AppController = function(loadingParams) {
 
   if (this.loadingParams_.libvpx) {
     this.libvpx_ = new LibVPX();
+
+    console.log([
+      'Default VPX params:',
+      '',
+      '   ?codec=vp8    Can also use vp9.',
+      '   ?width=640',
+      '   ?height=480',
+      '',
+      'For example, to encode 720p video with VP9 use:',
+      '',
+      '   ?libvpx=1&codec=vp9&width=1280&height=720',
+    ].join('\n'));
+
+    this.libvpx_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
+    this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
+    this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
+
     console.log('click somewhere to call libvpx.wasm');
     document.body.addEventListener('click', () => {
       this.libvpx_.encode(this.localVideo_);
@@ -613,6 +630,9 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
   this.loadingParams_.videoFec = urlParams['videofec'];
   this.loadingParams_.libvpx = urlParams['libvpx'];
+  this.loadingParams_.videoCodec = urlParams['codec']; // vp8, vp9, etc.
+  this.loadingParams_.videoWidth = urlParams['width']; // 640
+  this.loadingParams_.videoHeight = urlParams['height']; // 480
   /* eslint-enable dot-notation */
 };
 

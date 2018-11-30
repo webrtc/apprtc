@@ -12,8 +12,17 @@
 
 'use strict';
 
+const Encoders = {
+  VP8: 0x30385056,
+  VP9: 0x30395056,
+};
+
 class LibVPX {
   constructor() {
+    this.codec = 'vp8';
+    this.width = 640;
+    this.height = 480;
+
     this._initialized = false;
     this._previvfsize = 0;
     this._loadWasm('/wasm/libvpx/libvpx.js');
@@ -41,10 +50,12 @@ class LibVPX {
   }
 
   encode(videoElement) {
-    const VP8 = 0x30385056;
-    const VP9 = 0x30395056;
-    const width = 240;
-    const height = 160;
+    const codec = this.codec;
+    const width = this.width;
+    const height = this.height;
+    const fourcc = Encoders[codec];
+
+    console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
 
     // - Take a video frame from <video> to <canvas>.
     // - Copy RGBA data to the WASM memory.
@@ -72,11 +83,13 @@ class LibVPX {
 
     if (!this._initialized) {
       console.warn('initializing libvpx');
-      _vpx_js_encoder_init(VP8, width, height);
+      _vpx_js_encoder_init(fourcc, width, height);
       this._initialized = true;
     }
 
+    const time = Date.now();
     _vpx_js_encoder_process();
+    console.log('frame encoded in', Date.now() - time, 'ms');
     // _vpx_js_encoder_exit(); // flushes all memory buffers, etc.
 
     const ivfData = FS.readFile('/vpx-ivf');
