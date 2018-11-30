@@ -76,7 +76,6 @@ var AppController = function(loadingParams) {
 
   this.deactivate_(this.miniCanvas_);
   this.deactivate_(this.remoteCanvas_);
-  this.libwebp_ = new LibWebP();
 
   this.newRoomButton_.addEventListener('click',
       this.onNewRoomClick_.bind(this), false);
@@ -92,6 +91,13 @@ var AppController = function(loadingParams) {
 
   this.loadingParams_ = loadingParams;
   this.loadUrlParams_();
+
+  if (this.loadingParams_.libvpx) {
+    this.libvpx_ = new LibVPX();
+  } else {
+    console.warn('Use ?libvpx=1 to load libvpx.wasm instead.');
+    this.libwebp_ = new LibWebP();
+  }
 
   var paramsPromise = Promise.resolve({});
   if (this.loadingParams_.paramsFunction) {
@@ -602,6 +608,7 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
   this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
   this.loadingParams_.videoFec = urlParams['videofec'];
+  this.loadingParams_.libvpx = urlParams['libvpx'];
   /* eslint-enable dot-notation */
 };
 

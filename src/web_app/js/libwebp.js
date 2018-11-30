@@ -15,9 +15,24 @@
 'use strict';
 
 var LibWebP = function() {
-  Module.onRuntimeInitialized = () => {
-    console.warn('libwebp.version', '0x' + Module._version().toString(16));
+  const src = '/wasm/libwebp/a.out.js';
+  console.warn('loading wasm module:', src);
+  const script = document.createElement('script');
+  script.src = src;
+
+  script.onerror = () => {
+    console.warn('failed to load the script');
   };
+
+  script.onload = () => {
+    console.log('script loaded, waiting for wasm...');
+
+    Module.onRuntimeInitialized = () => {
+      console.warn('libwebp.version', '0x' + _version().toString(16));
+    };
+  };
+
+  document.body.appendChild(script);
 };
 
 LibWebP.prototype.encode = function(image) {
