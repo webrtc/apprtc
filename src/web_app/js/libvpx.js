@@ -32,29 +32,47 @@ class LibVPX {
       Module.onRuntimeInitialized = () => {
         console.warn('libvpx.wasm loaded');
         console.log('wasm module:', Module);
-        console.log('click somewhere to call libvpx.wasm');
-        document.body.addEventListener('click', () => this._onBodyClick());
       };
     };
 
     document.body.appendChild(script);
   }
 
-  _onBodyClick() {
-    console.warn('initializing libvpx');
-
+  encode(videoElement) {
     const VP8 = 0x30385056;
     const width = 640;
     const height = 480;
-    const yuvdata = new Uint8Array(width * height * 3 / 2);
 
-    FS.writeFile('/vpx-yuv', yuvdata); // in-memory memfs emscripten file
+    // - Take a video frame from <video> to <canvas>.
+    // - Copy RGBA data to the WASM memory.
+    // - Convert RGBA to YUV.
+    // - Copy YUV data to the in-memory /vpx-yuv file.
+    console.log('taking a rgba video frame');
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context2d = canvas.getContext('2d');
+    context2d.drawImage(videoElement, 0, 0, width, height);
+    const {data:rgbaData} = context2d.getImageData(0, 0, width, height);
+    console.log('RGB data:', rgbaData);
+    const rgbaSize = width * height * 4;
+    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
+    const rgbaPtr = _malloc(rgbaSize);
+    const yuvPtr = _malloc(yuvSize);
+    HEAP8.set(rgbaData, rgbaPtr);
+    _vpx_js_rgba_to_yuv420(yuvPtr, rgbaPtr, width, height);
+    const yuvData = new Uint8Array(HEAP8.buffer, yuvPtr, yuvSize);
+    console.log('YUV data:', yuvData);
+    FS.writeFile('/vpx-yuv', yuvData); // in-memory memfs emscripten file
+    _free(rgbaPtr);
+    _free(yuvPtr);
 
+    console.warn('initializing libvpx');
     _vpx_js_encoder_init(VP8, width, height);
     _vpx_js_encoder_process();
     _vpx_js_encoder_exit(); // flushes all memory buffers, etc.
 
-    const ivfdata = FS.readFile('/vpx-ivf');
-    console.log('IVF data:', ivfdata);
+    const ivfData = FS.readFile('/vpx-ivf');
+    console.log('IVF data:', ivfData);
   }
 }

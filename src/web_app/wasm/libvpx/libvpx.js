@@ -5481,6 +5481,12 @@ var real__vpx_js_encoder_process = asm["_vpx_js_encoder_process"]; asm["_vpx_js_
   return real__vpx_js_encoder_process.apply(null, arguments);
 };
 
+var real__vpx_js_rgba_to_yuv420 = asm["_vpx_js_rgba_to_yuv420"]; asm["_vpx_js_rgba_to_yuv420"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real__vpx_js_rgba_to_yuv420.apply(null, arguments);
+};
+
 var real_establishStackSpace = asm["establishStackSpace"]; asm["establishStackSpace"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
@@ -5575,6 +5581,10 @@ var _vpx_js_encoder_process = Module["_vpx_js_encoder_process"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["_vpx_js_encoder_process"].apply(null, arguments) };
+var _vpx_js_rgba_to_yuv420 = Module["_vpx_js_rgba_to_yuv420"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["_vpx_js_rgba_to_yuv420"].apply(null, arguments) };
 var establishStackSpace = Module["establishStackSpace"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');

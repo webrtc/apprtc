@@ -94,6 +94,10 @@ var AppController = function(loadingParams) {
 
   if (this.loadingParams_.libvpx) {
     this.libvpx_ = new LibVPX();
+    console.log('click somewhere to call libvpx.wasm');
+    document.body.addEventListener('click', () => {
+      this.libvpx_.encode(this.localVideo_);
+    });
   } else {
     console.warn('Use ?libvpx=1 to load libvpx.wasm instead.');
     this.libwebp_ = new LibWebP();
