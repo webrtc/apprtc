@@ -427,11 +427,8 @@ AppController.prototype.transitionToActive_ = function () {
 
         const sendFrame = () => {
           const time = Date.now();
-
-          console.log('taking a rgba video frame');
           localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
           const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
-
           const packets = this.libvpx_.encode(rgba);
           console.log('Total time to process this frame:', Date.now() - time, 'ms');
           console.warn('Sending IVF data to remote:', packets.length, 'bytes');

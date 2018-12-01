@@ -28,7 +28,6 @@ class LibVPX {
 
     this._initialized = false;
     this._lastIvfSize = 0;
-    this._lastYuvSize = 0;
 
     this._loadWasm('/wasm/libvpx/libvpx.js');
   }
@@ -103,7 +102,6 @@ class LibVPX {
     const ivfSize = FS.stat(IVF_FILE).size;
     FS.write(ivfFile, ivfData, 0, ivfData.length, ivfSize);
     FS.close(ivfFile);
-    console.log('Added new IVF data at file pos', ivfSize);
 
     if (!this._initialized) {
       console.warn('initializing vpx decoder');
@@ -119,19 +117,7 @@ class LibVPX {
 
     // Read the new YUV frames written by the decoder.
 
-    const newYuvSize = FS.stat(YUV_FILE).size;
-
-    if (newYuvSize == this._lastYuvSize) {
-      console.warn('No new YUV frames decoded.');
-      return [];
-    }
-
-    const yuvFile = FS.open(YUV_FILE, 'r');
-    const yuvFrames = new Uint8Array(newYuvSize - this._lastYuvSize);
-    FS.read(yuvFile, yuvFrames, 0, yuvFrames.length, this._lastYuvSize);
-    FS.close(yuvFile);
-    this._lastYuvSize = newYuvSize;
-
+    const yuvFrames = FS.readFile(YUV_FILE);
     if (yuvFrames.length % yuvSize != 0)
       console.warn('Wrong YUV size:', yuvFrames.length, '%', yuvSize, '!= 0');
 
