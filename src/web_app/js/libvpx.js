@@ -70,7 +70,6 @@ class LibVPX {
     HEAP8.set(rgbaData, rgbaPtr);
     _vpx_js_rgba_to_yuv420(yuvPtr, rgbaPtr, width, height);
     const yuvData = new Uint8Array(HEAP8.buffer, yuvPtr, yuvSize);
-    console.log('YUV data:', strbuf(yuvData));
     FS.writeFile(YUV_FILE, yuvData); // in-memory memfs emscripten file
     _free(rgbaPtr);
     _free(yuvPtr);
@@ -85,7 +84,9 @@ class LibVPX {
     FS.read(ivfFile, ivfData, 0, ivfData.length, this._lastIvfSize);
     FS.close(ivfFile);
     this._lastIvfSize = ivfSize;
-    console.log('IVF data:', strbuf(ivfData));
+
+    console.log(IVF_FILE, 'size:', FS.stat(IVF_FILE).size >> 10, 'KB');
+    console.log(YUV_FILE, 'size:', FS.stat(YUV_FILE).size >> 10, 'KB');
 
     return ivfData;
   }
@@ -130,7 +131,6 @@ class LibVPX {
     FS.read(yuvFile, yuvFrames, 0, yuvFrames.length, this._lastYuvSize);
     FS.close(yuvFile);
     this._lastYuvSize = newYuvSize;
-    console.log('YUV frames:', strbuf(yuvFrames));
 
     if (yuvFrames.length % yuvSize != 0)
       console.warn('Wrong YUV size:', yuvFrames.length, '%', yuvSize, '!= 0');
@@ -147,28 +147,17 @@ class LibVPX {
       HEAP8.set(yuvData, yuvPtr);
       _vpx_js_yuv420_to_rgba(rgbaPtr, yuvPtr, width, height);
       const rgbaData = new Uint8Array(HEAP8.buffer, rgbaPtr, rgbaSize);
-      console.log('RGB data:', strbuf(rgbaData));
       rgbaFrames.push(rgbaData);
     }
 
     _free(rgbaPtr);
     _free(yuvPtr);
 
+    console.log(IVF_FILE, 'size:', FS.stat(IVF_FILE).size >> 10, 'KB');
+    console.log(YUV_FILE, 'size:', FS.stat(YUV_FILE).size >> 10, 'KB');
+
     return rgbaFrames;
   }
-}
-
-function strbuf(array, count = 10) {
-  let s = '';
-
-  for (let i = 0; i < count; i++)
-    s += ('00' + array[i].toString(16)).slice(-2);
-
-  let n = array.length < 1024 ?
-    array.length + ' B' :
-    (array.length >> 10) + ' KB';
-
-  return n + ' [' + s + '...]';
 }
 
 function loadScript(src) {
