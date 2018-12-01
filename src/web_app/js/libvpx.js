@@ -43,11 +43,16 @@ class LibVPX {
     });
   }
 
-  encode(videoElement) {
+  encode(rgbaData) {
     const codec = this.codec;
     const width = this.width;
     const height = this.height;
     const fourcc = Codecs[codec];
+    const rgbaSize = width * height * 4;
+    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
+
+    if (rgbaData.length != rgbaSize)
+      console.warn('Wrong RGBA data size:', rgbaData.length);
 
     console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
 
@@ -57,20 +62,9 @@ class LibVPX {
       this._initialized = true;
     }
 
-    // - Take a video frame from <video> to <canvas>.
     // - Copy RGBA data to the WASM memory.
     // - Convert RGBA to YUV.
     // - Copy YUV data to the in-memory /vpx-yuv file.
-    console.log('taking a rgba video frame');
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context2d = canvas.getContext('2d');
-    context2d.drawImage(videoElement, 0, 0, width, height);
-    const {data:rgbaData} = context2d.getImageData(0, 0, width, height);
-    console.log('RGB data:', strbuf(rgbaData));
-    const rgbaSize = width * height * 4;
-    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
     const rgbaPtr = _malloc(rgbaSize);
     const yuvPtr = _malloc(yuvSize);
     HEAP8.set(rgbaData, rgbaPtr);
