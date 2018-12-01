@@ -27,7 +27,9 @@ class LibVPX {
     this.height = 480;
 
     this._initialized = false;
-    this._previvfsize = 0;
+    this._lastIvfSize = 0;
+    this._lastYuvSize = 0;
+
     this._loadWasm('/wasm/libvpx/libvpx.js');
   }
 
@@ -48,6 +50,12 @@ class LibVPX {
     const fourcc = Codecs[codec];
 
     console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
+
+    if (!this._initialized) {
+      console.warn('initializing vpx encoder');
+      _vpx_js_encoder_open(fourcc, width, height);
+      this._initialized = true;
+    }
 
     // - Take a video frame from <video> to <canvas>.
     // - Copy RGBA data to the WASM memory.
@@ -73,44 +81,71 @@ class LibVPX {
     _free(rgbaPtr);
     _free(yuvPtr);
 
-    if (!this._initialized) {
-      console.warn('initializing vpx encoder');
-      _vpx_js_encoder_open(fourcc, width, height);
-      this._initialized = true;
-    }
-
     const time = Date.now();
     _vpx_js_encoder_run();
     console.log('frame encoded in', Date.now() - time, 'ms');
 
-    const ivfSize = FS.lstat(IVF_FILE).size;
-    console.log('IVF file size delta:', ivfSize - this._previvfsize);
-    this._previvfsize = ivfSize;
+    const ivfSize = FS.stat(IVF_FILE).size;
+    const ivfFile = FS.open(IVF_FILE, 'r');
+    const ivfData = new Uint8Array(ivfSize - this._lastIvfSize);
+    FS.read(ivfFile, ivfData, 0, ivfData.length, this._lastIvfSize);
+    FS.close(ivfFile);
+    this._lastIvfSize = ivfSize;
+    console.log('IVF data:', strbuf(ivfData));
+
+    return ivfData;
   }
 
-  decode() {
+  decode(ivfData) {
     const width = this.width;
     const height = this.height;
+    const rgbaSize = width * height * 4;
+    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
 
-    console.warn('initializing vpx decoder');
-    _vpx_js_encoder_close();
-    this._initialized = false;
-    console.log('IVF file size:', FS.lstat(IVF_FILE).size);
-    _vpx_js_decoder_open();
+    // Append new IVF data to the /vpx-ivf file.
+
+    const ivfFile = FS.open(IVF_FILE, 'a');
+    const ivfSize = FS.stat(IVF_FILE).size;
+    FS.write(ivfFile, ivfData, 0, ivfData.length, ivfSize);
+    FS.close(ivfFile);
+    console.log('Added new IVF data at file pos', ivfSize);
+
+    if (!this._initialized) {
+      console.warn('initializing vpx decoder');
+      _vpx_js_decoder_open();
+      this._initialized = true;
+    }
+
+    // Run the VPX decoder.
+
     const time = Date.now();
     _vpx_js_decoder_run();
     console.log('frames decoded in', Date.now() - time, 'ms');
-    _vpx_js_encoder_close();
-    console.log('YUV file size:', FS.lstat(YUV_FILE).size);
 
-    const rgbaSize = width * height * 4;
-    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
-    const yuvFrames = FS.readFile(YUV_FILE); // UInt8Array
+    // Read the new YUV frames written by the decoder.
+
+    const newYuvSize = FS.stat(YUV_FILE).size;
+
+    if (newYuvSize == this._lastYuvSize) {
+      console.warn('No new YUV frames decoded.');
+      return [];
+    }
+
+    const yuvFile = FS.open(YUV_FILE, 'r');
+    const yuvFrames = new Uint8Array(newYuvSize - this._lastYuvSize);
+    FS.read(yuvFile, yuvFrames, 0, yuvFrames.length, this._lastYuvSize);
+    FS.close(yuvFile);
+    this._lastYuvSize = newYuvSize;
     console.log('YUV frames:', strbuf(yuvFrames));
+
     if (yuvFrames.length % yuvSize != 0)
       console.warn('Wrong YUV size:', yuvFrames.length, '%', yuvSize, '!= 0');
+
+    // Convert YUV frames to RGB frames.
+
     const rgbaPtr = _malloc(rgbaSize);
     const yuvPtr = _malloc(yuvSize);
+    const rgbaFrames = [];
 
     for (let frameId = 0; frameId < yuvFrames.length / yuvSize; frameId++) {
       const yuvData = yuvFrames.slice(
@@ -119,21 +154,13 @@ class LibVPX {
       _vpx_js_yuv420_to_rgba(rgbaPtr, yuvPtr, width, height);
       const rgbaData = new Uint8Array(HEAP8.buffer, rgbaPtr, rgbaSize);
       console.log('RGB data:', strbuf(rgbaData));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const context2d = canvas.getContext('2d');
-      const imageData = context2d.getImageData(0, 0, width, height);
-      imageData.data.set(rgbaData);
-      context2d.putImageData(imageData, 0, 0);
-      const dataUrl = canvas.toDataURL();
-      console.log('%c       ',
-        `font-size: ${height}px; background: url(${dataUrl}) no-repeat;`);
+      rgbaFrames.push(rgbaData);
     }
 
     _free(rgbaPtr);
     _free(yuvPtr);
+
+    return rgbaFrames;
   }
 }
 
@@ -143,7 +170,11 @@ function strbuf(array, count = 10) {
   for (let i = 0; i < count; i++)
     s += ('00' + array[i].toString(16)).slice(-2);
 
-  return (array.length >> 10) + ' KB [' + s + '...]';
+  let n = array.length < 1024 ?
+    array.length + ' B' :
+    (array.length >> 10) + ' KB';
+
+  return n + ' [' + s + '...]';
 }
 
 function loadScript(src) {
