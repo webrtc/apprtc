@@ -46,7 +46,7 @@ class LibVPX {
     });
   }
 
-  encode(rgbaData) {
+  encode(rgbaData, keyframe = false) {
     const codec = this.codec;
     const width = this.width;
     const height = this.height;
@@ -77,8 +77,8 @@ class LibVPX {
     _free(rgbaPtr);
     _free(yuvPtr);
 
-    const forceKeyframe = 0;
-    _vpx_js_encoder_run(forceKeyframe);
+    // more keyframes = better video quality
+    _vpx_js_encoder_run(keyframe ? 1 : 0);
 
     const ivfSize = FS.stat(ENC_IVF_FILE).size;
     const ivfFile = FS.open(ENC_IVF_FILE, 'r');

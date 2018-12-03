@@ -388,82 +388,90 @@ AppController.prototype.transitionToActive_ = function () {
     this.listenersAdded_ = true;
 
     if (this.libwebp_) {
-      const {width, height} = this.miniCanvas_;
-
-      const miniCtx2d = this.miniCanvas_.getContext('2d');
-      const remoteCtx2d = this.remoteCanvas_.getContext('2d');
-
-      setInterval(() => {
-        miniCtx2d.drawImage(this.miniVideo_, 0, 0, width, height);
-        const frame = miniCtx2d.getImageData(0, 0, width, height);
-        console.warn('video frame', frame);
-        const encoded = this.libwebp_.encode(frame);
-        console.warn('encoded', encoded.length);
-        dc.send(encoded); // 64 KB max
-      }, 1500);
-
-      dc.onmessage = event => {
-        const encoded = new Uint8Array(event.data);
-        console.warn('encoded remote frame:', encoded);
-        const {data, width, height} = this.libwebp_.decode(encoded);
-        console.warn('decoded remote frame:', width, height, data);
-        const frame = remoteCtx2d.createImageData(width, height);
-        frame.data.set(data, 0);
-        remoteCtx2d.putImageData(frame, 0, 0);
-      };
+      this.installWebP_();
     } else {
-      const {width, height} = this.libvpx_;
-
-      this.remoteCanvas_.width = width;
-      this.remoteCanvas_.height = height;
-
-      const remoteContext2d = this.remoteCanvas_.getContext('2d');
-      const remoteRgbaData = remoteContext2d.getImageData(0, 0, width, height);
-
-      const localCanvas = document.createElement('canvas');
-      localCanvas.width = width;
-      localCanvas.height = height;
-      const localContext2d = localCanvas.getContext('2d');
-
-      console.warn('Click somewhere to run VPX encoder.');
-      document.body.addEventListener('click', () => {
-        const sendFrame = () => {
-          if (dc.readyState != 'open')
-            return;
-          const time = Date.now();
-          localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
-          const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
-          const packets = this.libvpx_.encode(rgba);
-          console.log(`RGB frame encoded: ${Date.now() - time} ms, ${packets.length} bytes`);
-          dc.send(packets); // 64 KB max
-        };
-
-        const fps = this.libvpx_.fps;
-
-        if (fps > 0)
-          setInterval(sendFrame, 1000 / fps);
-        else
-          sendFrame();
-      });
-
-      dc.onmessage = event => {
-        const time = Date.now();
-        const packets = new Uint8Array(event.data);
-        // console.warn('Got IVF packets from remote:', packets.length, 'bytes');
-        const frames = this.libvpx_.decode(packets);
-
-        frames.map(rgba => {
-          remoteRgbaData.data.set(rgba);
-          remoteContext2d.putImageData(remoteRgbaData, 0, 0);
-        });
-
-        if (frames.length != 1)
-          console.warn(`Decoded ${frames.length} frames`);
-
-        console.log(`IVF frame decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
-      };
+      this.installVPX_();
     }
   }
+};
+
+AppController.prototype.installWebP_ = function () {
+  const {width, height} = this.miniCanvas_;
+
+  const miniCtx2d = this.miniCanvas_.getContext('2d');
+  const remoteCtx2d = this.remoteCanvas_.getContext('2d');
+
+  setInterval(() => {
+    miniCtx2d.drawImage(this.miniVideo_, 0, 0, width, height);
+    const frame = miniCtx2d.getImageData(0, 0, width, height);
+    console.warn('video frame', frame);
+    const encoded = this.libwebp_.encode(frame);
+    console.warn('encoded', encoded.length);
+    dc.send(encoded); // 64 KB max
+  }, 1500);
+
+  dc.onmessage = event => {
+    const encoded = new Uint8Array(event.data);
+    console.warn('encoded remote frame:', encoded);
+    const {data, width, height} = this.libwebp_.decode(encoded);
+    console.warn('decoded remote frame:', width, height, data);
+    const frame = remoteCtx2d.createImageData(width, height);
+    frame.data.set(data, 0);
+    remoteCtx2d.putImageData(frame, 0, 0);
+  };
+};
+
+AppController.prototype.installVPX_ = function () {
+  const {width, height, fps} = this.libvpx_;
+
+  this.remoteCanvas_.width = width;
+  this.remoteCanvas_.height = height;
+
+  const remoteContext2d = this.remoteCanvas_.getContext('2d');
+  const remoteRgbaData = remoteContext2d.getImageData(0, 0, width, height);
+
+  const localCanvas = document.createElement('canvas');
+  localCanvas.width = width;
+  localCanvas.height = height;
+  const localContext2d = localCanvas.getContext('2d');
+
+  const sendFrame = () => {
+    if (dc.readyState != 'open')
+      return;
+    const time = Date.now();
+    localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
+    const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
+    const packets = this.libvpx_.encode(rgba);
+    console.log(`RGB frame encoded: ${Date.now() - time} ms, ${packets.length} bytes`);
+    dc.send(packets); // 64 KB max
+  };
+
+  if (fps > 0) {
+    setInterval(sendFrame, 1000 / fps);
+  } else {
+    const button = document.createElement('button');
+    button.setAttribute('style', 'position:fixed;left:10px;top:10px');
+    button.textContent = 'Send Frame';
+    document.body.append(button);
+    button.addEventListener('click', () => sendFrame());
+  }
+
+  dc.onmessage = event => {
+    const time = Date.now();
+    const packets = new Uint8Array(event.data);
+    // console.warn('Got IVF packets from remote:', packets.length, 'bytes');
+    const frames = this.libvpx_.decode(packets);
+
+    frames.map(rgba => {
+      remoteRgbaData.data.set(rgba);
+      remoteContext2d.putImageData(remoteRgbaData, 0, 0);
+    });
+
+    if (frames.length != 1)
+      console.warn(`Decoded ${frames.length} frames`);
+
+    console.log(`IVF frame decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
+  };
 };
 
 AppController.prototype.transitionToWaiting_ = function () {
