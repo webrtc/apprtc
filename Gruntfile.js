@@ -150,6 +150,7 @@ module.exports = function(grunt) {
             'src/web_app/js/infobox.js',
             'src/web_app/js/libwebp.js',
             'src/web_app/js/libvpx.js',
+            'src/web_app/js/webrtc.js',
             'src/web_app/js/peerconnectionclient.js',
             'src/web_app/js/remotewebsocket.js',
             'src/web_app/js/roomselection.js',

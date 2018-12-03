@@ -112,8 +112,9 @@ var AppController = function (loadingParams) {
     this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
     this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
     this.libvpx_.fps = +(this.loadingParams_.videoFps || '0');
+  } else if (this.loadingParams_.webrtc) {
+    this.webrtc_ = new WebRTC();
   } else {
-    console.warn('Use ?libvpx=1 to load libvpx.wasm instead.');
     this.libwebp_ = new LibWebP();
   }
 
@@ -692,7 +693,7 @@ AppController.prototype.loadUrlParams_ = function () {
   this.loadingParams_.videoWidth = urlParams['width']; // 640
   this.loadingParams_.videoHeight = urlParams['height']; // 480
   this.loadingParams_.videoFps = urlParams['fps']; // 30
-
+  this.loadingParams_.webrtc = urlParams['webrtc'];
   /* eslint-enable dot-notation */
 };
 
