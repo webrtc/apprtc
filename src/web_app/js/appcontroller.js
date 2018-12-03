@@ -94,7 +94,6 @@ var AppController = function (loadingParams) {
 
   if (this.loadingParams_.libvpx) {
     this.libvpx_ = new LibVPX();
-<<<<<<< HEAD
 
     console.log([
       'Default VPX params:',
@@ -112,10 +111,8 @@ var AppController = function (loadingParams) {
     this.libvpx_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
     this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
     this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
-=======
   } else if (this.loadingParams_.webrtc) {
     this.webrtc_ = new WebRTC();
->>>>>>> Add ?webrtc=1 option
   } else {
     console.warn('Use ?libvpx=1 to load libvpx.wasm instead.');
     this.libwebp_ = new LibWebP();
