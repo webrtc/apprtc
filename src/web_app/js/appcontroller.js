@@ -134,6 +134,8 @@ var AppController = function (loadingParams) {
       }.bind(this));
     }
 
+    console.log('Config:', this.loadingParams_);
+
     this.roomLink_ = '';
     this.roomSelection_ = null;
     this.localStream_ = null;
@@ -425,6 +427,8 @@ AppController.prototype.transitionToActive_ = function () {
       console.warn('Click somewhere to run VPX encoder.');
       document.body.addEventListener('click', () => {
         const sendFrame = () => {
+          if (dc.readyState != 'open')
+            return;
           const time = Date.now();
           localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
           const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
@@ -455,7 +459,7 @@ AppController.prototype.transitionToActive_ = function () {
         if (frames.length != 1)
           console.warn(`Decoded ${frames.length} frames`);
 
-        console.log(`IVF frames decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
+        console.log(`IVF frame decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
       };
     }
   }
@@ -682,11 +686,13 @@ AppController.prototype.loadUrlParams_ = function () {
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
   this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
   this.loadingParams_.videoFec = urlParams['videofec'];
+
   this.loadingParams_.libvpx = urlParams['libvpx'];
   this.loadingParams_.videoCodec = urlParams['codec']; // vp8, vp9, etc.
   this.loadingParams_.videoWidth = urlParams['width']; // 640
   this.loadingParams_.videoHeight = urlParams['height']; // 480
   this.loadingParams_.videoFps = urlParams['fps']; // 30
+
   /* eslint-enable dot-notation */
 };
 
