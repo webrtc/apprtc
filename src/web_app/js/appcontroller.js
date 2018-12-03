@@ -111,6 +111,7 @@ var AppController = function (loadingParams) {
     this.libvpx_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
     this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
     this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
+    this.libvpx_.fps = +(this.loadingParams_.videoFps || '0');
   } else {
     console.warn('Use ?libvpx=1 to load libvpx.wasm instead.');
     this.libwebp_ = new LibWebP();
@@ -423,18 +424,16 @@ AppController.prototype.transitionToActive_ = function () {
 
       console.warn('Click somewhere to run VPX encoder.');
       document.body.addEventListener('click', () => {
-        const fps = +(this.loadingParams_.videoFps || '0');
-
         const sendFrame = () => {
           const time = Date.now();
           localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
           const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
           const packets = this.libvpx_.encode(rgba);
-          console.log('Total time to process this frame:', Date.now() - time, 'ms');
-          console.warn('Sending IVF data to remote:', packets.length, 'bytes');
-
+          console.log(`RGB frame encoded: ${Date.now() - time} ms, ${packets.length} bytes`);
           dc.send(packets); // 64 KB max
         };
+
+        const fps = this.libvpx_.fps;
 
         if (fps > 0)
           setInterval(sendFrame, 1000 / fps);
@@ -445,7 +444,7 @@ AppController.prototype.transitionToActive_ = function () {
       dc.onmessage = event => {
         const time = Date.now();
         const packets = new Uint8Array(event.data);
-        console.warn('Got IVF packets from remote:', packets.length, 'bytes');
+        // console.warn('Got IVF packets from remote:', packets.length, 'bytes');
         const frames = this.libvpx_.decode(packets);
 
         frames.map(rgba => {
@@ -453,7 +452,10 @@ AppController.prototype.transitionToActive_ = function () {
           remoteContext2d.putImageData(remoteRgbaData, 0, 0);
         });
 
-        console.log('Total time to process these frames:', Date.now() - time, 'ms');
+        if (frames.length != 1)
+          console.warn(`Decoded ${frames.length} frames`);
+
+        console.log(`IVF frames decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
       };
     }
   }

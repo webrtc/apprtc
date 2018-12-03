@@ -25,6 +25,7 @@ class LibVPX {
     this.codec = 'vp8';
     this.width = 640;
     this.height = 480;
+    this.fps = 10;
 
     this._initialized = false;
     this._lastIvfSize = 0;
@@ -53,11 +54,11 @@ class LibVPX {
     if (rgbaData.length != rgbaSize)
       console.warn('Wrong RGBA data size:', rgbaData.length);
 
-    console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
+    // console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
 
     if (!this._initialized) {
       console.warn('initializing vpx encoder');
-      _vpx_js_encoder_open(fourcc, width, height);
+      _vpx_js_encoder_open(fourcc, width, height, this.fps || 30);
       this._initialized = true;
     }
 
@@ -73,9 +74,8 @@ class LibVPX {
     _free(rgbaPtr);
     _free(yuvPtr);
 
-    const time = Date.now();
-    _vpx_js_encoder_run();
-    console.log('frame encoded in', Date.now() - time, 'ms');
+    const forceKeyframe = 0;
+    _vpx_js_encoder_run(forceKeyframe);
 
     const ivfSize = FS.stat(IVF_FILE).size;
     const ivfFile = FS.open(IVF_FILE, 'r');
@@ -84,8 +84,8 @@ class LibVPX {
     FS.close(ivfFile);
     this._lastIvfSize = ivfSize;
 
-    console.log(IVF_FILE, 'size:', FS.stat(IVF_FILE).size >> 10, 'KB');
-    console.log(YUV_FILE, 'size:', FS.stat(YUV_FILE).size >> 10, 'KB');
+    // console.log(IVF_FILE, 'size:', FS.stat(IVF_FILE).size >> 10, 'KB');
+    // console.log(YUV_FILE, 'size:', FS.stat(YUV_FILE).size >> 10, 'KB');
 
     return ivfData;
   }
@@ -111,9 +111,7 @@ class LibVPX {
 
     // Run the VPX decoder.
 
-    const time = Date.now();
     _vpx_js_decoder_run();
-    console.log('frames decoded in', Date.now() - time, 'ms');
 
     // Read the new YUV frames written by the decoder.
 
@@ -139,8 +137,8 @@ class LibVPX {
     _free(rgbaPtr);
     _free(yuvPtr);
 
-    console.log(IVF_FILE, 'size:', FS.stat(IVF_FILE).size >> 10, 'KB');
-    console.log(YUV_FILE, 'size:', FS.stat(YUV_FILE).size >> 10, 'KB');
+    // console.log(IVF_FILE, 'size:', FS.stat(IVF_FILE).size >> 10, 'KB');
+    // console.log(YUV_FILE, 'size:', FS.stat(YUV_FILE).size >> 10, 'KB');
 
     return rgbaFrames;
   }
