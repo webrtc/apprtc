@@ -35,6 +35,7 @@ class LibVPX {
     this._rgbPtr = 0;
     this._yuvPtr = 0;
     this._yuvFrame = null; // UInt8Array
+    this._ivfFrame = null; // UInt8Array, dynamic
 
     this._loadWasm('/wasm/libvpx/libvpx.js');
   }
@@ -47,6 +48,12 @@ class LibVPX {
         console.log('wasm module:', Module);
       };
     });
+  }
+
+  _allocIvfFrame(size) {
+    if (!this._ivfFrame || this._ivfFrame.length < size)
+      this._ivfFrame = new Uint8Array(size);
+    return new Uint8Array(this._ivfFrame.buffer, 0, size);
   }
 
   encode(rgbaData, keyframe = false) {
@@ -83,7 +90,7 @@ class LibVPX {
 
     const ivfSize = FS.stat(ENC_IVF_FILE).size;
     const ivfFile = FS.open(ENC_IVF_FILE, 'r');
-    const ivfData = new Uint8Array(ivfSize - this._lastIvfSize);
+    const ivfData = this._allocIvfFrame(ivfSize - this._lastIvfSize);
     FS.read(ivfFile, ivfData, 0, ivfData.length, this._lastIvfSize);
     FS.close(ivfFile);
     this._lastIvfSize = ivfSize;
