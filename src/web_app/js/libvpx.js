@@ -32,6 +32,9 @@ class LibVPX {
     this._encInitialized = false;
     this._decInitialized = false;
     this._lastIvfSize = 0;
+    this._rgbPtr = 0;
+    this._yuvPtr = 0;
+    this._yuvFrame = null; // UInt8Array
 
     this._loadWasm('/wasm/libvpx/libvpx.js');
   }
@@ -68,14 +71,12 @@ class LibVPX {
     // - Copy RGBA data to the WASM memory.
     // - Convert RGBA to YUV.
     // - Copy YUV data to the in-memory /vpx-yuv file.
-    const rgbaPtr = _malloc(rgbaSize);
-    const yuvPtr = _malloc(yuvSize);
-    HEAP8.set(rgbaData, rgbaPtr);
-    _vpx_js_rgba_to_yuv420(yuvPtr, rgbaPtr, width, height);
-    const yuvData = new Uint8Array(HEAP8.buffer, yuvPtr, yuvSize);
+    this._rgbPtr = this._rgbPtr || _malloc(rgbaSize);
+    this._yuvPtr = this._yuvPtr || _malloc(yuvSize);
+    HEAP8.set(rgbaData, this._rgbPtr);
+    _vpx_js_rgba_to_yuv420(this._yuvPtr, this._rgbPtr, width, height);
+    const yuvData = new Uint8Array(HEAP8.buffer, this._yuvPtr, yuvSize);
     FS.writeFile(ENC_YUV_FILE, yuvData); // in-memory memfs emscripten file
-    _free(rgbaPtr);
-    _free(yuvPtr);
 
     // more keyframes = better video quality
     _vpx_js_encoder_run(keyframe ? 1 : 0);
@@ -87,10 +88,7 @@ class LibVPX {
     FS.close(ivfFile);
     this._lastIvfSize = ivfSize;
 
-    // console.log(ENC_YUV_FILE, 'size:', FS.stat(ENC_YUV_FILE).size >> 10, 'KB');
-    // console.log(ENC_IVF_FILE, 'size:', FS.stat(ENC_IVF_FILE).size >> 10, 'KB');
-
-    return ivfData;
+    return ivfData; // it's a temp buffer, but it's small
   }
 
   decode(ivfData) {
@@ -118,32 +116,25 @@ class LibVPX {
 
     // Read the new YUV frames written by the decoder.
 
-    const yuvFrames = FS.readFile(DEC_YUV_FILE);
-    if (yuvFrames.length % yuvSize != 0)
-      console.warn('Wrong YUV size:', yuvFrames.length, '%', yuvSize, '!= 0');
+    const yuvFile = FS.open(DEC_YUV_FILE, 'r');
+    const yuvFileSize = FS.stat(DEC_YUV_FILE).size;
+
+    // Only 1 YUV frame is expected. Multiple frames not supported by this demo.
+    if (yuvFileSize != yuvSize)
+      throw new Error(`Unexpected YUV file size: ${yuvFileSize} vs ${yuvSize}`);
 
     // Convert YUV frames to RGB frames.
 
-    const rgbaPtr = _malloc(rgbaSize);
-    const yuvPtr = _malloc(yuvSize);
-    const rgbaFrames = [];
+    this._rgbPtr = this._rgbaPtr || _malloc(rgbaSize);
+    this._yuvPtr = this._yuvPtr || _malloc(yuvSize);
+    this._yuvFrame = this._yuvFrame || new Uint8Array(yuvSize);
+    FS.read(yuvFile, this._yuvFrame, 0, yuvSize);
+    HEAP8.set(this._yuvFrame, this._yuvPtr);
+    _vpx_js_yuv420_to_rgba(this._rgbPtr, this._yuvPtr, width, height);
+    const rgbaData = new Uint8Array(HEAP8.buffer, this._rgbPtr, rgbaSize);
+    FS.close(yuvFile);
 
-    for (let frameId = 0; frameId < yuvFrames.length / yuvSize; frameId++) {
-      const yuvData = yuvFrames.slice(
-        frameId * yuvSize, (frameId + 1) * yuvSize);
-      HEAP8.set(yuvData, yuvPtr);
-      _vpx_js_yuv420_to_rgba(rgbaPtr, yuvPtr, width, height);
-      const rgbaData = new Uint8Array(HEAP8.buffer, rgbaPtr, rgbaSize);
-      rgbaFrames.push(rgbaData);
-    }
-
-    _free(rgbaPtr);
-    _free(yuvPtr);
-
-    // console.log(DEC_IVF_FILE, 'size:', FS.stat(DEC_IVF_FILE).size >> 10, 'KB');
-    // console.log(DEC_YUV_FILE, 'size:', FS.stat(DEC_YUV_FILE).size >> 10, 'KB');
-
-    return rgbaFrames;
+    return rgbaData; // it's a view into HEAP8.buffer, not a copy
   }
 }
 

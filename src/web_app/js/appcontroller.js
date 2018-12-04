@@ -460,16 +460,9 @@ AppController.prototype.installVPX_ = function () {
     const time = Date.now();
     const packets = new Uint8Array(event.data);
     // console.warn('Got IVF packets from remote:', packets.length, 'bytes');
-    const frames = this.libvpx_.decode(packets);
-
-    frames.map(rgba => {
-      remoteRgbaData.data.set(rgba);
-      remoteContext2d.putImageData(remoteRgbaData, 0, 0);
-    });
-
-    if (frames.length != 1)
-      console.warn(`Decoded ${frames.length} frames`);
-
+    const rgba = this.libvpx_.decode(packets);
+    remoteRgbaData.data.set(rgba);
+    remoteContext2d.putImageData(remoteRgbaData, 0, 0);
     console.log(`IVF frame decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
   };
 };
