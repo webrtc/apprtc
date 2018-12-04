@@ -80,7 +80,9 @@ class TimeProp {
 
 class SizeProp {
   constructor(text, args) {
-    args.format = x => (x / 1024 | 0) + ' KB';
+    args.format = x => x < 1024 ?
+      (x | 0) + ' B' :
+      (x / 1024 | 0) + ' KB';
     return new Prop(text, args);
   }
 }
@@ -103,5 +105,11 @@ const uistats = {
   }),
   decIvfFileSize: new SizeProp('IVF decoder file size', {
     title: 'Size of the /vpx-dec-ivf'
+  }),
+  rtpSendSize: new SizeProp('RTP packet send', {
+    title: 'Size of the sent RTP packets.'
+  }),
+  rtpRecvSize: new SizeProp('RTP packet recv', {
+    title: 'Size of the received RTP packets.'
   }),
 };
