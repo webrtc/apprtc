@@ -12,12 +12,36 @@
 
 'use strict';
 
+class MovingAverage {
+  constructor(length) {
+    this.length = length;
+    this.buffer = [];
+    this.head = 0;
+    this.sum = 0;
+  }
+
+  push(value) {
+    this.sum += value;
+
+    if (this.buffer.length == this.length)
+      this.sum -= this.buffer[this.head];
+
+    this.buffer[this.head++] = value;
+    this.head %= this.length;
+  }
+
+  get() {
+    return this.sum / this.buffer.length;
+  }
+}
+
 class Prop {
-  constructor(label, {title, format}) {
+  constructor(label, {title, format, malen}) {
     this.label = label;
     this.title = title;
     this._format = format || (x => x);
     this._valueEl = null; // <div>
+    this._ma = new MovingAverage(malen || 30);
   }
 
   _getValueElement() {
@@ -41,20 +65,21 @@ class Prop {
 
   set(value) {
     const el = this._getValueElement();
-    el.textContent = this._format(value);
+    this._ma.push(value);
+    el.textContent = this._format(this._ma.get());
   }
 }
 
 class TimeProp {
   constructor(text, args) {
-    args.format = x => x + ' ms';
+    args.format = x => (x | 0) + ' ms';
     return new Prop(text, args);
   }
 }
 
 class SizeProp {
   constructor(text, args) {
-    args.format = x => (x / 1024).toFixed(1) + ' KB';
+    args.format = x => (x / 1024 | 0) + ' KB';
     return new Prop(text, args);
   }
 }
