@@ -66,7 +66,8 @@ class Prop {
   set(value) {
     const el = this._getValueElement();
     this._ma.push(value);
-    el.textContent = this._format(this._ma.get());
+    // Just el.textContent would create a new HTML element.
+    (el.firstChild || el).textContent = this._format(this._ma.get());
   }
 }
 

@@ -28,6 +28,7 @@ class LibVPX {
     this.width = 640;
     this.height = 480;
     this.fps = 10;
+    this.bitrate = 1000; // kbit/s, ivf packet size = bitrate/fps
 
     this._encInitialized = false;
     this._decInitialized = false;
@@ -71,7 +72,8 @@ class LibVPX {
 
     if (!this._encInitialized) {
       console.warn('initializing vpx encoder');
-      _vpx_js_encoder_open(fourcc, width, height, this.fps || 30);
+      _vpx_js_encoder_open(fourcc, width, height, this.fps || 30,
+          this.bitrate || 200);
       this._encInitialized = true;
     }
 
