@@ -88,7 +88,7 @@ PeerConnectionClient.prototype.addStream = function(stream) {
 
 PeerConnectionClient.prototype.setupDataChannel_ = function() {
   this.dataChannel_.onopen = event => console.warn('dc:open ->', event);
-  this.dataChannel_.onmessage = event => console.warn('dc:message ->', event);
+  //this.dataChannel_.onmessage = event => console.warn('dc:message ->', event);
 };
 
 PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
