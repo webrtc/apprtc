@@ -299,12 +299,12 @@ AppController.prototype.onRemoteHangup_ = function () {
 };
 
 AppController.prototype.onRemoteSdpSet_ = function (hasRemoteVideo) {
-  if (hasRemoteVideo) {
-    trace('Waiting for remote video.');
-    this.waitForRemoteVideo_();
+  if(window.dc === undefined) {
+    assert(window.pc);
+    window.pc.addEventListener("datachannel", event => { this.transitionToActive_(); });
   } else {
-    trace('No remote video stream; not waiting for media to arrive.');
     // TODO(juberti): Make this wait for ICE connection before transitioning.
+    // TODO(psla): Make this wait for Data Channel when wartc is used.
     this.transitionToActive_();
   }
 };
@@ -449,7 +449,7 @@ AppController.prototype.installVPX_ = function () {
   const localContext2d = localCanvas.getContext('2d');
 
   const sendFrame = () => {
-    if (dc.readyState != 'open')
+    if (dc === undefined || dc.readyState != 'open')
       return;
     const time = Date.now();
     localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
