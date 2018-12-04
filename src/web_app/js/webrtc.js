@@ -40,7 +40,8 @@ class WebRTC {
             this.__parent.__destruct.call(this);
           },
           sendPacket: function(payload) {
-            console.log('sendPacket: ' + payload);
+            console.log('sendPacket');
+            console.log(payload);
             return true;
           },
         });
@@ -53,6 +54,21 @@ class WebRTC {
           clockrateHz: 48000,
           numChannels: 2,
         });
+        function sendSomeAudio(offset) {
+          let sendBuffer = new Module.VectorInt16();
+          for (let i = 0; i < 480 * 2; i++) {
+            sendBuffer.push_back(offset + i);
+          }
+          console.log('sending audio');
+          sendStream.sendAudioData({
+            data: sendBuffer,
+            sampleRate: 48000,
+            numberOfChannels: 2,
+            numberOfFrames: 480,
+          });
+          setTimeout(() => sendSomeAudio((offset + 10) % 100 - 50), 500);
+        }
+        setTimeout(() => sendSomeAudio(0), 500);
       };
     };
 
