@@ -391,7 +391,7 @@ AppController.prototype.transitionToActive_ = function () {
 
     if (this.libwebp_) {
       this.installWebP_();
-    } else {
+    } else if (this.libvpx_) {
       this.installVPX_();
     }
   }
