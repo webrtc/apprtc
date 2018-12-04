@@ -42,18 +42,25 @@ class WebRTC {
           sendPacket: function(payload) {
             console.log('sendPacket');
             console.log(payload);
+            let payloadCopy = new Module.VectorUint8();
+            for (let i = 0; i < payload.length; i++) {
+              payloadCopy.push_back(payload[i]);
+            }
+            call.deliverPacket(payloadCopy);
             return true;
           },
         });
-        let call = new Module.Call(new Transport());
+        var call = new Module.Call(new Transport());
         let sendStream = call.createAudioSendStream({
           ssrc: 123,
-          cname: "cname",
+          cname: 'cname',
           payloadType: 42,
-          codecName: "opus",
+          codecName: 'opus',
           clockrateHz: 48000,
           numChannels: 2,
         });
+        sendStream.start();
+
         function sendSomeAudio(offset) {
           let sendBuffer = new Module.VectorInt16();
           for (let i = 0; i < 480 * 2; i++) {
@@ -62,13 +69,43 @@ class WebRTC {
           console.log('sending audio');
           sendStream.sendAudioData({
             data: sendBuffer,
-            sampleRate: 48000,
-            numberOfChannels: 2,
-            numberOfFrames: 480,
+            numChannels: 2,
+            sampleRateHz: 48000,
+            samplesPerChannel: 480,
+            timestamp: 0,
           });
-          setTimeout(() => sendSomeAudio((offset + 10) % 100 - 50), 500);
+          setTimeout(() => sendSomeAudio((offset + 10) % 100 - 50), 1000);
         }
-        setTimeout(() => sendSomeAudio(0), 500);
+        setTimeout(() => sendSomeAudio(0), 1000);
+
+        const AudioSink =
+            Module.AudioReceiveStreamSink.extend("AudioReceiveStreamSink", {
+              __construct: function() {
+                this.__parent.__construct.call(this);
+              },
+              __destruct: function() {
+                this.__parent.__destruct.call(this);
+              },
+              onAudioFrame: function(audioFrame) {
+                console.log('onAudioFrame');
+                console.log(audioFrame);
+              },
+            });
+
+        let receiveAudioCodecs = new Module.VectorAudioCodec();
+        receiveAudioCodecs.push_back({
+          payloadType: 42,
+          name: 'opus',
+          clockrateHz: 48000,
+          numChannels: 2,
+        });
+        let receiveStream = call.createAudioReceiveStream({
+          localSsrc: 345,
+          remoteSsrc: 123,
+          codecs: receiveAudioCodecs,
+        });
+        receiveStream.setSink(new AudioSink());
+        receiveStream.start();
       };
     };
 
