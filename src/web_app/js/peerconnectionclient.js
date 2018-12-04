@@ -83,7 +83,7 @@ PeerConnectionClient.prototype.addStream = function(stream) {
   if (!this.pc_) {
     return;
   }
-  this.pc_.addStream(stream);
+  // this.pc_.addStream(stream);
 };
 
 PeerConnectionClient.prototype.setupDataChannel_ = function() {
