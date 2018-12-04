@@ -442,7 +442,8 @@ AppController.prototype.installVPX_ = function () {
     localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
     const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
     const packets = this.libvpx_.encode(rgba);
-    console.log(`RGB frame encoded: ${Date.now() - time} ms, ${packets.length} bytes`);
+    uistats.rgbFrame.set(Date.now() - time);
+    uistats.sentSize.set(packets.length);
     dc.send(packets); // 64 KB max
   };
 
@@ -463,7 +464,8 @@ AppController.prototype.installVPX_ = function () {
     const rgba = this.libvpx_.decode(packets);
     remoteRgbaData.data.set(rgba);
     remoteContext2d.putImageData(remoteRgbaData, 0, 0);
-    console.log(`IVF frame decoded: ${Date.now() - time} ms, ${packets.length} bytes`);
+    uistats.yuvFrame.set(Date.now() - time);
+    uistats.recvSize.set(packets.length);
   };
 };
 

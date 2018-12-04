@@ -126,6 +126,21 @@ label {
   margin: 0 10px 0 0;
 }
 
+#wasm-stats {
+  position: fixed;
+  right: 10pt;
+  top: 10pt;
+  border: 1px solid green;
+  background: black;
+  color: white;
+  z-index: 5;
+}
+
+#wasm-stats > * > * {
+  display: inline-block;
+  margin: 3pt 5pt;
+}
+
 #local-video {
   height: 100%;
   max-height: 100%;
