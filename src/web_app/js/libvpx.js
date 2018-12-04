@@ -94,6 +94,7 @@ class LibVPX {
     FS.read(ivfFile, ivfData, 0, ivfData.length, this._lastIvfSize);
     FS.close(ivfFile);
     this._lastIvfSize = ivfSize;
+    uistats.encIvfFileSize.set(ivfSize);
 
     return ivfData; // it's a temp buffer, but it's small
   }
@@ -110,6 +111,7 @@ class LibVPX {
     const ivfSize = FS.stat(DEC_IVF_FILE).size;
     FS.write(ivfFile, ivfData, 0, ivfData.length, ivfSize);
     FS.close(ivfFile);
+    uistats.decIvfFileSize.set(ivfSize);
 
     if (!this._decInitialized) {
       console.warn('initializing vpx decoder');

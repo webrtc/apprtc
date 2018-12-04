@@ -72,4 +72,10 @@ const uistats = {
   recvSize: new SizeProp('Recv Packet', {
     title: 'Size of the received key-frame or delta-frame.'
   }),
+  encIvfFileSize: new SizeProp('IVF encoder file size', {
+    title: 'Size of the /vpx-enc-ivf'
+  }),
+  decIvfFileSize: new SizeProp('IVF decoder file size', {
+    title: 'Size of the /vpx-dec-ivf'
+  }),
 };
