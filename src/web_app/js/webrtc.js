@@ -34,6 +34,7 @@ class WebRTC {
         console.log('wasm module:', Module);
         this._onWasmLoaded();
       };
+
     };
 
     document.body.appendChild(script);
@@ -69,6 +70,32 @@ class WebRTC {
     });
     sendStream.start();
 
+        function floatToInt(floatSample) {
+          s = Math.max(-1, Math.min(1, floatSample));
+          return s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        function sendAudio(floatBufferChannel1, floatBufferChannel2) {
+          // buffer in 
+          console.log("sending audio");
+          assert(floatBufferChannel1.length == floatBufferChannel2.length);
+          assert(floatBufferChannel1.length >= 480);
+
+          let sendBuffer = new Module.VectorInt16();
+          for (let i = 0; i < 480; i++) {
+            sendBuffer[i*2] = floatToInt(floatBufferChannel1[i]);
+            sendBuffer[i*2+1] = floatToInt(floatBufferChannel2[i]);
+          }
+          // ignores the rest of the buffer for now!
+          // TODO
+
+          sendStream.sendAudioData({
+            data: sendBuffer,
+            numChannels: 2,
+            sampleRateHz: 48000,
+            samplesPerChannel: 480,
+            timestamp: 0,
+          });
+        }
     function sendSomeAudio(offset) {
       let sendBuffer = new Module.VectorInt16();
       for (let i = 0; i < 480 * 2; i++) {
@@ -82,9 +109,7 @@ class WebRTC {
         samplesPerChannel: 480,
         timestamp: 0,
       });
-      setTimeout(() => sendSomeAudio((offset + 10) % 100 - 50), 1000);
     }
-    setTimeout(() => sendSomeAudio(0), 1000);
 
     const AudioSink =
       Module.AudioReceiveStreamSink.extend("AudioReceiveStreamSink", {
@@ -114,5 +139,38 @@ class WebRTC {
     });
     receiveStream.setSink(new AudioSink());
     receiveStream.start();
+        function startSending() {
+          console.warn('Activating webrtc audio');
+          if (navigator.mediaDevices) {
+            console.warn('Activating webrtc audio');
+
+            console.log('getUserMedia supported.');
+            navigator.mediaDevices.getUserMedia({audio: true, video: false})
+                .then(function(stream) {
+                  /*
+                     var audioCtx = new AudioContext();
+                     audioCtx.audioWorklet.addModule("js/wasm-worklet-processor.js");
+                     var source = audioCtx.createMediaStreamSource(stream);
+                     const processor = new AudioWorkletNode(context, 'wasm-processor');
+                     source.connect(processor).connect(context.destination);
+                     source.start();
+                     */
+                  console.log("created stream!");
+                  var audioCtx = new AudioContext();
+                  var source = audioCtx.createMediaStreamSource(stream);
+                  var processor = audioCtx.createScriptProcessor(0, 2, 2);
+                  // var processor = stream.context.createScriptProcessor(0, 1, 1);
+                  source.connect(processor).connect(audioCtx.destination);
+                  processor.onaudioprocess = function(e) {
+                    var channelData = e.inputBuffer.getChannelData(0);
+                    var channelData2 = e.inputBuffer.getChannelData(0);
+                    // console.log('captured audio ' + channelData.length);
+                    // console.log(channelData);
+                    sendAudio(channelData, channelData2);
+                  }
+                });
+          }
+        }
+        startSending();
   };
 }

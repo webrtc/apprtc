@@ -115,6 +115,7 @@ var AppController = function (loadingParams) {
     this.libvpx_.fps = +(this.loadingParams_.videoFps || '0');
     this.libvpx_.bitrate = +(this.loadingParams_.videoSendBitrate || '200');
   } else if (this.loadingParams_.webrtc) {
+    console.log("Loading webrtc");
     this.webrtc_ = new WebRTC();
   } else {
     this.libwebp_ = new LibWebP();
