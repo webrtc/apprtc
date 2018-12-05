@@ -101,7 +101,7 @@ var AppController = function (loadingParams) {
       '   ?codec=vp8    Can also use vp9.',
       '   ?width=640',
       '   ?height=480',
-      '   ?vsbr=200     Video bitrate in kilobits per second.',
+      '   ?vsbr=1500    Video bitrate in kilobits per second.',
       '   ?fps=30       fps=0 would allow to send frames one by one.',
       '',
       'For example, to encode 720p video with VP9 use:',
@@ -113,7 +113,7 @@ var AppController = function (loadingParams) {
     this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
     this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
     this.libvpx_.fps = +(this.loadingParams_.videoFps || '30');
-    this.libvpx_.bitrate = +(this.loadingParams_.videoSendBitrate || '200');
+    this.libvpx_.bitrate = +(this.loadingParams_.videoSendBitrate || '1500');
   } else if (this.loadingParams_.webrtc) {
     console.log("Loading webrtc");
     this.webrtc_ = new WebRTC();

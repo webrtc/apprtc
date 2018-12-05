@@ -32,7 +32,6 @@ class LibVPX {
 
     this._encInitialized = false;
     this._decInitialized = false;
-    this._lastIvfSize = 0;
     this._rgbPtr = 0;
     this._yuvPtr = 0;
     this._yuvFrame = null; // UInt8Array
@@ -68,8 +67,6 @@ class LibVPX {
     if (rgbaData.length != rgbaSize)
       console.warn('Wrong RGBA data size:', rgbaData.length);
 
-    // console.log(`Encoding ${width}x${height} with ${codec} fourcc:${fourcc}`);
-
     if (!this._encInitialized) {
       console.warn('initializing vpx encoder');
       _vpx_js_encoder_open(fourcc, width, height, this.fps || 30,
@@ -90,39 +87,31 @@ class LibVPX {
     // more keyframes = better video quality
     _vpx_js_encoder_run(keyframe ? 1 : 0);
 
+    // Read IVF data from the file.
+
     const ivfSize = FS.stat(ENC_IVF_FILE).size;
     const ivfFile = FS.open(ENC_IVF_FILE, 'r');
-    const ivfData = this._allocIvfFrame(ivfSize - this._lastIvfSize);
-    FS.read(ivfFile, ivfData, 0, ivfData.length, this._lastIvfSize);
+    const ivfData = this._allocIvfFrame(ivfSize);
+    FS.read(ivfFile, ivfData, 0, ivfData.length);
     FS.close(ivfFile);
-    this._lastIvfSize = ivfSize;
-    uistats.encIvfFileSize.set(ivfSize);
 
     return ivfData; // it's a temp buffer, but it's small
   }
 
   decode(ivfData) {
+    const fourcc = Codecs[this.codec];
     const width = this.width;
     const height = this.height;
     const rgbaSize = width * height * 4;
     const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
 
-    // Append new IVF data to the /vpx-ivf file.
-
-    const ivfFile = FS.open(DEC_IVF_FILE, 'a');
-    const ivfSize = FS.stat(DEC_IVF_FILE).size;
-    FS.write(ivfFile, ivfData, 0, ivfData.length, ivfSize);
-    FS.close(ivfFile);
-    uistats.decIvfFileSize.set(ivfSize);
-
     if (!this._decInitialized) {
       console.warn('initializing vpx decoder');
-      _vpx_js_decoder_open();
+      _vpx_js_decoder_open(fourcc, width, height, this.fps || 30);
       this._decInitialized = true;
     }
 
-    // Run the VPX decoder.
-
+    FS.writeFile(DEC_IVF_FILE, ivfData);
     _vpx_js_decoder_run();
 
     // Read the new YUV frames written by the decoder.
