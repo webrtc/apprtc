@@ -112,28 +112,10 @@ class LibVPX {
     }
 
     FS.writeFile(DEC_IVF_FILE, ivfData);
-    _vpx_js_decoder_run();
 
-    // Read the new YUV frames written by the decoder.
-
-    const yuvFile = FS.open(DEC_YUV_FILE, 'r');
-    const yuvFileSize = FS.stat(DEC_YUV_FILE).size;
-
-    // Only 1 YUV frame is expected. Multiple frames not supported by this demo.
-    if (yuvFileSize != yuvSize)
-      throw new Error(`Unexpected YUV file size: ${yuvFileSize} vs ${yuvSize}`);
-
-    // Convert YUV frames to RGB frames.
-
-    this._rgbPtr = this._rgbaPtr || _malloc(rgbaSize);
-    this._yuvPtr = this._yuvPtr || _malloc(yuvSize);
-    this._yuvFrame = this._yuvFrame || new Uint8Array(yuvSize);
-    FS.read(yuvFile, this._yuvFrame, 0, yuvSize);
-    HEAP8.set(this._yuvFrame, this._yuvPtr);
-    _vpx_js_yuv420_to_rgba(this._rgbPtr, this._yuvPtr, width, height);
+    this._rgbPtr = this._rgbPtr || _malloc(rgbaSize);
+    _vpx_js_decoder_run(this._rgbPtr);
     const rgbaData = new Uint8Array(HEAP8.buffer, this._rgbPtr, rgbaSize);
-    FS.close(yuvFile);
-
     return rgbaData; // it's a view into HEAP8.buffer, not a copy
   }
 }
