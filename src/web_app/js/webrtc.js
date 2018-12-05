@@ -19,23 +19,34 @@ class WebRTC {
 
   _loadWasm(src) {
     console.warn('loading wasm module:', src);
+    const time = Date.now();
     const script = document.createElement('script');
     script.src = src;
 
     script.onerror = () => {
-      console.warn('failed to load the script');
+      console.warn('failed to load the script:', src);
     };
 
     script.onload = () => {
       console.log('script loaded, waiting for wasm...');
 
       Module.onRuntimeInitialized = () => {
-        console.warn('webrtc.wasm loaded');
+        console.warn('webrtc.wasm loaded:', Date.now() - time, 'ms');
         console.log('wasm module:', Module);
+        this._showTheStartButton();
       };
     };
 
     document.body.appendChild(script);
+  }
+
+  _showTheStartButton() {
+    console.log('Click the button to start the WebRTC stuff.');
+    const button = document.createElement('button');
+    button.setAttribute('style', 'position:fixed;left:10px;top:10px');
+    button.textContent = 'Start WebRTC';
+    document.body.append(button);
+    button.addEventListener('click', () => this.start());
   }
 
   start() {
@@ -69,8 +80,8 @@ class WebRTC {
         console.log('sendPacket');
         // console.log(payload);
         console.log('Sending a RTP packet:', payload.length, 'bytes');
+        uistats.rtpSendSize.set(payload.length);
         if (window.dc) {
-          uistats.rtpSendSize.set(payload.length);
           const payloadCopy = new Uint8Array(payload);
           dc.send(payloadCopy);
         } else {

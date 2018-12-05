@@ -117,7 +117,6 @@ var AppController = function (loadingParams) {
   } else if (this.loadingParams_.webrtc) {
     console.log("Loading webrtc");
     this.webrtc_ = new WebRTC();
-    this.installWebRtc_();
   } else {
     this.libwebp_ = new LibWebP();
   }
@@ -397,15 +396,6 @@ AppController.prototype.transitionToActive_ = function () {
       this.installVPX_();
     }
   }
-};
-
-AppController.prototype.installWebRtc_ = function () {
-  console.log('Click the button to start the WebRTC stuff.');
-  const button = document.createElement('button');
-  button.setAttribute('style', 'position:fixed;left:10px;top:10px');
-  button.textContent = 'Start WebRTC';
-  document.body.append(button);
-  button.addEventListener('click', () => this.webrtc_.start());
 };
 
 AppController.prototype.installWebP_ = function () {
