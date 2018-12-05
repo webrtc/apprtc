@@ -136,9 +136,9 @@ class WebRTC {
         sendingQueue.splice(0, 2 * 480);
 
         const audioFrame = new Module.AudioFrame();
-        audioFrame.setNumChannels(2);                                               
-        audioFrame.setSampleRateHz(48000);                                          
-        audioFrame.setSamplesPerChannel(sendBuffer.size() / 2);                                       
+        audioFrame.setNumChannels(2);
+        audioFrame.setSampleRateHz(48000);
+        audioFrame.setSamplesPerChannel(sendBuffer.size() / 2);
         audioFrame.setData(sendBuffer);
         sendStream.sendAudioData(audioFrame);
       }
@@ -212,17 +212,17 @@ class WebRTC {
                 let numberOfPulls = channel1.length / 480;
                 var offset = 0;
                 for(i=0; i < numberOfPulls; i++) {
-                  const audioFrame = new Module.AudioFrame();                                 
-                  audioFrame.setNumChannels(2);                                               
-                  audioFrame.setSampleRateHz(48000);                                          
-                  audioFrame.setSamplesPerChannel(480);                                       
+                  const audioFrame = new Module.AudioFrame();
+                  audioFrame.setNumChannels(2);
+                  audioFrame.setSampleRateHz(48000);
+                  audioFrame.setSamplesPerChannel(480);
 
                   // pre-allocate!
-                  for (let i = 0; i < 480 * 2; i++) {                                         
-                    audioFrame.data().push_back(0);                                           
-                  }                 
+                  for (let i = 0; i < 480 * 2; i++) {
+                    audioFrame.data().push_back(0);
+                  }
 
-                  audioDeviceModule.pullRenderData(audioFrame);                               
+                  audioDeviceModule.pullRenderData(audioFrame);
 
                   for(var s = 0; s < audioFrame.data().size() / 2; s++) {
                     channel1[offset + s] = intToFloat(audioFrame.data().get(s*2));
