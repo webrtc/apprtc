@@ -115,8 +115,13 @@ var AppController = function (loadingParams) {
     this.libvpx_.fps = +(this.loadingParams_.videoFps || '30');
     this.libvpx_.bitrate = +(this.loadingParams_.videoSendBitrate || '1500');
   } else if (this.loadingParams_.webrtc) {
-    console.log("Loading webrtc");
-    this.webrtc_ = new WebRTC();
+    console.log([
+      'Loading WebRTC. Default WebRTC params will just use audio in wasm.',
+      'To use WebRTC (in wasm) for audio & video:',
+      '',
+      '   ?webrtc=1&webrtcvideo=1',
+    ].join('\n'));
+    this.webrtc_ = new WebRTC(this.loadingParams_.webrtcVideo, this.miniVideo_);
   } else {
     this.libwebp_ = new LibWebP();
   }
@@ -700,6 +705,7 @@ AppController.prototype.loadUrlParams_ = function () {
   this.loadingParams_.videoHeight = urlParams['height']; // 480
   this.loadingParams_.videoFps = urlParams['fps']; // 30
   this.loadingParams_.webrtc = urlParams['webrtc'];
+  this.loadingParams_.webrtcVideo = urlParams['webrtcvideo']
   /* eslint-enable dot-notation */
 };
 

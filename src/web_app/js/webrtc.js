@@ -16,7 +16,14 @@ const framesPerPacket = 512;
 const receivingSamplesPerCallback = 2048;
 
 class WebRTC {
-  constructor() {
+  constructor(sendVideo, miniVideo) {
+    // TODO: Consider changing width & height.
+    this.width = 640;
+    this.height = 480;
+    this.fps = 10;
+    this.sendVideo = sendVideo;
+    // $(UI_CONSTANTS.miniVideo) from appcontroller.js.
+    this.miniVideo = miniVideo;
     this._loadWasm('/wasm/webrtc/webrtc.js');
   }
 
@@ -99,7 +106,7 @@ class WebRTC {
     let audioDeviceModule = Module.createAudioDeviceModule();
     audioDeviceModule.startPlayout();
     call = new Module.Call(new Transport(), audioDeviceModule);
-    let sendStream = call.createAudioSendStream({
+    let audioSendStream = call.createAudioSendStream({
       ssrc: 123,
       cname: 'cname',
       payloadType: 42,
@@ -107,7 +114,12 @@ class WebRTC {
       clockrateHz: 48000,
       numChannels: 2,
     });
-    sendStream.start();
+    audioSendStream.start();
+
+    let videoSendStream = call.createVideoSendStream({
+      ssrc: 234,
+    });
+    videoSendStream.start();
 
     function intToFloat(intSample) {
       return intSample / 32768;
@@ -116,6 +128,47 @@ class WebRTC {
     function floatToInt(floatSample) {
       s = Math.max(-1, Math.min(1, floatSample));
       return s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+
+    function startSendingVideo(width, height, fps, miniVideo) {
+      console.log('Starting to send VideoFrames on wasm VideoSendStream...');
+      const sendFrame = () => {
+        const localCanvas = document.createElement('canvas');
+        localCanvas.width = width;
+        localCanvas.height = height;
+        const localContext2d = localCanvas.getContext('2d');
+        if (dc === undefined || dc.readyState != 'open')
+          return;
+        localContext2d.drawImage(miniVideo, 0, 0, width, height);
+        const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
+        console.log('Sending raw video frame', rgba);
+
+        const rgbaSize = width * height * 4;
+        // const yuvSize = this.width * this.height * 3 / 2; // 48 bits per 4 pixels
+        if (rgba.length != rgbaSize)
+          console.warn('Wrong RGBA data size:', rgba.length);
+
+        let videoData = new Module.VectorUint8();
+        for (let i = 0; i < rgba; i++) {
+          videoData.push_back(rgba[i]);
+        }
+        // TODO:Passing in 0 as a timestamp, could be causing the frames to get dropped.
+        const videoFrame = new Module.VideoFrame(0, width, height);
+        videoFrame.setRgbData(videoData);
+        videoSendStream.sendVideoFrame(videoFrame);
+        delete videoFrame;
+      };
+
+      if (fps > 0) {
+        setInterval(sendFrame, 1000 / fps);
+      } else {
+        const button = document.createElement('button');
+        button.setAttribute('style', 'position:fixed;left:10px;top:10px');
+        button.textContent = 'Send Frame';
+        document.body.append(button);
+        button.addEventListener('click', () => sendFrame());
+      }
+      // TODO: Receiver w/ remote data.
     }
 
     function sendAudio(floatBufferChannel1, floatBufferChannel2) {
@@ -141,25 +194,11 @@ class WebRTC {
         audioFrame.setSampleRateHz(48000);
         audioFrame.setSamplesPerChannel(sendBuffer.size() / 2);
         audioFrame.setData(sendBuffer);
-        sendStream.sendAudioData(audioFrame);
+        audioSendStream.sendAudioData(audioFrame);
       }
 
       // best garbage collection I can think of
       sendBuffer.delete();
-    }
-
-    function sendSomeAudio(offset) {
-      let sendBuffer = new Module.VectorInt16();
-      for (let i = 0; i < framesPerPacket * 2; i++) {
-        sendBuffer.push_back(offset + i);
-      }
-      sendStream.sendAudioData({
-        data: sendBuffer,
-        numChannels: 2,
-        sampleRateHz: 48000,
-        samplesPerChannel: framesPerPacket,
-        timestamp: 0,
-      });
     }
 
     let receiveAudioCodecs = new Module.VectorAudioCodec();
@@ -180,7 +219,7 @@ class WebRTC {
     var sendingQueue = [];
     var receivingQueueChannel1 = [];
     var receivingQueueChannel2 = [];
-    function startSending() {
+    function startSendingAudio(sendVideo) {
       console.warn('Activating webrtc audio');
       if (navigator.mediaDevices) {
         console.warn('Activating webrtc audio');
@@ -248,6 +287,9 @@ class WebRTC {
           });
       }
     }
-    startSending();
+    startSendingAudio();
+    if (this.sendVideo) {
+      startSendingVideo(this.width, this.height, this.fps, this.miniVideo);
+    }
   };
 }
