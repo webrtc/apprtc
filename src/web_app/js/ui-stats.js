@@ -112,4 +112,10 @@ const uistats = {
   rtpRecvSize: new SizeProp('RTP packet recv', {
     title: 'Size of the received RTP packets.'
   }),
+  audioEncTime: new TimeProp('Audio Encoding', {
+    title: 'Time to encode an audio or video packet.',
+  }),
+  audioDecTime: new TimeProp('Audio Decoding', {
+    title: 'Time to decode an audio or video packet.',
+  }),
 };

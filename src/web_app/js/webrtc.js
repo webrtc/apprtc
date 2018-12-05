@@ -55,23 +55,25 @@ class WebRTC {
       __construct: function () {
         this.__parent.__construct.call(this);
 
-        if (window.dc) {
-          console.warn('Subscribing to RTP packets');
-          dc.onmessage = event => {
-            const packet = new Uint8Array(event.data);
-            uistats.rtpRecvSize.set(packet.length);
-            console.log('Received a RTP packet:', packet.length, 'bytes');
-            console.log(packet);
-            // TODO: Do something with it.
-            let receivedBuffer = new Module.VectorUint8();
-            for(i=0; i<packet.length; i++) {
-              receivedBuffer.push_back(packet[i]);
-            }
-            call.deliverPacket(receivedBuffer);
-          };
-        } else {
+        if (!window.dc) {
           console.warn('window.dc:RTCDataChannel doesnt exist yet');
+          return;
         }
+
+        console.warn('Subscribing to RTP packets');
+        dc.onmessage = event => {
+          const time = Date.now();
+          const packet = new Uint8Array(event.data);
+          uistats.rtpRecvSize.set(packet.length);
+          console.log('Received a RTP packet:', packet.length, 'bytes');
+          console.log(packet);
+          let receivedBuffer = new Module.VectorUint8();
+          for (i = 0; i < packet.length; i++) {
+            receivedBuffer.push_back(packet[i]);
+          }
+          call.deliverPacket(receivedBuffer);
+          uistats.audioDecTime.set(Date.now() - time);
+        };
       },
       __destruct: function () {
         this.__parent.__destruct.call(this);
@@ -126,9 +128,9 @@ class WebRTC {
       // ignores the rest of the buffer for now!
       // TODO
       const audioFrame = new Module.AudioFrame();
-      audioFrame.setNumChannels(2);                                               
-      audioFrame.setSampleRateHz(48000);                                          
-      audioFrame.setSamplesPerChannel(480);                                       
+      audioFrame.setNumChannels(2);
+      audioFrame.setSampleRateHz(48000);
+      audioFrame.setSamplesPerChannel(480);
       audioFrame.setData(sendBuffer);
 
       sendStream.sendAudioData(audioFrame);
@@ -171,63 +173,65 @@ class WebRTC {
 
         console.log('getUserMedia supported.');
         navigator.mediaDevices.getUserMedia({audio: true, video: false})
-            .then(function (stream) {
-              /*
-                 var audioCtx = new AudioContext();
-                 audioCtx.audioWorklet.addModule("js/wasm-worklet-processor.js");
-                 var source = audioCtx.createMediaStreamSource(stream);
-                 const processor = new AudioWorkletNode(context, 'wasm-processor');
-                 source.connect(processor).connect(context.destination);
-                 source.start();
-                 */
-              console.log("created stream!");
-              var audioCtx = new AudioContext();
-              var source = audioCtx.createMediaStreamSource(stream);
-              var processor = audioCtx.createScriptProcessor(0, 2, 2);
-              // var processor = stream.context.createScriptProcessor(0, 1, 1);
-              source.connect(processor).connect(audioCtx.destination);
-              processor.onaudioprocess = function (e) {
-                var channelData = e.inputBuffer.getChannelData(0);
-                var channelData2 = e.inputBuffer.getChannelData(0);
-                // console.log('captured audio ' + channelData.length);
-                // console.log(channelData);
-                sendAudio(channelData, channelData2);
+          .then(function (stream) {
+            /*
+               var audioCtx = new AudioContext();
+               audioCtx.audioWorklet.addModule("js/wasm-worklet-processor.js");
+               var source = audioCtx.createMediaStreamSource(stream);
+               const processor = new AudioWorkletNode(context, 'wasm-processor');
+               source.connect(processor).connect(context.destination);
+               source.start();
+               */
+            console.log("created stream!");
+            var audioCtx = new AudioContext();
+            var source = audioCtx.createMediaStreamSource(stream);
+            var processor = audioCtx.createScriptProcessor(0, 2, 2);
+            // var processor = stream.context.createScriptProcessor(0, 1, 1);
+            source.connect(processor).connect(audioCtx.destination);
+            processor.onaudioprocess = function (e) {
+              const time = Date.now();
+              var channelData = e.inputBuffer.getChannelData(0);
+              var channelData2 = e.inputBuffer.getChannelData(0);
+              // console.log('captured audio ' + channelData.length);
+              // console.log(channelData);
+              sendAudio(channelData, channelData2);
+              uistats.audioEncTime.set(Date.now() - time);
+            }
+
+            // And playback, hacky, using script processor
+            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            destination = audioCtx.createMediaStreamDestination();
+            var playbackProcessor = audioCtx.createScriptProcessor(0, 2, 2);
+            var oscillator = audioCtx.createOscillator();
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // value in hertz
+            oscillator.connect(playbackProcessor).connect(audioCtx.destination);
+            playbackProcessor.onaudioprocess = function (e) {
+              const audioFrame = new Module.AudioFrame();
+              audioFrame.setNumChannels(2);
+              audioFrame.setSampleRateHz(48000);
+              audioFrame.setSamplesPerChannel(480);
+              console.log('before: ' + audioFrame.data().size());
+
+              // pre-allocate!
+              for (let i = 0; i < 480 * 2; i++) {
+                audioFrame.data().push_back(0);
               }
 
-              // And playback, hacky, using script processor
-              var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-              destination = audioCtx.createMediaStreamDestination();
-              var playbackProcessor = audioCtx.createScriptProcessor(0, 2, 2);
-              var oscillator = audioCtx.createOscillator();
-              oscillator.type = 'square';
-              oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // value in hertz
-              oscillator.connect(playbackProcessor).connect(audioCtx.destination);
-              playbackProcessor.onaudioprocess = function (e) {
-                const audioFrame = new Module.AudioFrame();                                 
-                audioFrame.setNumChannels(2);                                               
-                audioFrame.setSampleRateHz(48000);                                          
-                audioFrame.setSamplesPerChannel(480);                                       
-                console.log('before: ' + audioFrame.data().size());
+              audioDeviceModule.pullRenderData(audioFrame);
+              console.log('after: ' + audioFrame.data().size());
+              var outputBuffer = e.outputBuffer;
+              var channel1 = outputBuffer.getChannelData(0);
+              var channel2 = outputBuffer.getChannelData(1);
 
-                // pre-allocate!
-                for (let i = 0; i < 480 * 2; i++) {                                         
-                  audioFrame.data().push_back(0);                                           
-                }                 
-
-                audioDeviceModule.pullRenderData(audioFrame);                               
-                console.log('after: ' + audioFrame.data().size());
-                var outputBuffer = e.outputBuffer;
-                var channel1 = outputBuffer.getChannelData(0);
-                var channel2 = outputBuffer.getChannelData(1);
-
-                for(var s = 0; s < audioFrame.data().size() / 2; s++) {
-                  channel1[s] = intToFloat(audioFrame.data().get(s*2));
-                  channel2[s] = intToFloat(audioFrame.data().get(s*2+1));
-                }
-                console.log(audioFrame.data().get(0));
+              for (var s = 0; s < audioFrame.data().size() / 2; s++) {
+                channel1[s] = intToFloat(audioFrame.data().get(s * 2));
+                channel2[s] = intToFloat(audioFrame.data().get(s * 2 + 1));
               }
-              oscillator.start();
-            });
+              console.log(audioFrame.data().get(0));
+            }
+            oscillator.start();
+          });
       }
     }
     startSending();

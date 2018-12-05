@@ -88,7 +88,8 @@ PeerConnectionClient.prototype.addStream = function(stream) {
 
 PeerConnectionClient.prototype.setupDataChannel_ = function() {
   this.dataChannel_.onopen = event => console.warn('dc:open ->', event);
-  //this.dataChannel_.onmessage = event => console.warn('dc:message ->', event);
+  // this listener is later overridden by webrtc.js or libvpx.js
+  this.dataChannel_.onmessage = event => console.warn('dc:message (default handler) ->', event);
 };
 
 PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
