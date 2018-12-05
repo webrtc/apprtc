@@ -178,7 +178,8 @@ class WebRTC {
     receiveStream.start();
 
     var sendingQueue = [];
-    var receivingQueue = [];
+    var receivingQueueChannel1 = [];
+    var receivingQueueChannel2 = [];
     function startSending() {
       console.warn('Activating webrtc audio');
       if (navigator.mediaDevices) {
@@ -229,10 +230,18 @@ class WebRTC {
                   audioDeviceModule.pullRenderData(audioFrame);
 
                   for(var s = 0; s < audioFrame.data().size() / 2; s++) {
-                    channel1[offset + s] = intToFloat(audioFrame.data().get(s*2));
-                    channel2[offset + s] = intToFloat(audioFrame.data().get(s*2+1));
+                    receivingQueueChannel1.push(intToFloat(audioFrame.data().get(s*2)));
+                    receivingQueueChannel2.push(intToFloat(audioFrame.data().get(s*2+1)));
                   }
-                  offset += audioFrame.data().size() / 2;
+                }
+
+                if(receivingQueueChannel1.length > receivingSamplesPerCallback) {
+                for(var i=0; i < receivingSamplesPerCallback; i++) {
+                  channel1[i] = receivingQueueChannel1[i];
+                  channel2[i] = receivingQueueChannel2[i];
+                }
+                receivingQueueChannel1.splice(0, receivingSamplesPerCallback);
+                receivingQueueChannel2.splice(0, receivingSamplesPerCallback);
                 }
               }
             oscillator.start();
