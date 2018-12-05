@@ -13,7 +13,7 @@
 'use strict';
 
 const framesPerPacket = 512;
-const receivingSamplesPerCallback = 4096;
+const receivingSamplesPerCallback = 2048;
 
 class WebRTC {
   constructor() {
@@ -127,12 +127,13 @@ class WebRTC {
 
       // while we have something in the queue, send it right away! hopefully
       // webrtc is ok with that.
+      let sendBuffer = new Module.VectorInt16();
+      for (let i = 0; i < 2 * 480; i++) {
+        sendBuffer.push_back(sendingQueue[i]);
+      }
+
       while(sendingQueue.length > 2 * 480) {
         console.log("sending packet, current_length=" + sendingQueue.length);
-        let sendBuffer = new Module.VectorInt16();
-        for (let i = 0; i < 2 * 480; i++) {
-          sendBuffer.push_back(sendingQueue[i]);
-        }
         sendingQueue.splice(0, 2 * 480);
 
         const audioFrame = new Module.AudioFrame();
@@ -142,6 +143,9 @@ class WebRTC {
         audioFrame.setData(sendBuffer);
         sendStream.sendAudioData(audioFrame);
       }
+
+      // best garbage collection I can think of
+      sendBuffer.delete();
     }
 
     function sendSomeAudio(offset) {
