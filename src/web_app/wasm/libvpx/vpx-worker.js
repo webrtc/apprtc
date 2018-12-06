@@ -9,13 +9,13 @@
 
 importScripts('/wasm/libvpx/libvpx.js');
 
+const KB = 0x400; // 2**10
+const MAX_IVF_SIZE = 64 * KB; // RTCDataChannel cannot send more than this
+
 const Codecs = {
   VP8: 0x30385056,
   VP9: 0x30395056,
 };
-
-const ENC_IVF_FILE = "/vpx-enc-ivf"; // vpx encoder writes here
-const DEC_IVF_FILE = "/vpx-dec-ivf"; // vpx decoder reads here
 
 class LibVPX {
   constructor() {
@@ -29,8 +29,7 @@ class LibVPX {
     this._decInitialized = false;
     this._rgbPtr = 0;
     this._yuvPtr = 0;
-    this._yuvFrame = null; // UInt8Array
-    this._ivfFrame = null; // UInt8Array, dynamic
+    this._ivfPtr = 0;
 
     onmessage = event => {
       const req = event.data;
@@ -70,20 +69,14 @@ class LibVPX {
     }
   }
 
-  _allocIvfFrame(size) {
-    if (!this._ivfFrame || this._ivfFrame.length < size)
-      this._ivfFrame = new Uint8Array(size);
-    return new Uint8Array(this._ivfFrame.buffer, 0, size);
-  }
-
-  encode(rgbaData, keyframe = false) {
-    rgbaData = new Uint8Array(rgbaData);
-
+  encode(rgbaData) {
     const codec = this.codec;
     const width = this.width;
     const height = this.height;
     const fourcc = Codecs[codec];
     const rgbaSize = width * height * 4;
+
+    rgbaData = new Uint8Array(rgbaData);
 
     if (rgbaData.length != rgbaSize)
       console.warn('Wrong RGBA data size:', rgbaData.length);
@@ -95,19 +88,11 @@ class LibVPX {
       this._encInitialized = true;
     }
 
+    this._ivfPtr = this._ivfPtr || _malloc(MAX_IVF_SIZE);
     this._rgbPtr = this._rgbPtr || _malloc(rgbaSize);
     HEAP8.set(rgbaData, this._rgbPtr);
-    _vpx_js_encoder_run(this._rgbPtr);
-
-    // Read IVF data from the file.
-
-    const ivfSize = FS.stat(ENC_IVF_FILE).size;
-    const ivfFile = FS.open(ENC_IVF_FILE, 'r');
-    const ivfData = this._allocIvfFrame(ivfSize);
-    FS.read(ivfFile, ivfData, 0, ivfData.length);
-    FS.close(ivfFile);
-
-    return ivfData;
+    const ivfSize = _vpx_js_encoder_run(this._rgbPtr, this._ivfPtr, MAX_IVF_SIZE);
+    return new Uint8Array(HEAP8.buffer, this._ivfPtr, ivfSize);
   }
 
   decode(ivfData) {
@@ -116,16 +101,18 @@ class LibVPX {
     const height = this.height;
     const rgbaSize = width * height * 4;
 
+    ivfData = new Uint8Array(ivfData);
+
     if (!this._decInitialized) {
       console.warn('initializing vpx decoder');
       _vpx_js_decoder_open(fourcc, width, height, this.fps || 30);
       this._decInitialized = true;
     }
 
-    FS.writeFile(DEC_IVF_FILE, new Uint8Array(ivfData));
-
+    this._ivfPtr = this._ivfPtr || _malloc(MAX_IVF_SIZE);
     this._rgbPtr = this._rgbPtr || _malloc(rgbaSize);
-    _vpx_js_decoder_run(this._rgbPtr);
+    HEAP8.set(ivfData, this._ivfPtr);
+    _vpx_js_decoder_run(this._rgbPtr, this._ivfPtr, ivfData.length);
     return new Uint8Array(HEAP8.buffer, this._rgbPtr, rgbaSize);
   }
 }
