@@ -88,6 +88,10 @@ class SizeProp {
 }
 
 const uistats = {
+  sendFps: new Prop('FPS', {
+    title: 'How fast we send encoded frames.',
+    format: x => x | 0,
+  }),
   rgbFrame: new TimeProp('RGB Frame', {
     title: 'Time to encode RGB frame.',
   }),

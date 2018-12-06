@@ -5,12 +5,9 @@
  *  that can be found in the LICENSE file in the root of the source
  *  tree.
  */
-
-/* More information about these options at jshint.com/docs/options */
-
-/* exported LibVPX */
-
 'use strict';
+
+importScripts('/wasm/libvpx/libvpx.js');
 
 const Codecs = {
   VP8: 0x30385056,
@@ -37,17 +34,42 @@ class LibVPX {
     this._yuvFrame = null; // UInt8Array
     this._ivfFrame = null; // UInt8Array, dynamic
 
-    this._loadWasm('/wasm/libvpx/libvpx.js');
+    onmessage = event => {
+      const req = event.data;
+      // console.log('Received web worker request:', req);
+      const {id} = req;
+
+      try {
+        let res = this._handleWebWorkerRequest(req);
+
+        if (res instanceof Uint8Array) {
+          // Copying the entire result buffer every time is a bad idea, but it's
+          // much better than letting postMessage serialize it to JSON and then
+          // deserialize it back on the appcontroller.js side.
+          res = new Uint8Array(res);
+          postMessage({ id, res: res.buffer }, [res.buffer]);
+        } else {
+          postMessage({ id, res });
+        }
+      } catch (err) {
+        postMessage({ id, err });
+      }
+    };
   }
 
-  _loadWasm(src) {
-    console.warn('loading wasm module:', src);
-    loadScript(src).then(() => {
-      Module.onRuntimeInitialized = () => {
-        console.warn('libvpx.wasm loaded');
-        console.log('wasm module:', Module);
-      };
-    });
+  _handleWebWorkerRequest(req) {
+    switch (req.type) {
+      case 'init':
+        const data = req.data;
+        console.log('Updating props:', data);
+        Object.assign(this, data);
+        return;
+      case 'call':
+        // console.log('Invoking', req.name, req.args);
+        return this[req.name](...req.args);
+      default:
+        throw new Error('Unrecognized request type.');
+    }
   }
 
   _allocIvfFrame(size) {
@@ -57,6 +79,8 @@ class LibVPX {
   }
 
   encode(rgbaData, keyframe = false) {
+    rgbaData = new Uint8Array(rgbaData);
+
     const codec = this.codec;
     const width = this.width;
     const height = this.height;
@@ -95,7 +119,7 @@ class LibVPX {
     FS.read(ivfFile, ivfData, 0, ivfData.length);
     FS.close(ivfFile);
 
-    return ivfData; // it's a temp buffer, but it's small
+    return ivfData;
   }
 
   decode(ivfData) {
@@ -103,7 +127,6 @@ class LibVPX {
     const width = this.width;
     const height = this.height;
     const rgbaSize = width * height * 4;
-    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
 
     if (!this._decInitialized) {
       console.warn('initializing vpx decoder');
@@ -111,21 +134,12 @@ class LibVPX {
       this._decInitialized = true;
     }
 
-    FS.writeFile(DEC_IVF_FILE, ivfData);
+    FS.writeFile(DEC_IVF_FILE, new Uint8Array(ivfData));
 
     this._rgbPtr = this._rgbPtr || _malloc(rgbaSize);
     _vpx_js_decoder_run(this._rgbPtr);
-    const rgbaData = new Uint8Array(HEAP8.buffer, this._rgbPtr, rgbaSize);
-    return rgbaData; // it's a view into HEAP8.buffer, not a copy
+    return new Uint8Array(HEAP8.buffer, this._rgbPtr, rgbaSize);
   }
 }
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onerror = reject;
-    script.onload = resolve;
-    document.body.appendChild(script);
-  });
-}
+new LibVPX();

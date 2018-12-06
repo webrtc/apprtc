@@ -93,7 +93,10 @@ var AppController = function (loadingParams) {
   this.loadUrlParams_();
 
   if (this.loadingParams_.libvpx) {
-    this.libvpx_ = new LibVPX();
+    const src = '/wasm/libvpx/vpx-worker.js';
+
+    this.vpxenc_ = new Worker(src);
+    this.vpxdec_ = new Worker(src);
 
     console.log([
       'Default VPX params:',
@@ -109,11 +112,16 @@ var AppController = function (loadingParams) {
       '   ?libvpx=1&codec=vp9&width=1280&height=720',
     ].join('\n'));
 
-    this.libvpx_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
-    this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
-    this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
-    this.libvpx_.fps = +(this.loadingParams_.videoFps || '30');
-    this.libvpx_.bitrate = +(this.loadingParams_.videoSendBitrate || '1500');
+    this.vpxconfig_ = {};
+
+    this.vpxconfig_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
+    this.vpxconfig_.width = +(this.loadingParams_.videoWidth || '640');
+    this.vpxconfig_.height = +(this.loadingParams_.videoHeight || '480');
+    this.vpxconfig_.fps = +(this.loadingParams_.videoFps || '30');
+    this.vpxconfig_.bitrate = +(this.loadingParams_.videoSendBitrate || '1500');
+
+    this.vpxenc_.postMessage({ type: 'init', data: this.vpxconfig_ });
+    this.vpxdec_.postMessage({ type: 'init', data: this.vpxconfig_ });
   } else if (this.loadingParams_.webrtc) {
     console.log([
       'Loading WebRTC. Default WebRTC params will just use audio in wasm.',
@@ -304,7 +312,6 @@ AppController.prototype.onRemoteHangup_ = function () {
 
 AppController.prototype.onRemoteSdpSet_ = function (hasRemoteVideo) {
   if(window.dc === undefined) {
-    assert(window.pc);
     window.pc.addEventListener("datachannel", event => { this.transitionToActive_(); });
   } else {
     // TODO(juberti): Make this wait for ICE connection before transitioning.
@@ -397,7 +404,7 @@ AppController.prototype.transitionToActive_ = function () {
 
     if (this.libwebp_) {
       this.installWebP_();
-    } else if (this.libvpx_) {
+    } else if (this.vpxconfig_) {
       this.installVPX_();
     }
   }
@@ -430,7 +437,7 @@ AppController.prototype.installWebP_ = function () {
 };
 
 AppController.prototype.installVPX_ = function () {
-  const {width, height, fps} = this.libvpx_;
+  const {width, height, fps} = this.vpxconfig_;
 
   this.remoteCanvas_.width = width;
   this.remoteCanvas_.height = height;
@@ -443,19 +450,99 @@ AppController.prototype.installVPX_ = function () {
   localCanvas.height = height;
   const localContext2d = localCanvas.getContext('2d');
 
+  let enctime, dectime, encoding = false, nframes = 0;
+
+  setInterval(() => {
+    uistats.sendFps.set(nframes);
+    nframes = 0;
+  }, 1000);
+
+  // Lifetime of an outgoing video frame:
+  //  - Every 1000/fps ms canvas.drawImage grabs a RGBA frame
+  //  - postMessage transfers the data to the VPX encoder web worker
+  //  - sendEncodedFrame sends the delta-frame created by the encoder
+  // The encoder thread doesn't have a bakclog of the frames to be encoded:
+  // the UI thread ensures that the encoder is called only when it's idle.
   const sendFrame = () => {
-    if (dc === undefined || dc.readyState != 'open')
-      return;
-    const time = Date.now();
+    if (encoding) return;
+    encoding = true;
+    enctime = Date.now();
     localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
     const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
-    const packets = this.libvpx_.encode(rgba);
-    uistats.rgbFrame.set(Date.now() - time);
+
+    this.vpxenc_.postMessage({
+      id: 'enc',
+      type: 'call',
+      name: 'encode',
+      args: [rgba.buffer]
+    }, [rgba.buffer]);
+  };
+
+  const sendEncodedFrame = packets => {
+    uistats.rgbFrame.set(Date.now() - enctime);
     uistats.sentSize.set(packets.length);
-    dc.send(packets); // 64 KB max
+    nframes++;
+
+    if (window.dc && dc.readyState == 'open')
+      dc.send(packets); // 64 KB max
+    else
+      console.warn('Data channel isnt ready: dropping this frame.');
+  };
+
+  const drawDecodedFrame = rgba => {
+    remoteRgbaData.data.set(rgba);
+    remoteContext2d.putImageData(remoteRgbaData, 0, 0);
+    uistats.yuvFrame.set(Date.now() - dectime);
+  };
+
+  const recvVpxResponse = rsp => {
+    // console.log('Received response from VPX:', rsp);
+    let {id, res, err} = rsp;
+    if (err) return;
+
+    // This doesn't copy data, but creates a view into an existing ArrayBuffer
+    // transferred by postMessage from the web worker.
+    res = new Uint8Array(res);
+
+    switch (id) {
+    case 'enc':
+      sendEncodedFrame(res);
+      encoding = false;
+      break;
+    case 'dec':
+      drawDecodedFrame(res);
+      break;
+    default:
+      console.warn('Unhandled response.');
+    }
+  };
+
+  // Lifetime of an incoming video frame:
+  //  - The data channel delivers the delta frame data.
+  //  - postMessage transfers the data to the VPX decoder web worker.
+  //  - drawDecodedFrame draws the decoded RGBA frame on the canvas.
+  // Delta frame aren't skipped as otherwise the video would become blurry. This
+  // means that the decoder thread may have a backlog of pending delta frames.
+  // The backlog is transparently maintained for us by the postMessage function.
+  // However since the decoder is fast, it almost never has a backlog.
+  const recvIncomingDelatFrame = data => {
+    dectime = Date.now();
+    const packets = new Uint8Array(data);
+    uistats.recvSize.set(packets.length);
+
+    this.vpxdec_.postMessage({
+      id: 'dec',
+      type: 'call',
+      name: 'decode',
+      args: [packets.buffer],
+    }, [packets.buffer]);
   };
 
   if (fps > 0) {
+    // Every 1000/fps ms canvas.drawImage will be capturing a frame and sending
+    // it to the VPX encoder. Each drawImage call needs 25 ms, but it runs
+    // independently from the encoder. If the encoder is still busy with the
+    // previous frame, the captured frame is dropped.
     setInterval(sendFrame, 1000 / fps);
   } else {
     const button = document.createElement('button');
@@ -465,16 +552,12 @@ AppController.prototype.installVPX_ = function () {
     button.addEventListener('click', () => sendFrame());
   }
 
-  dc.onmessage = event => {
-    const time = Date.now();
-    const packets = new Uint8Array(event.data);
-    // console.warn('Got IVF packets from remote:', packets.length, 'bytes');
-    const rgba = this.libvpx_.decode(packets);
-    remoteRgbaData.data.set(rgba);
-    remoteContext2d.putImageData(remoteRgbaData, 0, 0);
-    uistats.yuvFrame.set(Date.now() - time);
-    uistats.recvSize.set(packets.length);
-  };
+  // The encoder and decoder run on separate threads.
+  this.vpxenc_.onmessage = event => recvVpxResponse(event.data);
+  this.vpxdec_.onmessage = event => recvVpxResponse(event.data);
+
+  // The incoming video frames come via this data channel.
+  dc.onmessage = event => recvIncomingDelatFrame(event.data);
 };
 
 AppController.prototype.transitionToWaiting_ = function () {
