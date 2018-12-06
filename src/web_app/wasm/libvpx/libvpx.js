@@ -5568,8 +5568,6 @@ var _vpx_js_decoder_run = Module["_vpx_js_decoder_run"] = function() {  return M
 var _vpx_js_encoder_close = Module["_vpx_js_encoder_close"] = function() {  return Module["asm"]["_vpx_js_encoder_close"].apply(null, arguments) };
 var _vpx_js_encoder_open = Module["_vpx_js_encoder_open"] = function() {  return Module["asm"]["_vpx_js_encoder_open"].apply(null, arguments) };
 var _vpx_js_encoder_run = Module["_vpx_js_encoder_run"] = function() {  return Module["asm"]["_vpx_js_encoder_run"].apply(null, arguments) };
-var _vpx_js_rgba_to_yuv420 = Module["_vpx_js_rgba_to_yuv420"] = function() {  return Module["asm"]["_vpx_js_rgba_to_yuv420"].apply(null, arguments) };
-var _vpx_js_yuv420_to_rgba = Module["_vpx_js_yuv420_to_rgba"] = function() {  return Module["asm"]["_vpx_js_yuv420_to_rgba"].apply(null, arguments) };
 var establishStackSpace = Module["establishStackSpace"] = function() {  return Module["asm"]["establishStackSpace"].apply(null, arguments) };
 var runPostSets = Module["runPostSets"] = function() {  return Module["asm"]["runPostSets"].apply(null, arguments) };
 var setThrew = Module["setThrew"] = function() {  return Module["asm"]["setThrew"].apply(null, arguments) };

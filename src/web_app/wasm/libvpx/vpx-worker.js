@@ -15,9 +15,7 @@ const Codecs = {
 };
 
 const ENC_IVF_FILE = "/vpx-enc-ivf"; // vpx encoder writes here
-const ENC_YUV_FILE = "/vpx-enc-yuv"; // vpx encoder read here
 const DEC_IVF_FILE = "/vpx-dec-ivf"; // vpx decoder reads here
-const DEC_YUV_FILE = "/vpx-dec-yuv"; // vpx decoder writes here
 
 class LibVPX {
   constructor() {
@@ -86,7 +84,6 @@ class LibVPX {
     const height = this.height;
     const fourcc = Codecs[codec];
     const rgbaSize = width * height * 4;
-    const yuvSize = width * height * 3 / 2; // 48 bits per 4 pixels
 
     if (rgbaData.length != rgbaSize)
       console.warn('Wrong RGBA data size:', rgbaData.length);
@@ -98,18 +95,9 @@ class LibVPX {
       this._encInitialized = true;
     }
 
-    // - Copy RGBA data to the WASM memory.
-    // - Convert RGBA to YUV.
-    // - Copy YUV data to the in-memory /vpx-yuv file.
     this._rgbPtr = this._rgbPtr || _malloc(rgbaSize);
-    this._yuvPtr = this._yuvPtr || _malloc(yuvSize);
     HEAP8.set(rgbaData, this._rgbPtr);
-    _vpx_js_rgba_to_yuv420(this._yuvPtr, this._rgbPtr, width, height);
-    const yuvData = new Uint8Array(HEAP8.buffer, this._yuvPtr, yuvSize);
-    FS.writeFile(ENC_YUV_FILE, yuvData); // in-memory memfs emscripten file
-
-    // more keyframes = better video quality
-    _vpx_js_encoder_run(keyframe ? 1 : 0);
+    _vpx_js_encoder_run(this._rgbPtr);
 
     // Read IVF data from the file.
 
