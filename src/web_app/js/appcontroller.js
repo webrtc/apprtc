@@ -450,7 +450,7 @@ AppController.prototype.installVPX_ = function () {
   localCanvas.height = height;
   const localContext2d = localCanvas.getContext('2d');
 
-  let enctime, dectime, encoding = false, nframes = 0;
+  let enctime, dectime, encoding = false, nframes = 0, latestFrame = null;
 
   setInterval(() => {
     uistats.sendFps.set(nframes);
@@ -463,12 +463,19 @@ AppController.prototype.installVPX_ = function () {
   //  - sendEncodedFrame sends the delta-frame created by the encoder
   // The encoder thread doesn't have a bakclog of the frames to be encoded:
   // the UI thread ensures that the encoder is called only when it's idle.
-  const sendFrame = () => {
+  const grabLocalFrame = () => {
+    localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
+    const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
+    latestFrame = rgba;
+    encodeLatestFrame();
+  };
+
+  const encodeLatestFrame = () => {
     if (encoding) return;
     encoding = true;
     enctime = Date.now();
-    localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
-    const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
+    const rgba = latestFrame;
+    latestFrame = null;
 
     this.vpxenc_.postMessage({
       id: 'enc',
@@ -479,7 +486,7 @@ AppController.prototype.installVPX_ = function () {
   };
 
   const sendEncodedFrame = packets => {
-    uistats.rgbFrame.set(Date.now() - enctime);
+    uistats.encFrame.set(Date.now() - enctime);
     uistats.sentSize.set(packets.length);
     nframes++;
 
@@ -492,7 +499,7 @@ AppController.prototype.installVPX_ = function () {
   const drawDecodedFrame = rgba => {
     remoteRgbaData.data.set(rgba);
     remoteContext2d.putImageData(remoteRgbaData, 0, 0);
-    uistats.yuvFrame.set(Date.now() - dectime);
+    uistats.decFrame.set(Date.now() - dectime);
   };
 
   const recvVpxResponse = rsp => {
@@ -508,6 +515,7 @@ AppController.prototype.installVPX_ = function () {
     case 'enc':
       sendEncodedFrame(res);
       encoding = false;
+      latestFrame && encodeLatestFrame();
       break;
     case 'dec':
       drawDecodedFrame(res);
@@ -543,13 +551,13 @@ AppController.prototype.installVPX_ = function () {
     // it to the VPX encoder. Each drawImage call needs 25 ms, but it runs
     // independently from the encoder. If the encoder is still busy with the
     // previous frame, the captured frame is dropped.
-    setInterval(sendFrame, 1000 / fps);
+    setInterval(grabLocalFrame, 1000 / fps);
   } else {
     const button = document.createElement('button');
     button.setAttribute('style', 'position:fixed;left:10px;top:10px');
     button.textContent = 'Send Frame';
     document.body.append(button);
-    button.addEventListener('click', () => sendFrame());
+    button.addEventListener('click', () => grabLocalFrame());
   }
 
   // The encoder and decoder run on separate threads.

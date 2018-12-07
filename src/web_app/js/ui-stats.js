@@ -92,11 +92,11 @@ const uistats = {
     title: 'How fast we send encoded frames.',
     format: x => x | 0,
   }),
-  rgbFrame: new TimeProp('RGB Frame', {
-    title: 'Time to encode RGB frame.',
+  encFrame: new TimeProp('Encoded Frame', {
+    title: 'Time to encode a RGBA frame.',
   }),
-  yuvFrame: new TimeProp('IVF Frame', {
-    title: 'Time to decode IVF frame.',
+  decFrame: new TimeProp('Decoded Frame', {
+    title: 'Time to decode a VPX delta-frame.',
   }),
   sentSize: new SizeProp('Sent Packet', {
     title: 'Size of the sent key-frame or delta-frame.'
