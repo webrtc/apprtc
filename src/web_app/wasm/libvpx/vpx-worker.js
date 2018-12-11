@@ -10,7 +10,8 @@
 importScripts('/wasm/libvpx/libvpx.js');
 
 const KB = 0x400; // 2**10
-const MAX_IVF_SIZE = 64 * KB; // RTCDataChannel cannot send more than this
+const MB = KB * KB;
+const MAX_IVF_SIZE = 1 * MB;
 
 const Codecs = {
   VP8: 0x30385056,

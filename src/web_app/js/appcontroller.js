@@ -106,6 +106,7 @@ var AppController = function (loadingParams) {
       '   ?height=480',
       '   ?vsbr=1500    Video bitrate in kilobits per second.',
       '   ?fps=30       fps=0 would allow to send frames one by one.',
+      '   ?packet=16    The packet size in KB. Cannot exceed 64 KB.',
       '',
       'For example, to encode 720p video with VP9 use:',
       '',
@@ -114,11 +115,14 @@ var AppController = function (loadingParams) {
 
     this.vpxconfig_ = {};
 
+    this.vpxconfig_.packetSize = +(this.loadingParams_.packet || 64) << 10;
     this.vpxconfig_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
-    this.vpxconfig_.width = +(this.loadingParams_.videoWidth || '640');
-    this.vpxconfig_.height = +(this.loadingParams_.videoHeight || '480');
-    this.vpxconfig_.fps = +(this.loadingParams_.videoFps || '30');
-    this.vpxconfig_.bitrate = +(this.loadingParams_.videoSendBitrate || '1500');
+    this.vpxconfig_.width = +(this.loadingParams_.videoWidth || 640);
+    this.vpxconfig_.height = +(this.loadingParams_.videoHeight || 480);
+    this.vpxconfig_.fps = +(this.loadingParams_.videoFps || 30);
+    this.vpxconfig_.bitrate = +(this.loadingParams_.videoSendBitrate || 1500);
+
+    console.log('VPX config:', this.vpxconfig_);
 
     this.vpxenc_.postMessage({ type: 'init', data: this.vpxconfig_ });
     this.vpxdec_.postMessage({ type: 'init', data: this.vpxconfig_ });
@@ -437,7 +441,7 @@ AppController.prototype.installWebP_ = function () {
 };
 
 AppController.prototype.installVPX_ = function () {
-  const {width, height, fps} = this.vpxconfig_;
+  const {width, height, fps, packetSize} = this.vpxconfig_;
 
   this.remoteCanvas_.width = width;
   this.remoteCanvas_.height = height;
@@ -451,6 +455,7 @@ AppController.prototype.installVPX_ = function () {
   const localContext2d = localCanvas.getContext('2d');
 
   let enctime, dectime, encoding = false, nframes = 0, latestFrame = null;
+  let decbuf = new Uint8Array(1 << 20), decbuflen = 0;
 
   setInterval(() => {
     uistats.sendFps.set(nframes);
@@ -490,10 +495,13 @@ AppController.prototype.installVPX_ = function () {
     uistats.sentSize.set(packets.length);
     nframes++;
 
-    if (window.dc && dc.readyState == 'open')
-      dc.send(packets); // 64 KB max
-    else
-      console.warn('Data channel isnt ready: dropping this frame.');
+    if (window.dc && dc.readyState == 'open') {
+      for (let offset = 0; offset < packets.length; offset += packetSize) {
+        let length = Math.min(packetSize, packets.length - offset);
+        let view = new Uint8Array(packets.buffer, offset, length);
+        dc.send(view); // 64 KB max
+      }
+    }
   };
 
   const drawDecodedFrame = rgba => {
@@ -533,10 +541,17 @@ AppController.prototype.installVPX_ = function () {
   // means that the decoder thread may have a backlog of pending delta frames.
   // The backlog is transparently maintained for us by the postMessage function.
   // However since the decoder is fast, it almost never has a backlog.
-  const recvIncomingDelatFrame = data => {
+  const recvIncomingDeltaFrame = data => {
+    data = new Uint8Array(data);
+    decbuf.set(data, decbuflen);
+    decbuflen += data.length;
+    if (data.length == packetSize)
+      return; // wait for the final chunk of the incoming frame
+
     dectime = Date.now();
-    const packets = new Uint8Array(data);
+    const packets = decbuf.slice(0, decbuflen);
     uistats.recvSize.set(packets.length);
+    decbuflen = 0;
 
     this.vpxdec_.postMessage({
       id: 'dec',
@@ -565,7 +580,7 @@ AppController.prototype.installVPX_ = function () {
   this.vpxdec_.onmessage = event => recvVpxResponse(event.data);
 
   // The incoming video frames come via this data channel.
-  dc.onmessage = event => recvIncomingDelatFrame(event.data);
+  dc.onmessage = event => recvIncomingDeltaFrame(event.data);
 };
 
 AppController.prototype.transitionToWaiting_ = function () {
@@ -791,6 +806,7 @@ AppController.prototype.loadUrlParams_ = function () {
   this.loadingParams_.videoFec = urlParams['videofec'];
 
   this.loadingParams_.libvpx = urlParams['libvpx'];
+  this.loadingParams_.packet = urlParams['packet']; // 16 (KB)
   this.loadingParams_.videoCodec = urlParams['codec']; // vp8, vp9, etc.
   this.loadingParams_.videoWidth = urlParams['width']; // 640
   this.loadingParams_.videoHeight = urlParams['height']; // 480
