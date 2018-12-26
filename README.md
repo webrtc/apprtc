@@ -96,6 +96,9 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 `https://[YOUR_VERSION_ID]-dot-[YOUR_PROJECT_ID]` (append `?wstls=false` to the
 URL if you have TLS disabled on Collider for dev/testing purposes).
 
+### Use Forward header scheme
+Setting environment variable ``FORWARD_SCHEME=True`` enables AppRTC to use the scheme declared in the Forwarded header ([RFC7239](https://tools.ietf.org/html/rfc7239)) so that it can be used behind a TLS terminating proxy.
+
 ## Advanced Topics
 ### Enabling Local Logging
 

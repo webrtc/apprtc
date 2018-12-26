@@ -300,7 +300,16 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
     'bypass_join_confirmation': json.dumps(bypass_join_confirmation),
     'version_info': json.dumps(get_version_info())
   }
-
+  
+  # If set to true it will take the protocol (scheme) from the http Forward
+  # header. Allows using a TLS termination proxy.
+  forward_scheme = 'FORWARD_SCHEME' in os.environ and \
+      os.environ['FORWARD_SCHEME'] == 'True'
+  if forward_scheme:
+	  forwarded = request.headers['Forwarded']
+	  forwarded = dict(item.split("=") for item in forwarded.split(";"))
+	  request.scheme = forwarded['proto']
+  
   if room_id is not None:
     room_link = request.host_url + '/r/' + room_id
     room_link = append_url_arguments(request, room_link)
