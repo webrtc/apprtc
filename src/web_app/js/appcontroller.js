@@ -220,7 +220,7 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
     // clean up steps before page is closed.
     // Chrome apps can't use onbeforeunload.
     window.onbeforeunload = function() {
-      this.call_.hangup(false);
+      this.call_.hangup(true);
     }.bind(this);
 
     window.onpopstate = function(event) {

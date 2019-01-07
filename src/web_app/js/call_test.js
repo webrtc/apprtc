@@ -158,7 +158,7 @@ describe('Call test', function() {
     // var realXMLHttpRequest = XMLHttpRequest;
     // XMLHttpRequest = MockXMLHttpRequest;
 
-    call.hangup(false);
+    call.hangup(true);
     // XMLHttpRequest = realXMLHttpRequest;
 
     expect(stopCalled).toBeTruthy();
