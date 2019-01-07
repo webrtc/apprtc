@@ -34,14 +34,13 @@ module.exports = function(grunt) {
       }
     },
 
-    htmlhint: {
-      html1: {
+    htmllint: {
+      all: {
         src: [
           'src/**/*_template.html'
         ]
       }
     },
-
     eslint: {
       options: {
         configFile: 'build/.eslintrc'
@@ -169,7 +168,7 @@ module.exports = function(grunt) {
 
   // Enable plugins.
   grunt.loadNpmTasks('grunt-contrib-csslint');
-  grunt.loadNpmTasks('grunt-htmlhint');
+  grunt.loadNpmTasks('grunt-html');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-closurecompiler-new-grunt');
   grunt.loadNpmTasks('grunt-eslint');
@@ -178,7 +177,7 @@ module.exports = function(grunt) {
   // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['runLinting', 'runPythonTests', 'build',
                                  'runUnitTests']);
-  grunt.registerTask('runLinting', ['csslint', 'htmlhint', 'eslint']);
+  grunt.registerTask('runLinting', ['csslint', 'eslint']);
   grunt.registerTask('runPythonTests', ['shell:pipInstall',
                                         'shell:ensureGcloudSDKIsInstalled',
                                         'shell:buildAppEnginePackageWithTests',
