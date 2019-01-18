@@ -15,7 +15,7 @@ Follow the instructions on [Node.js website](https://nodejs.org)
 and on [Grunt website](http://gruntjs.com/) to install them.
 
 When Node.js and Grunt are available you can install the required dependencies
-running `npm install` from the project root folder.
+running `npm install` and `pip install -r requirements.txt` from the project root folder.
 
 Before you start the AppRTC dev server and everytime you update the source code
 you need to recompile the App Engine package by running `grunt build`.
