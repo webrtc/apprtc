@@ -11,8 +11,7 @@ The development AppRTC server can be accessed by visiting [http://localhost:8080
 Running AppRTC locally requires [Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python),
 [Node.js](https://nodejs.org) and [Grunt](http://gruntjs.com/).
 
-Follow the instructions on [Node.js website](https://nodejs.org)
-and on [Grunt website](http://gruntjs.com/) to install them.
+Follow the instructions on [Node.js website](https://nodejs.org), [Python PIP](https://pip.pypa.io/en/stable/installing/) and on [Grunt website](http://gruntjs.com/) to install them.
 
 When Node.js and Grunt are available you can install the required dependencies
 running `npm install` from the project root folder.
