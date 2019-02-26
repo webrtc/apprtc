@@ -95,9 +95,9 @@ def CopyApprtcSource(src_path, dest_path):
           shutil.copy(os.path.join(dirpath, name), dest_path)
     elif dirpath.endswith('js'):
       for name in files:
-        # loopback.js and rtstats.js are not compiled by Closure
+        # loopback.js is not compiled by Closure
         # and need to be copied separately.
-        if name in ['loopback.js', 'rtstats.js']:
+        if name in ['loopback.js']:
           dest_js_path = os.path.join(dest_path, 'js')
           if not os.path.exists(dest_js_path):
               os.makedirs(dest_js_path)

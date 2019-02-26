@@ -6,7 +6,6 @@ browser*
 firefox*
 node_modules
 out
-rtstats.js
 secrets.json
 source-context*.json
 temp/*
