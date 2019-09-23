@@ -197,6 +197,9 @@ PeerConnectionClient.prototype.doAnswer_ = function() {
 
 PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
     function(sessionDescription) {
+      sessionDescription.sdp = maybeSetOpusOptions(
+          sessionDescription.sdp,
+          this.params_);
       sessionDescription.sdp = maybePreferAudioReceiveCodec(
           sessionDescription.sdp,
           this.params_);

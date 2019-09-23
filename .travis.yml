@@ -30,8 +30,8 @@ matrix:
     - env: BROWSER=chrome  BVER=unstable
 
 before_install:
-  - nvm install 6
-  - nvm use 6
+  - nvm install 8
+  - nvm use 8
 
 before_script:
   - npm install
