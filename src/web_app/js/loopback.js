@@ -70,8 +70,9 @@ function setupLoopback(wssUrl, roomId) {
       // this line but for loopback where we reuse the offer, that is skipped
       // and remains in the answer and breaks the call.
       // https://bugs.chromium.org/p/chromium/issues/detail?id=616263
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=1077740
       loopbackAnswer = loopbackAnswer
-          .replace(/a=crypto:0 AES_CM_128_HMAC_SHA1_32\sinline:.{44}/, '');
+          .replace(/a=crypto:[1-9]+ .*/g, '');
       sendLoopbackMessage(JSON.parse(loopbackAnswer));
     } else if (message.type === 'candidate') {
       sendLoopbackMessage(message);
