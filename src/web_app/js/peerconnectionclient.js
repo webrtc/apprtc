@@ -216,7 +216,8 @@ PeerConnectionClient.prototype.setLocalSdpAndNotify_ =
           sessionDescription.sdp,
           this.params_);
       this.pc_.setLocalDescription(sessionDescription)
-          .then(trace.bind(null, 'Set session description success.'))
+          .then(trace.bind(null, '' +
+              'Set session description success.'))
           .catch(this.onError_.bind(this, 'setLocalDescription'));
 
       if (this.onsignalingmessage) {
@@ -331,7 +332,7 @@ PeerConnectionClient.prototype.onSignalingStateChanged_ = function() {
   if (!this.pc_) {
     return;
   }
-  trace('Signaling state changed to: ' + this.pc_.signalingState);
+  trace(' Signaling state changed to: ' + this.pc_.signalingState);
 
   if (this.onsignalingstatechange) {
     this.onsignalingstatechange();

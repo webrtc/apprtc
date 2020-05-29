@@ -400,11 +400,11 @@ Call.prototype.maybeGetIceServers_ = function() {
               this.params_.peerConnectionConfig.iceServers =
               servers.concat(iceServers);
             }.bind(this)).catch(function(error) {
-          if (this.onstatusmessage) {
+          if (this.onstatusmessage) { //How this becomes true
             // Error retrieving ICE servers.
             var subject =
-                encodeURIComponent('AppRTC demo ICE servers not working');
-            this.onstatusmessage(
+                encodeURIComponent('AppRTC demo ICE servers not working'); //what is the utility of this variable
+            this.onstatusmessage(       // How this message gets activated
                 'No TURN server; unlikely that media will traverse networks. ' +
                 'If this persists please ' +
                 '<a href="mailto:discuss-webrtc@googlegroups.com?' +
