@@ -61,19 +61,17 @@ function setupLoopback(wssUrl, roomId) {
       return;
     }
     if (message.type === 'offer') {
-      var loopbackAnswer = wssMessage.msg;
-      loopbackAnswer = loopbackAnswer.replace('"offer"', '"answer"');
-      loopbackAnswer =
-          loopbackAnswer.replace('a=ice-options:google-ice\\r\\n', '');
+      message.type = 'answer';
+      message.sdp = message.sdp
+        .replace('a=ice-options:google-ice\r\n', '')
       // As of Chrome M51, an additional crypto method has been added when
       // using SDES. This works in a P2P due to the negotiation phase removes
       // this line but for loopback where we reuse the offer, that is skipped
       // and remains in the answer and breaks the call.
       // https://bugs.chromium.org/p/chromium/issues/detail?id=616263
       // https://bugs.chromium.org/p/chromium/issues/detail?id=1077740
-      loopbackAnswer = loopbackAnswer
-          .replace(/a=crypto:[1-9]+ .*/g, '');
-      sendLoopbackMessage(JSON.parse(loopbackAnswer));
+        .replace(/a=crypto:[1-9]+ .*\r\n/g, '');
+      sendLoopbackMessage(message);
     } else if (message.type === 'candidate') {
       sendLoopbackMessage(message);
     }
