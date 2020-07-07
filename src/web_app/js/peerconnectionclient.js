@@ -36,6 +36,9 @@ var PeerConnectionClient = function(params, startTime) {
   // Create an RTCPeerConnection via the polyfill (adapter.js).
   this.pc_ = new RTCPeerConnection(
       params.peerConnectionConfig, params.peerConnectionConstraints);
+  window.pc = this.pc_;
+  console.warn('window.pc = RTCPeerConnection');
+
   this.pc_.onicecandidate = this.onIceCandidate_.bind(this);
   this.pc_.ontrack = this.onRemoteStreamAdded_.bind(this);
   this.pc_.onremovestream = trace.bind(null, 'Remote stream removed.');
@@ -80,7 +83,12 @@ PeerConnectionClient.prototype.addStream = function(stream) {
   if (!this.pc_) {
     return;
   }
-  this.pc_.addStream(stream);
+  // this.pc_.addStream(stream);
+};
+
+PeerConnectionClient.prototype.setupDataChannel_ = function() {
+  this.dataChannel_.onopen = event => console.warn('dc:open ->', event);
+  this.dataChannel_.onmessage = event => console.warn('dc:message ->', event);
 };
 
 PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
@@ -94,6 +102,12 @@ PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
 
   this.isInitiator_ = true;
   this.started_ = true;
+
+  this.dataChannel_ = this.pc_.createDataChannel('wartc');
+  window.dc = this.dataChannel_;
+  console.warn('window.dc = pc.createDataChannel(...)');
+  this.setupDataChannel_();
+
   var constraints = mergeConstraints(
       PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
   trace('Sending offer to peer, with constraints: \n\'' +
@@ -116,6 +130,14 @@ PeerConnectionClient.prototype.startAsCallee = function(initialMessages) {
 
   this.isInitiator_ = false;
   this.started_ = true;
+
+  this.pc_.ondatachannel = event => {
+    console.warn('pc:datachannel ->', event);
+    this.dataChannel_ = event.channel;
+    window.dc = this.dataChannel_;
+    console.warn('window.dc = event.channel');
+    this.setupDataChannel_();
+  };
 
   if (initialMessages && initialMessages.length > 0) {
     // Convert received messages to JSON objects and add them to the message

@@ -18,6 +18,14 @@ handlers:
 - url: /pako
   static_dir: third_party/pako
 
+- url: /wasm/(.*\.wasm)$
+  static_files: wasm/\1
+  upload: wasm/(.*\.wasm)$
+  mime_type: application/wasm
+
+- url: /wasm
+  static_dir: wasm
+
 - url: /images
   static_dir: images
 

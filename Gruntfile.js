@@ -106,6 +106,12 @@ module.exports = function(grunt) {
           },
           {
             expand: true,
+            cwd: 'src/web_app/wasm',
+            src: ['*'],
+            dest: 'out/app_engine/wasm'
+          },
+          {
+            expand: true,
             cwd: out_app_engine_dir,
             src: [
               '**/*.js',
@@ -141,6 +147,10 @@ module.exports = function(grunt) {
             'src/web_app/js/call.js',
             'src/web_app/js/constants.js',
             'src/web_app/js/infobox.js',
+            'src/web_app/js/ui-stats.js',
+            'src/web_app/js/libwebp.js',
+            'src/web_app/js/libvpx.js',
+            'src/web_app/js/webrtc.js',
             'src/web_app/js/peerconnectionclient.js',
             'src/web_app/js/remotewebsocket.js',
             'src/web_app/js/roomselection.js',
@@ -154,7 +164,7 @@ module.exports = function(grunt) {
         },
         options: {
           'compilation_level': 'WHITESPACE_ONLY',
-          'language_in': 'ECMASCRIPT5',
+          'language_in': 'ECMASCRIPT6',
           'formatting': 'PRETTY_PRINT'
         },
       },

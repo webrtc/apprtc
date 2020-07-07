@@ -32,11 +32,18 @@
 </head>
 
 <body>
+  <div id="wasm-stats">
+
+  </div>
+
   <!--
    * Keep the HTML id attributes in sync with |UI_CONSTANTS| defined in
    * appcontroller.js.
   -->
   <div id="videos">
+    <canvas id="mini-canvas"></canvas>
+    <canvas id="remote-canvas"></canvas>
+
     <video id="mini-video" autoplay playsinline muted></video>
     <video id="remote-video" autoplay playsinline></video>
     <video id="local-video" autoplay playsinline muted></video>

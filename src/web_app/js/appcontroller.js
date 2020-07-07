@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace, InfoBox, setUpFullScreen, isFullScreen,
+/* globals trace, InfoBox, setUpFullScreen, isFullScreen, LibWebP,
    RoomSelection, isChromeApp, $ */
 /* exported AppController, remoteVideo */
 
@@ -28,12 +28,14 @@ var UI_CONSTANTS = {
   icons: '#icons',
   infoDiv: '#info-div',
   localVideo: '#local-video',
+  miniCanvas: '#mini-canvas',
   miniVideo: '#mini-video',
   muteAudioSvg: '#mute-audio',
   muteVideoSvg: '#mute-video',
   newRoomButton: '#new-room-button',
   newRoomLink: '#new-room-link',
   privacyLinks: '#privacy',
+  remoteCanvas: '#remote-canvas',
   remoteVideo: '#remote-video',
   rejoinButton: '#rejoin-button',
   rejoinDiv: '#rejoin-div',
@@ -51,16 +53,18 @@ var UI_CONSTANTS = {
 };
 
 // The controller that connects the Call with the UI.
-var AppController = function(loadingParams) {
+var AppController = function (loadingParams) {
   trace('Initializing; server= ' + loadingParams.roomServer + '.');
   trace('Initializing; room=' + loadingParams.roomId + '.');
 
   this.hangupSvg_ = $(UI_CONSTANTS.hangupSvg);
   this.icons_ = $(UI_CONSTANTS.icons);
   this.localVideo_ = $(UI_CONSTANTS.localVideo);
+  this.miniCanvas_ = $(UI_CONSTANTS.miniCanvas);
   this.miniVideo_ = $(UI_CONSTANTS.miniVideo);
   this.sharingDiv_ = $(UI_CONSTANTS.sharingDiv);
   this.statusDiv_ = $(UI_CONSTANTS.statusDiv);
+  this.remoteCanvas_ = $(UI_CONSTANTS.remoteCanvas);
   this.remoteVideo_ = $(UI_CONSTANTS.remoteVideo);
   this.videosDiv_ = $(UI_CONSTANTS.videosDiv);
   this.roomLinkHref_ = $(UI_CONSTANTS.roomLinkHref);
@@ -70,20 +74,53 @@ var AppController = function(loadingParams) {
   this.rejoinButton_ = $(UI_CONSTANTS.rejoinButton);
   this.newRoomButton_ = $(UI_CONSTANTS.newRoomButton);
 
+  this.deactivate_(this.miniCanvas_);
+  this.deactivate_(this.remoteCanvas_);
+
   this.newRoomButton_.addEventListener('click',
-      this.onNewRoomClick_.bind(this), false);
+    this.onNewRoomClick_.bind(this), false);
   this.rejoinButton_.addEventListener('click',
-      this.onRejoinClick_.bind(this), false);
+    this.onRejoinClick_.bind(this), false);
 
   this.muteAudioIconSet_ =
-      new AppController.IconSet_(UI_CONSTANTS.muteAudioSvg);
+    new AppController.IconSet_(UI_CONSTANTS.muteAudioSvg);
   this.muteVideoIconSet_ =
-      new AppController.IconSet_(UI_CONSTANTS.muteVideoSvg);
+    new AppController.IconSet_(UI_CONSTANTS.muteVideoSvg);
   this.fullscreenIconSet_ =
-      new AppController.IconSet_(UI_CONSTANTS.fullscreenSvg);
+    new AppController.IconSet_(UI_CONSTANTS.fullscreenSvg);
 
   this.loadingParams_ = loadingParams;
   this.loadUrlParams_();
+
+  if (this.loadingParams_.libvpx) {
+    this.libvpx_ = new LibVPX();
+
+    console.log([
+      'Default VPX params:',
+      '',
+      '   ?codec=vp8    Can also use vp9.',
+      '   ?width=640',
+      '   ?height=480',
+      '   ?vsbr=200     Video bitrate in kilobits per second.',
+      '   ?fps=0        Can use 30 to send frames on timer.',
+      '',
+      'For example, to encode 720p video with VP9 use:',
+      '',
+      '   ?libvpx=1&codec=vp9&width=1280&height=720',
+    ].join('\n'));
+
+    this.libvpx_.codec = (this.loadingParams_.videoCodec || 'vp8').toUpperCase();
+    this.libvpx_.width = +(this.loadingParams_.videoWidth || '640');
+    this.libvpx_.height = +(this.loadingParams_.videoHeight || '480');
+    this.libvpx_.fps = +(this.loadingParams_.videoFps || '0');
+    this.libvpx_.bitrate = +(this.loadingParams_.videoSendBitrate || '200');
+  } else if (this.loadingParams_.webrtc) {
+    console.log("Loading webrtc");
+    this.webrtc_ = new WebRTC();
+    this.installWebRtc_();
+  } else {
+    this.libwebp_ = new LibWebP();
+  }
 
   var paramsPromise = Promise.resolve({});
   if (this.loadingParams_.paramsFunction) {
@@ -94,13 +131,15 @@ var AppController = function(loadingParams) {
     paramsPromise = this.loadingParams_.paramsFunction();
   }
 
-  Promise.resolve(paramsPromise).then(function(newParams) {
+  Promise.resolve(paramsPromise).then(function (newParams) {
     // Merge newly retrieved params with loadingParams.
     if (newParams) {
-      Object.keys(newParams).forEach(function(key) {
+      Object.keys(newParams).forEach(function (key) {
         this.loadingParams_[key] = newParams[key];
       }.bind(this));
     }
+
+    console.log('Config:', this.loadingParams_);
 
     this.roomLink_ = '';
     this.roomSelection_ = null;
@@ -116,12 +155,12 @@ var AppController = function(loadingParams) {
       if (!RoomSelection.matchRandomRoomPattern(this.loadingParams_.roomId)) {
         // Show the room name only if it does not match the random room pattern.
         $(UI_CONSTANTS.confirmJoinRoomSpan).textContent = ' "' +
-            this.loadingParams_.roomId + '"';
+          this.loadingParams_.roomId + '"';
       }
       var confirmJoinDiv = $(UI_CONSTANTS.confirmJoinDiv);
       this.show_(confirmJoinDiv);
 
-      $(UI_CONSTANTS.confirmJoinButton).onclick = function() {
+      $(UI_CONSTANTS.confirmJoinButton).onclick = function () {
         this.hide_(confirmJoinDiv);
 
         // Record this room in the recently used list.
@@ -137,17 +176,17 @@ var AppController = function(loadingParams) {
       // Display the room selection UI.
       this.showRoomSelection_();
     }
-  }.bind(this)).catch(function(error) {
+  }.bind(this)).catch(function (error) {
     trace('Error initializing: ' + error.message);
   }.bind(this));
 };
 
-AppController.prototype.createCall_ = function() {
+AppController.prototype.createCall_ = function () {
   var privacyLinks = $(UI_CONSTANTS.privacyLinks);
   this.hide_(privacyLinks);
   this.call_ = new Call(this.loadingParams_);
   this.infoBox_ = new InfoBox($(UI_CONSTANTS.infoDiv), this.call_,
-      this.loadingParams_.versionInfo);
+    this.loadingParams_.versionInfo);
 
   var roomErrors = this.loadingParams_.errorMessages;
   var roomWarnings = this.loadingParams_.warningMessages;
@@ -169,23 +208,23 @@ AppController.prototype.createCall_ = function() {
   this.call_.onlocalstreamadded = this.onLocalStreamAdded_.bind(this);
 
   this.call_.onsignalingstatechange =
-      this.infoBox_.updateInfoDiv.bind(this.infoBox_);
+    this.infoBox_.updateInfoDiv.bind(this.infoBox_);
   this.call_.oniceconnectionstatechange =
-      this.infoBox_.updateInfoDiv.bind(this.infoBox_);
+    this.infoBox_.updateInfoDiv.bind(this.infoBox_);
   this.call_.onnewicecandidate =
-      this.infoBox_.recordIceCandidateTypes.bind(this.infoBox_);
+    this.infoBox_.recordIceCandidateTypes.bind(this.infoBox_);
 
   this.call_.onerror = this.displayError_.bind(this);
   this.call_.onstatusmessage = this.displayStatus_.bind(this);
   this.call_.oncallerstarted = this.displaySharingInfo_.bind(this);
 };
 
-AppController.prototype.showRoomSelection_ = function() {
+AppController.prototype.showRoomSelection_ = function () {
   var roomSelectionDiv = $(UI_CONSTANTS.roomSelectionDiv);
   this.roomSelection_ = new RoomSelection(roomSelectionDiv, UI_CONSTANTS);
 
   this.show_(roomSelectionDiv);
-  this.roomSelection_.onRoomSelected = function(roomName) {
+  this.roomSelection_.onRoomSelected = function (roomName) {
     this.hide_(roomSelectionDiv);
     this.createCall_();
     this.finishCallSetup_(roomName);
@@ -198,7 +237,7 @@ AppController.prototype.showRoomSelection_ = function() {
   }.bind(this);
 };
 
-AppController.prototype.setupUi_ = function() {
+AppController.prototype.setupUi_ = function () {
   this.iconEventSetup_();
   document.onkeypress = this.onKeyPress_.bind(this);
   window.onmousemove = this.showIcons_.bind(this);
@@ -211,7 +250,7 @@ AppController.prototype.setupUi_ = function() {
   setUpFullScreen();
 };
 
-AppController.prototype.finishCallSetup_ = function(roomId) {
+AppController.prototype.finishCallSetup_ = function (roomId) {
   this.call_.start(roomId);
   this.setupUi_();
 
@@ -219,11 +258,11 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
     // Call hangup with async = false. Required to complete multiple
     // clean up steps before page is closed.
     // Chrome apps can't use onbeforeunload.
-    window.onbeforeunload = function() {
+    window.onbeforeunload = function () {
       this.call_.hangup(false);
     }.bind(this);
 
-    window.onpopstate = function(event) {
+    window.onpopstate = function (event) {
       if (!event.state) {
         // TODO (chuckhays) : Resetting back to room selection page not
         // yet supported, reload the initial page instead.
@@ -239,7 +278,7 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
   }
 };
 
-AppController.prototype.hangup_ = function() {
+AppController.prototype.hangup_ = function () {
   trace('Hanging up.');
   this.hide_(this.icons_);
   this.displayStatus_('Hanging up');
@@ -252,37 +291,37 @@ AppController.prototype.hangup_ = function() {
   window.onmousemove = null;
 };
 
-AppController.prototype.onRemoteHangup_ = function() {
+AppController.prototype.onRemoteHangup_ = function () {
   this.displayStatus_('The remote side hung up.');
   this.transitionToWaiting_();
 
   this.call_.onRemoteHangup();
 };
 
-AppController.prototype.onRemoteSdpSet_ = function(hasRemoteVideo) {
-  if (hasRemoteVideo) {
-    trace('Waiting for remote video.');
-    this.waitForRemoteVideo_();
+AppController.prototype.onRemoteSdpSet_ = function (hasRemoteVideo) {
+  if(window.dc === undefined) {
+    assert(window.pc);
+    window.pc.addEventListener("datachannel", event => { this.transitionToActive_(); });
   } else {
-    trace('No remote video stream; not waiting for media to arrive.');
     // TODO(juberti): Make this wait for ICE connection before transitioning.
+    // TODO(psla): Make this wait for Data Channel when wartc is used.
     this.transitionToActive_();
   }
 };
 
-AppController.prototype.waitForRemoteVideo_ = function() {
+AppController.prototype.waitForRemoteVideo_ = function () {
   // Wait for the actual video to start arriving before moving to the active
   // call state.
   if (this.remoteVideo_.readyState >= 2) { // i.e. can play
     trace('Remote video started; currentTime: ' +
-          this.remoteVideo_.currentTime);
+      this.remoteVideo_.currentTime);
     this.transitionToActive_();
   } else {
     this.remoteVideo_.oncanplay = this.waitForRemoteVideo_.bind(this);
   }
 };
 
-AppController.prototype.onRemoteStreamAdded_ = function(stream) {
+AppController.prototype.onRemoteStreamAdded_ = function (stream) {
   this.deactivate_(this.sharingDiv_);
   trace('Remote stream added.');
   this.remoteVideo_.srcObject = stream;
@@ -295,7 +334,7 @@ AppController.prototype.onRemoteStreamAdded_ = function(stream) {
   }
 };
 
-AppController.prototype.onLocalStreamAdded_ = function(stream) {
+AppController.prototype.onLocalStreamAdded_ = function (stream) {
   trace('User has granted access to local media.');
   this.localStream_ = stream;
   this.infoBox_.getLocalTrackIds(this.localStream_);
@@ -305,7 +344,7 @@ AppController.prototype.onLocalStreamAdded_ = function(stream) {
   }
 };
 
-AppController.prototype.attachLocalStream_ = function() {
+AppController.prototype.attachLocalStream_ = function () {
   trace('Attaching local stream.');
   this.localVideo_.srcObject = this.localStream_;
 
@@ -320,14 +359,14 @@ AppController.prototype.attachLocalStream_ = function() {
   }
 };
 
-AppController.prototype.transitionToActive_ = function() {
+AppController.prototype.transitionToActive_ = function () {
   // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
   var connectTime = window.performance.now();
   this.infoBox_.setSetupTimes(this.call_.startTime, connectTime);
   this.infoBox_.updateInfoDiv();
   trace('Call setup time: ' + (connectTime - this.call_.startTime).toFixed(0) +
-      'ms.');
+    'ms.');
 
   // Prepare the remote video and PIP elements.
   trace('reattachMediaStream: ' + this.localVideo_.srcObject);
@@ -343,9 +382,107 @@ AppController.prototype.transitionToActive_ = function() {
   this.activate_(this.videosDiv_);
   this.show_(this.hangupSvg_);
   this.displayStatus_('');
+
+  // this.deactivate_(this.miniVideo_);
+  this.deactivate_(this.remoteVideo_);
+  // this.activate_(this.miniCanvas_);
+  this.activate_(this.remoteCanvas_);
+
+  if (!this.listenersAdded_) {
+    this.listenersAdded_ = true;
+
+    if (this.libwebp_) {
+      this.installWebP_();
+    } else if (this.libvpx_) {
+      this.installVPX_();
+    }
+  }
 };
 
-AppController.prototype.transitionToWaiting_ = function() {
+AppController.prototype.installWebRtc_ = function () {
+  console.log('Click the button to start the WebRTC stuff.');
+  const button = document.createElement('button');
+  button.setAttribute('style', 'position:fixed;left:10px;top:10px');
+  button.textContent = 'Start WebRTC';
+  document.body.append(button);
+  button.addEventListener('click', () => this.webrtc_.start());
+};
+
+AppController.prototype.installWebP_ = function () {
+  const {width, height} = this.miniCanvas_;
+
+  const miniCtx2d = this.miniCanvas_.getContext('2d');
+  const remoteCtx2d = this.remoteCanvas_.getContext('2d');
+
+  setInterval(() => {
+    miniCtx2d.drawImage(this.miniVideo_, 0, 0, width, height);
+    const frame = miniCtx2d.getImageData(0, 0, width, height);
+    console.warn('video frame', frame);
+    const encoded = this.libwebp_.encode(frame);
+    console.warn('encoded', encoded.length);
+    dc.send(encoded); // 64 KB max
+  }, 1500);
+
+  dc.onmessage = event => {
+    const encoded = new Uint8Array(event.data);
+    console.warn('encoded remote frame:', encoded);
+    const {data, width, height} = this.libwebp_.decode(encoded);
+    console.warn('decoded remote frame:', width, height, data);
+    const frame = remoteCtx2d.createImageData(width, height);
+    frame.data.set(data, 0);
+    remoteCtx2d.putImageData(frame, 0, 0);
+  };
+};
+
+AppController.prototype.installVPX_ = function () {
+  const {width, height, fps} = this.libvpx_;
+
+  this.remoteCanvas_.width = width;
+  this.remoteCanvas_.height = height;
+
+  const remoteContext2d = this.remoteCanvas_.getContext('2d');
+  const remoteRgbaData = remoteContext2d.getImageData(0, 0, width, height);
+
+  const localCanvas = document.createElement('canvas');
+  localCanvas.width = width;
+  localCanvas.height = height;
+  const localContext2d = localCanvas.getContext('2d');
+
+  const sendFrame = () => {
+    if (dc === undefined || dc.readyState != 'open')
+      return;
+    const time = Date.now();
+    localContext2d.drawImage(this.miniVideo_, 0, 0, width, height);
+    const {data: rgba} = localContext2d.getImageData(0, 0, width, height);
+    const packets = this.libvpx_.encode(rgba);
+    uistats.rgbFrame.set(Date.now() - time);
+    uistats.sentSize.set(packets.length);
+    dc.send(packets); // 64 KB max
+  };
+
+  if (fps > 0) {
+    setInterval(sendFrame, 1000 / fps);
+  } else {
+    const button = document.createElement('button');
+    button.setAttribute('style', 'position:fixed;left:10px;top:10px');
+    button.textContent = 'Send Frame';
+    document.body.append(button);
+    button.addEventListener('click', () => sendFrame());
+  }
+
+  dc.onmessage = event => {
+    const time = Date.now();
+    const packets = new Uint8Array(event.data);
+    // console.warn('Got IVF packets from remote:', packets.length, 'bytes');
+    const rgba = this.libvpx_.decode(packets);
+    remoteRgbaData.data.set(rgba);
+    remoteContext2d.putImageData(remoteRgbaData, 0, 0);
+    uistats.yuvFrame.set(Date.now() - time);
+    uistats.recvSize.set(packets.length);
+  };
+};
+
+AppController.prototype.transitionToWaiting_ = function () {
   // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
 
@@ -354,7 +491,7 @@ AppController.prototype.transitionToWaiting_ = function() {
   this.deactivate_(this.videosDiv_);
 
   if (!this.remoteVideoResetTimer_) {
-    this.remoteVideoResetTimer_ = setTimeout(function() {
+    this.remoteVideoResetTimer_ = setTimeout(function () {
       this.remoteVideoResetTimer_ = null;
       trace('Resetting remoteVideo src after transitioning to waiting.');
       this.remoteVideo_.srcObject = null;
@@ -372,7 +509,7 @@ AppController.prototype.transitionToWaiting_ = function() {
   this.deactivate_(this.miniVideo_);
 };
 
-AppController.prototype.transitionToDone_ = function() {
+AppController.prototype.transitionToDone_ = function () {
   // Stop waiting for remote video.
   this.remoteVideo_.oncanplay = undefined;
   this.deactivate_(this.localVideo_);
@@ -384,14 +521,14 @@ AppController.prototype.transitionToDone_ = function() {
   this.displayStatus_('');
 };
 
-AppController.prototype.onRejoinClick_ = function() {
+AppController.prototype.onRejoinClick_ = function () {
   this.deactivate_(this.rejoinDiv_);
   this.hide_(this.rejoinDiv_);
   this.call_.restart();
   this.setupUi_();
 };
 
-AppController.prototype.onNewRoomClick_ = function() {
+AppController.prototype.onNewRoomClick_ = function () {
   this.deactivate_(this.rejoinDiv_);
   this.hide_(this.rejoinDiv_);
   this.showRoomSelection_();
@@ -403,7 +540,7 @@ AppController.prototype.onNewRoomClick_ = function() {
 // i: toggle info panel.
 // q: quit (hangup)
 // Return false to screen out original Chrome shortcuts.
-AppController.prototype.onKeyPress_ = function(event) {
+AppController.prototype.onKeyPress_ = function (event) {
   switch (String.fromCharCode(event.charCode)) {
     case ' ':
     case 'm':
@@ -435,14 +572,14 @@ AppController.prototype.onKeyPress_ = function(event) {
   }
 };
 
-AppController.prototype.pushCallNavigation_ = function(roomId, roomLink) {
+AppController.prototype.pushCallNavigation_ = function (roomId, roomLink) {
   if (!isChromeApp()) {
     window.history.pushState({'roomId': roomId, 'roomLink': roomLink}, roomId,
-        roomLink);
+      roomLink);
   }
 };
 
-AppController.prototype.displaySharingInfo_ = function(roomId, roomLink) {
+AppController.prototype.displaySharingInfo_ = function (roomId, roomLink) {
   this.roomLinkHref_.href = roomLink;
   this.roomLinkHref_.text = roomLink;
   this.roomLink_ = roomLink;
@@ -450,7 +587,7 @@ AppController.prototype.displaySharingInfo_ = function(roomId, roomLink) {
   this.activate_(this.sharingDiv_);
 };
 
-AppController.prototype.displayStatus_ = function(status) {
+AppController.prototype.displayStatus_ = function (status) {
   if (status === '') {
     this.deactivate_(this.statusDiv_);
   } else {
@@ -459,37 +596,37 @@ AppController.prototype.displayStatus_ = function(status) {
   this.statusDiv_.innerHTML = status;
 };
 
-AppController.prototype.displayError_ = function(error) {
+AppController.prototype.displayError_ = function (error) {
   trace(error);
   this.infoBox_.pushErrorMessage(error);
 };
 
-AppController.prototype.toggleAudioMute_ = function() {
+AppController.prototype.toggleAudioMute_ = function () {
   this.call_.toggleAudioMute();
   this.muteAudioIconSet_.toggle();
 };
 
-AppController.prototype.toggleVideoMute_ = function() {
+AppController.prototype.toggleVideoMute_ = function () {
   this.call_.toggleVideoMute();
   this.muteVideoIconSet_.toggle();
 };
 
-AppController.prototype.toggleFullScreen_ = function() {
+AppController.prototype.toggleFullScreen_ = function () {
   if (isFullScreen()) {
     trace('Exiting fullscreen.');
     document.querySelector('svg#fullscreen title').textContent =
-        'Enter fullscreen';
+      'Enter fullscreen';
     document.cancelFullScreen();
   } else {
     trace('Entering fullscreen.');
     document.querySelector('svg#fullscreen title').textContent =
-        'Exit fullscreen';
+      'Exit fullscreen';
     document.body.requestFullScreen();
   }
   this.fullscreenIconSet_.toggle();
 };
 
-AppController.prototype.toggleMiniVideo_ = function() {
+AppController.prototype.toggleMiniVideo_ = function () {
   if (this.miniVideo_.classList.contains('active')) {
     this.deactivate_(this.miniVideo_);
   } else {
@@ -497,55 +634,55 @@ AppController.prototype.toggleMiniVideo_ = function() {
   }
 };
 
-AppController.prototype.hide_ = function(element) {
+AppController.prototype.hide_ = function (element) {
   element.classList.add('hidden');
 };
 
-AppController.prototype.show_ = function(element) {
+AppController.prototype.show_ = function (element) {
   element.classList.remove('hidden');
 };
 
-AppController.prototype.activate_ = function(element) {
+AppController.prototype.activate_ = function (element) {
   element.classList.add('active');
 };
 
-AppController.prototype.deactivate_ = function(element) {
+AppController.prototype.deactivate_ = function (element) {
   element.classList.remove('active');
 };
 
-AppController.prototype.showIcons_ = function() {
+AppController.prototype.showIcons_ = function () {
   if (!this.icons_.classList.contains('active')) {
     this.activate_(this.icons_);
     this.setIconTimeout_();
   }
 };
 
-AppController.prototype.hideIcons_ = function() {
+AppController.prototype.hideIcons_ = function () {
   if (this.icons_.classList.contains('active')) {
     this.deactivate_(this.icons_);
   }
 };
 
-AppController.prototype.setIconTimeout_ = function() {
+AppController.prototype.setIconTimeout_ = function () {
   if (this.hideIconsAfterTimeout) {
     window.clearTimeout.bind(this, this.hideIconsAfterTimeout);
   }
-  this.hideIconsAfterTimeout = window.setTimeout(function() {
+  this.hideIconsAfterTimeout = window.setTimeout(function () {
     this.hideIcons_();
   }.bind(this), 5000);
 };
 
-AppController.prototype.iconEventSetup_ = function() {
-  this.icons_.onmouseenter = function() {
+AppController.prototype.iconEventSetup_ = function () {
+  this.icons_.onmouseenter = function () {
     window.clearTimeout(this.hideIconsAfterTimeout);
   }.bind(this);
 
-  this.icons_.onmouseleave = function() {
+  this.icons_.onmouseleave = function () {
     this.setIconTimeout_();
   }.bind(this);
 };
 
-AppController.prototype.loadUrlParams_ = function() {
+AppController.prototype.loadUrlParams_ = function () {
   /* eslint-disable dot-notation */
   // Suppressing eslint warns about using urlParams['KEY'] instead of
   // urlParams.KEY, since we'd like to use string literals to avoid the Closure
@@ -566,14 +703,21 @@ AppController.prototype.loadUrlParams_ = function() {
   this.loadingParams_.videoRecvBitrate = urlParams['vrbr'];
   this.loadingParams_.videoRecvCodec = urlParams['vrc'] || DEFAULT_VIDEO_CODEC;
   this.loadingParams_.videoFec = urlParams['videofec'];
+
+  this.loadingParams_.libvpx = urlParams['libvpx'];
+  this.loadingParams_.videoCodec = urlParams['codec']; // vp8, vp9, etc.
+  this.loadingParams_.videoWidth = urlParams['width']; // 640
+  this.loadingParams_.videoHeight = urlParams['height']; // 480
+  this.loadingParams_.videoFps = urlParams['fps']; // 30
+  this.loadingParams_.webrtc = urlParams['webrtc'];
   /* eslint-enable dot-notation */
 };
 
-AppController.IconSet_ = function(iconSelector) {
+AppController.IconSet_ = function (iconSelector) {
   this.iconElement = document.querySelector(iconSelector);
 };
 
-AppController.IconSet_.prototype.toggle = function() {
+AppController.IconSet_.prototype.toggle = function () {
   if (this.iconElement.classList.contains('on')) {
     this.iconElement.classList.remove('on');
     // turn it off: CSS hides `svg path.on` and displays `svg path.off`
