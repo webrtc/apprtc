@@ -129,7 +129,7 @@ module.exports = function(grunt) {
       }
     },
 
-    closurecompiler: {
+    'closure-compiler': {
       debug: {
         files: {
           // Destination: [source files]
@@ -170,9 +170,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-html');
   grunt.loadNpmTasks('grunt-shell');
-  grunt.loadNpmTasks('grunt-closurecompiler-new-grunt');
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadTasks('build/grunt-chrome-build');
+  // The load-grunt-tasks plugin won't automatically load closure-compiler
+  require('google-closure-compiler').grunt(grunt);
 
   // Set default tasks to run when grunt is called without parameters.
   grunt.registerTask('default', ['runLinting', 'runPythonTests', 'build',
@@ -184,5 +185,5 @@ module.exports = function(grunt) {
                                         'shell:runPythonTests',
                                         'shell:removePythonTestsFromOutAppEngineDir']);
   grunt.registerTask('runUnitTests', ['shell:runUnitTests']),
-  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closurecompiler:debug', 'grunt-chrome-build']);
+  grunt.registerTask('build', ['shell:buildAppEnginePackage', 'shell:genJsEnums', 'closure-compiler:debug', 'grunt-chrome-build']);
 };
