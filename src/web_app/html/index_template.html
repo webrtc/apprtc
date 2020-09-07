@@ -32,6 +32,11 @@
 </head>
 
 <body>
+  {% if header_message %}
+  <header>
+    {{ header_message }}
+  </header>
+  {% endif %}
   <!--
    * Keep the HTML id attributes in sync with |UI_CONSTANTS| defined in
    * appcontroller.js.

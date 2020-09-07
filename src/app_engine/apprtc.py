@@ -277,6 +277,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
       os.environ['BYPASS_JOIN_CONFIRMATION'] == 'True'
 
   params = {
+    'header_message': constants.HEADER_MESSAGE,
     'error_messages': error_messages,
     'warning_messages': warning_messages,
     'is_loopback' : json.dumps(debug == 'loopback'),
