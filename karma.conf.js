@@ -4,11 +4,29 @@ module.exports = function(config) {
       ? 'Chrome_no_sandbox' : process.env.BROWSER
   var travis = process.env.TRAVIS;
   var files = function() {
-    // List of tests that can run in "any" browser.
+    // List of tests that can run in 'any' browser.
     var filteredFiles = [
+      // Application files.
+      'src/web_app/js/adapter.js',
+      'src/web_app/js/constants.js',
+      'src/web_app/js/util.js',
+      'src/web_app/js/sdputils.js',
+      'src/web_app/js/enums.js',
+      'src/web_app/js/analytics.js',
+      'src/web_app/js/appcontroller.js',
+      'src/web_app/js/appwindow.js',
+      'src/web_app/js/call.js',
+      'src/web_app/js/infobox.js',
+      'src/web_app/js/loopback.js',
+      'src/web_app/js/peerconnectionclient.js',
+      'src/web_app/js/roomselection.js',
+      'src/web_app/js/signalingchannel.js',
+      'src/web_app/js/stats.js',
+      'src/web_app/js/storage.js',
+      'src/web_app/js/windowport.js',
+      // Test files.
       'src/web_app/js/testpolyfills.js',
       'src/web_app/js/test_mocks.js',
-      'out/app_engine/js/apprtc.debug.js',
       'src/web_app/js/appcontroller_test.js',
       'src/web_app/js/analytics_test.js',
       'src/web_app/js/call_test.js',
@@ -20,11 +38,6 @@ module.exports = function(config) {
       'src/web_app/js/signalingchannel_test.js',
       'src/web_app/js/utils_test.js'
     ];
-    if (browser.toLowerCase() === 'chrome') {
-      // Chrome extension tests.
-      filteredFiles.push('out/chrome_app/js/background.js');
-      filteredFiles.push('src/web_app/js/background_test.js');
-    }
     return filteredFiles;
   }
 

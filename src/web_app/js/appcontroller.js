@@ -70,11 +70,6 @@ var AppController = function(loadingParams) {
   this.rejoinButton_ = $(UI_CONSTANTS.rejoinButton);
   this.newRoomButton_ = $(UI_CONSTANTS.newRoomButton);
 
-  this.newRoomButton_.addEventListener('click',
-      this.onNewRoomClick_.bind(this), false);
-  this.rejoinButton_.addEventListener('click',
-      this.onRejoinClick_.bind(this), false);
-
   this.muteAudioIconSet_ =
       new AppController.IconSet_(UI_CONSTANTS.muteAudioSvg);
   this.muteVideoIconSet_ =
@@ -101,6 +96,11 @@ var AppController = function(loadingParams) {
         this.loadingParams_[key] = newParams[key];
       }.bind(this));
     }
+
+    this.newRoomButton_.addEventListener('click',
+        this.onNewRoomClick_.bind(this), false);
+    this.rejoinButton_.addEventListener('click',
+        this.onRejoinClick_.bind(this), false);
 
     this.roomLink_ = '';
     this.roomSelection_ = null;
