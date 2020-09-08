@@ -1,6 +1,7 @@
 *.pyc
 .DS_Store
 /src/web_app/js/enums.js
+src/web_app/js/adapter.js
 bower_components
 browser*
 firefox*
