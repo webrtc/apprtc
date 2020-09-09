@@ -88,55 +88,6 @@ describe('Call test', function() {
     call.restart();
   });
 
-  it('Setup cleanup queue', function() {
-    var realWindowPort = apprtc.windowPort;
-    apprtc.windowPort = new MockWindowPort();
-
-    var call = new Call(this.params_);
-    expect(apprtc.windowPort.messages.length).toEqual(0);
-    call.queueCleanupMessages_();
-    expect(apprtc.windowPort.messages.length).toEqual(3);
-
-    var verifyXhrMessage = function(message, method, url) {
-      expect(message.action).toEqual(Constants.QUEUEADD_ACTION);
-      expect(message.queueMessage.action).toEqual(Constants.XHR_ACTION);
-      expect(message.queueMessage.method).toEqual(method);
-      expect(message.queueMessage.url).toEqual(url);
-      expect(message.queueMessage.body).toBeNull();
-    };
-
-    verifyXhrMessage(apprtc.windowPort.messages[0], 'POST', FAKE_LEAVE_URL);
-    verifyXhrMessage(apprtc.windowPort.messages[2], 'DELETE',
-        FAKE_WSS_POST_URL);
-
-    var message = apprtc.windowPort.messages[1];
-    expect(message.action).toEqual(Constants.QUEUEADD_ACTION);
-    expect(message.queueMessage.action).toEqual(Constants.WS_ACTION);
-    expect(message.queueMessage.wsAction).toEqual(Constants.WS_SEND_ACTION);
-    var data = JSON.parse(message.queueMessage.data);
-    expect(data.cmd).toEqual('send');
-    var msg = JSON.parse(data.msg);
-    expect(msg.type).toEqual('bye');
-
-    apprtc.windowPort = realWindowPort;
-  });
-
-  it('Clear cleanup queue', function() {
-    var realWindowPort = apprtc.windowPort;
-    apprtc.windowPort = new MockWindowPort();
-
-    var call = new Call(this.params_);
-    call.queueCleanupMessages_();
-    expect(apprtc.windowPort.messages.length).toEqual(3);
-
-    call.clearCleanupQueue_();
-    expect(apprtc.windowPort.messages.length).toEqual(4);
-    var message = apprtc.windowPort.messages[3];
-    expect(message.action).toEqual(Constants.QUEUECLEAR_ACTION);
-
-    apprtc.windowPort = realWindowPort;
-  });
-
   it('hangup sync', function() {
     var call = new Call(this.params_);
     var stopCalled = false;

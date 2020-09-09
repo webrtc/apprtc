@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals parseJSON, trace, sendUrlRequest, isChromeApp, RemoteWebSocket */
+/* globals parseJSON, trace, sendUrlRequest, RemoteWebSocket */
 /* exported SignalingChannel */
 
 'use strict';
@@ -35,11 +35,7 @@ SignalingChannel.prototype.open = function() {
 
   trace('Opening signaling channel.');
   return new Promise(function(resolve, reject) {
-    if (isChromeApp()) {
-      this.websocket_ = new RemoteWebSocket(this.wssUrl_, this.wssPostUrl_);
-    } else {
-      this.websocket_ = new WebSocket(this.wssUrl_);
-    }
+    this.websocket_ = new WebSocket(this.wssUrl_);
 
     this.websocket_.onopen = function() {
       trace('Signaling channel opened.');

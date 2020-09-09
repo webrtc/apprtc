@@ -8,8 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace, InfoBox, setUpFullScreen, isFullScreen,
-   RoomSelection, isChromeApp, $ */
+/* globals trace, InfoBox, setUpFullScreen, isFullScreen, RoomSelection, $ */
 /* exported AppController, remoteVideo */
 
 'use strict';
@@ -215,28 +214,26 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
   this.call_.start(roomId);
   this.setupUi_();
 
-  if (!isChromeApp()) {
-    // Call hangup with async = false. Required to complete multiple
-    // clean up steps before page is closed.
-    // Chrome apps can't use onbeforeunload.
-    window.onbeforeunload = function() {
-      this.call_.hangup(false);
-    }.bind(this);
+  // Call hangup with async = false. Required to complete multiple
+  // clean up steps before page is closed.
+  // Chrome apps can't use onbeforeunload.
+  window.onbeforeunload = function() {
+    this.call_.hangup(false);
+  }.bind(this);
 
-    window.onpopstate = function(event) {
-      if (!event.state) {
-        // TODO (chuckhays) : Resetting back to room selection page not
-        // yet supported, reload the initial page instead.
-        trace('Reloading main page.');
-        location.href = location.origin;
-      } else {
-        // This could be a forward request to open a room again.
-        if (event.state.roomLink) {
-          location.href = event.state.roomLink;
-        }
+  window.onpopstate = function(event) {
+    if (!event.state) {
+      // TODO (chuckhays) : Resetting back to room selection page not
+      // yet supported, reload the initial page instead.
+      trace('Reloading main page.');
+      location.href = location.origin;
+    } else {
+      // This could be a forward request to open a room again.
+      if (event.state.roomLink) {
+        location.href = event.state.roomLink;
       }
-    };
-  }
+    }
+  };
 };
 
 AppController.prototype.hangup_ = function() {
@@ -436,10 +433,8 @@ AppController.prototype.onKeyPress_ = function(event) {
 };
 
 AppController.prototype.pushCallNavigation_ = function(roomId, roomLink) {
-  if (!isChromeApp()) {
-    window.history.pushState({'roomId': roomId, 'roomLink': roomLink}, roomId,
-        roomLink);
-  }
+  window.history.pushState({'roomId': roomId, 'roomLink': roomLink}, roomId,
+      roomLink);
 };
 
 AppController.prototype.displaySharingInfo_ = function(roomId, roomLink) {

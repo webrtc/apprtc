@@ -10,7 +10,7 @@
 
 /* globals trace, requestIceServers, sendUrlRequest, sendAsyncUrlRequest,
    SignalingChannel, PeerConnectionClient, setupLoopback,
-   parseJSON, isChromeApp, apprtc, Constants */
+   parseJSON, apprtc, Constants */
 
 /* exported Call */
 
@@ -61,48 +61,6 @@ Call.prototype.start = function(roomId) {
   }
 };
 
-Call.prototype.queueCleanupMessages_ = function() {
-  // Set up the cleanup queue.
-  // These steps mirror the cleanup done in hangup(), but will be
-  // executed when the Chrome App is closed by background.js.
-  apprtc.windowPort.sendMessage({
-    action: Constants.QUEUEADD_ACTION,
-    queueMessage: {
-      action: Constants.XHR_ACTION,
-      method: 'POST',
-      url: this.getLeaveUrl_(),
-      body: null
-    }
-  });
-
-  apprtc.windowPort.sendMessage({
-    action: Constants.QUEUEADD_ACTION,
-    queueMessage: {
-      action: Constants.WS_ACTION,
-      wsAction: Constants.WS_SEND_ACTION,
-      data: JSON.stringify({
-        cmd: 'send',
-        msg: JSON.stringify({type: 'bye'})
-      })
-    }
-  });
-
-  apprtc.windowPort.sendMessage({
-    action: Constants.QUEUEADD_ACTION,
-    queueMessage: {
-      action: Constants.XHR_ACTION,
-      method: 'DELETE',
-      url: this.channel_.getWssPostUrl(),
-      body: null
-    }
-  });
-};
-
-Call.prototype.clearCleanupQueue_ = function() {
-  // Clear the cleanup queue.
-  apprtc.windowPort.sendMessage({action: Constants.QUEUECLEAR_ACTION});
-};
-
 Call.prototype.restart = function() {
   // Reinitialize the promises so the media gets hooked up as a result
   // of calling maybeGetMedia_.
@@ -112,10 +70,6 @@ Call.prototype.restart = function() {
 
 Call.prototype.hangup = function(async) {
   this.startTime = null;
-
-  if (isChromeApp()) {
-    this.clearCleanupQueue_();
-  }
 
   if (this.localStream_) {
     if (typeof this.localStream_.getTracks === 'undefined') {
@@ -147,9 +101,6 @@ Call.prototype.hangup = function(async) {
   // where it is called from. When the browser is closed, the requests must
   // be executed as sync to finish before the browser closes. When called
   // from pressing the hang up button, the requests are executed async.
-
-  // If you modify the steps used to hang up a call, you must also modify
-  // the clean up queue steps set up in queueCleanupMessages_.');
 
   var steps = [];
   steps.push({
@@ -322,13 +273,6 @@ Call.prototype.connectToRoom_ = function(roomId) {
     Promise.all([this.getIceServersPromise_, this.getMediaPromise_])
         .then(function() {
           this.startSignaling_();
-          if (isChromeApp()) {
-            // We need to register the required clean up steps with the
-            // background window as soon as we have the information available.
-            // This is required because only the background window is notified
-            // when the window closes.
-            this.queueCleanupMessages_();
-          }
         }.bind(this)).catch(function(error) {
           this.onError_('Failed to start signaling: ' + error.message);
         }.bind(this));
