@@ -22,11 +22,8 @@
 
   <title>AppRTC</title>
 
-  <link rel="manifest" href="/manifest.json">
   <link rel="icon" sizes="192x192" href="/images/webrtc-icon-192x192.png">
-{% if not chromeapp %}
   <link rel="canonical" href="{{ room_link }}">
-{% endif %}
   <link rel="stylesheet" href="/css/main.css">
 
 </head>
@@ -123,9 +120,7 @@
     <a href="//github.com/webrtc/apprtc">Code repo</a>
   </div>
 
-{% if not chromeapp %}
   {{ include_loopback_js }}
-{% endif %}
   <script src="/js/adapter.js"></script>
   <script src="/js/util.js"></script>
   <script src="/js/sdputils.js"></script>
@@ -140,13 +135,8 @@
   <script src="/js/signalingchannel.js"></script>
   <script src="/js/stats.js"></script>
   <script src="/js/storage.js"></script>
-  <script src="/js/windowport.js"></script>
-
-{% if chromeapp %}
   <script src="/js/appwindow.js"></script>
-{% endif %}
 
-{% if not chromeapp %}
   <script type="text/javascript">
     var loadingParams = {
       errorMessages: {{ error_messages }},
@@ -202,6 +192,5 @@
     ga('create', 'UA-48530561-2', 'auto');
     ga('send', 'pageview');
   </script>
-{% endif %}
 </body>
 </html>
