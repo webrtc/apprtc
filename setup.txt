@@ -1,0 +1,15 @@
+These are the steps to setup our personal environment for development
+1. Run our docker apprtc:1.0 with following CLI:
+    docker run --network host --rm -it -v <local_path_to_this_apprtc_repo>:/root/apprtc <apprtc-image-name>:1.0 bash
+2. On docker terminal run following commands:
+    a. cd /root/apprtc
+    b. npm install
+    c. pip install -r requirements.txt
+    d. grunt build
+3. With above steps you have apprtc code is built and ready to on docker server with following CLI:
+    a. cd /root/apprtc
+    b. dev_appserver.py ./out/app_engine
+4. You can open <local)path_to_this_apprtc_repo> in your preferred IDE to browse through javascript code in src/webapp/js folder.
+5. Get started with read of README in js directory.
+
+--update this setup.txt as required--
