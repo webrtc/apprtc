@@ -29,6 +29,7 @@ def _Download(url, to):
   except urllib2.HTTPError, r:
     print('Could not download: %s Error: %d. %s' % (
         to, r.code, r.reason))
+    raise
 
 
 def _Extract(file_to_extract_path, destination_path):
