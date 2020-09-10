@@ -22,8 +22,13 @@ var loadingParams = {
   connect: false,
   paramsFunction: function() {
     return new Promise(function(resolve, reject) {
-      trace('Initializing; retrieving params from: ' + roomServer + '/params');
-      sendAsyncUrlRequest('GET', roomServer + '/params').then(function(result) {
+      var currentUrl = new URL(document.location.href);
+      var paramsUrl = roomServer + '/params';
+      if (currentUrl.searchParams.has("apikey")) {
+        paramsUrl += '?apikey=' + currentUrl.searchParams.get("apikey");
+      }
+      trace('Initializing; retrieving params from: ' + paramsUrl);
+      sendAsyncUrlRequest('GET', paramsUrl).then(function(result) {
         var serverParams = parseJSON(result);
         var newParams = {};
         if (!serverParams) {
