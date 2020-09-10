@@ -257,8 +257,9 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   # a random id, but we should make this better.
   username = client_id if client_id is not None else generate_random(9)
   if len(ice_server_base_url) > 0:
+    api_key = request.get('apikey', default_value=constants.ICE_SERVER_API_KEY)
     ice_server_url = constants.ICE_SERVER_URL_TEMPLATE % \
-        (ice_server_base_url, constants.ICE_SERVER_API_KEY)
+        (ice_server_base_url, api_key)
   else:
     ice_server_url = ''
 
@@ -268,7 +269,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
 
   pc_config = make_pc_config(ice_transports, ice_server_override)
   pc_constraints = make_pc_constraints(dtls, dscp, ipv6)
-  offer_options = {};
+  offer_options = {}
   media_constraints = make_media_stream_constraints(audio, video,
                                                     firefox_fake_device)
   wss_url, wss_post_url = get_wss_parameters(request)

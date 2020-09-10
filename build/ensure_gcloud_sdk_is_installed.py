@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
 import os
-import sys
-import requests
-import tarfile
 import subprocess
+import sys
+import tarfile
+import urllib2
 
 # We are downloading a specific version of the Gcloud SDK because we have not
 # found a URL to fetch the "latest" version.
@@ -14,22 +14,22 @@ import subprocess
 # https://cloud.google.com/sdk/downloads#versioned
 
 GCLOUD_DOWNLOAD_URL = 'https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/'
-GCLOUD_SDK_TAR_FILE = 'google-cloud-sdk-183.0.0-linux-x86_64.tar.gz'
+GCLOUD_SDK_TAR_FILE = 'google-cloud-sdk-308.0.0-linux-x86_64.tar.gz'
 GCLOUD_SDK_INSTALL_FOLDER = 'google-cloud-sdk'
 TEMP_DIR = 'temp'
 GCLOUD_SDK_PATH = os.path.join(TEMP_DIR, GCLOUD_SDK_INSTALL_FOLDER)
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  response = requests.get(url, stream=True)
-  if response.status_code == 200:
-    print 'Downloading %s to %s...' % (url, to)
-    with open(to, 'w') as to_file:
-      for chunk in response.iter_content(chunk_size=1024):
-        to_file.write(chunk)
-  else:
-    raise NameError('Could not download: %s Error: %s' % (to,
-        str(response.status_code)))
+  request = urllib2.urlopen(url)
+  try:
+    f = urllib2.urlopen(request)
+    with open(to, 'wb') as to_file:
+      to_file.write(f.read())
+  except urllib2.HTTPError, r:
+    print('Could not download: %s Error: %d. %s' % (
+        to, r.code, r.reason))
+    raise
 
 
 def _Extract(file_to_extract_path, destination_path):
