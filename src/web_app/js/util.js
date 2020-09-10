@@ -11,7 +11,6 @@
 /* exported calculateFps, setUpFullScreen, fullScreenElement, isFullScreen,
    requestIceServers, sendAsyncUrlRequest, sendSyncUrlRequest,
    randomString, trace, $, queryStringToDictionary */
-/* globals chrome */
 
 'use strict';
 

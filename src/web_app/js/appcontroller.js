@@ -80,13 +80,6 @@ var AppController = function(loadingParams) {
   this.loadUrlParams_();
 
   var paramsPromise = Promise.resolve({});
-  if (this.loadingParams_.paramsFunction) {
-    // If we have a paramsFunction value, we need to call it
-    // and use the returned values to merge with the passed
-    // in params. In the Chrome app, this is used to initialize
-    // the app with params from the server.
-    paramsPromise = this.loadingParams_.paramsFunction();
-  }
 
   Promise.resolve(paramsPromise).then(function(newParams) {
     // Merge newly retrieved params with loadingParams.
@@ -216,7 +209,6 @@ AppController.prototype.finishCallSetup_ = function(roomId) {
 
   // Call hangup with async = false. Required to complete multiple
   // clean up steps before page is closed.
-  // Chrome apps can't use onbeforeunload.
   window.onbeforeunload = function() {
     this.call_.hangup(false);
   }.bind(this);
