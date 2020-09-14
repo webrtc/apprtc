@@ -38,7 +38,7 @@ var Call = function(params) {
   this.onremotesdpset = null;
   this.onremotestreamadded = null;
   this.onsignalingstatechange = null;
-  this.onstatusmessage = null;
+  this.onturnstatusmessage = null;
 
   this.getMediaPromise_ = null;
   this.getIceServersPromise_ = null;
@@ -344,11 +344,11 @@ Call.prototype.maybeGetIceServers_ = function() {
               this.params_.peerConnectionConfig.iceServers =
               servers.concat(iceServers);
             }.bind(this)).catch(function(error) {
-          if (this.onstatusmessage) {
+          if (this.onturnstatusmessage) {
             // Error retrieving ICE servers.
             var subject =
                 encodeURIComponent('AppRTC demo ICE servers not working');
-            this.onstatusmessage(
+            this.onturnstatusmessage(
                 'No TURN server; unlikely that media will traverse networks. ' +
                 'If this persists please ' +
                 '<a href="mailto:discuss-webrtc@googlegroups.com?' +

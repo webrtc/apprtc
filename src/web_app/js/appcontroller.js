@@ -46,6 +46,7 @@ var UI_CONSTANTS = {
   roomSelectionRecentList: '#recent-rooms-list',
   sharingDiv: '#sharing-div',
   statusDiv: '#status-div',
+  turnInfoDiv: '#turn-info-div',
   videosDiv: '#videos',
 };
 
@@ -60,6 +61,7 @@ var AppController = function(loadingParams) {
   this.miniVideo_ = $(UI_CONSTANTS.miniVideo);
   this.sharingDiv_ = $(UI_CONSTANTS.sharingDiv);
   this.statusDiv_ = $(UI_CONSTANTS.statusDiv);
+  this.turnInfoDiv_ = $(UI_CONSTANTS.turnInfoDiv);
   this.remoteVideo_ = $(UI_CONSTANTS.remoteVideo);
   this.videosDiv_ = $(UI_CONSTANTS.videosDiv);
   this.roomLinkHref_ = $(UI_CONSTANTS.roomLinkHref);
@@ -168,7 +170,7 @@ AppController.prototype.createCall_ = function() {
       this.infoBox_.recordIceCandidateTypes.bind(this.infoBox_);
 
   this.call_.onerror = this.displayError_.bind(this);
-  this.call_.onstatusmessage = this.displayStatus_.bind(this);
+  this.call_.onturnstatusmessage = this.displayTurnStatus_.bind(this);
   this.call_.oncallerstarted = this.displaySharingInfo_.bind(this);
 };
 
@@ -273,6 +275,7 @@ AppController.prototype.waitForRemoteVideo_ = function() {
 
 AppController.prototype.onRemoteStreamAdded_ = function(stream) {
   this.deactivate_(this.sharingDiv_);
+  this.displayTurnStatus_('');
   trace('Remote stream added.');
   this.remoteVideo_.srcObject = stream;
   this.infoBox_.getRemoteTrackIds(stream);
@@ -371,6 +374,7 @@ AppController.prototype.transitionToDone_ = function() {
   this.activate_(this.rejoinDiv_);
   this.show_(this.rejoinDiv_);
   this.displayStatus_('');
+  this.displayTurnStatus_('');
 };
 
 AppController.prototype.onRejoinClick_ = function() {
@@ -444,6 +448,15 @@ AppController.prototype.displayStatus_ = function(status) {
     this.activate_(this.statusDiv_);
   }
   this.statusDiv_.innerHTML = status;
+};
+
+AppController.prototype.displayTurnStatus_ = function(status) {
+  if (status === '') {
+    this.deactivate_(this.turnInfoDiv_);
+  } else {
+    this.activate_(this.turnInfoDiv_);
+  }
+  this.turnInfoDiv_.innerHTML = status;
 };
 
 AppController.prototype.displayError_ = function(error) {
