@@ -38,10 +38,11 @@ ICE_SERVER_OVERRIDE = None
 #   }
 # ]
 
-ICE_SERVER_BASE_URL = 'https://networktraversal.googleapis.com'
+ICE_SERVER_BASE_URL = 'https://appr.tc'
 ICE_SERVER_URL_TEMPLATE = '%s/v1alpha/iceconfig?key=%s'
 ICE_SERVER_API_KEY = os.environ.get('ICE_SERVER_API_KEY')
 HEADER_MESSAGE = os.environ.get('HEADER_MESSAGE')
+ICE_SERVER_URLS = [url for url in os.environ.get('ICE_SERVER_URLS', '').split(',') if url]
 
 # Dictionary keys in the collider instance info constant.
 WSS_INSTANCE_HOST_KEY = 'host_port_pair'

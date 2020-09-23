@@ -51,7 +51,11 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
     *  Change `WSS_INSTANCE_HOST_KEY` to the hostname and port Collider is listening too, e.g. `localhost:8089` or `otherHost:443`.
 
 ### TURN/STUN
- * **If using TURN and STUN servers directly**
+
+* **If using TURN and STUN servers directly**
+
+    Either:
+
     * Comment out `TURN_SERVER_OVERRIDE = []` and then uncomment `TURN_SERVER_OVERRIDE = [ { "urls":...]` three lines below and fill your TURN server details, e.g.
 
     ```python
@@ -72,13 +76,21 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
     ]
     ```
 
+    * Or:
+
+    Set the the comma-separated list of STUN servers in app.yaml. e.g.
+
+    ```
+    ICE_SERVER_URLS: "stun:hostnameForYourStunServer,stun:hostnameForYourSecondStunServer"
+    ```
+
 * **Else if using ICE Server provider [1]**
   * Change `ICE_SERVER_BASE_URL` to your ICE server provider host.
   * Change `ICE_SERVER_URL_TEMPLATE` to a path or empty string depending if your ICE server provider has a specific URL path or not.
   * Change `ICE_SERVER_API_KEY` to an API key or empty string depending if your ICE server provider requires an API key to access it or not.
 
   ```python
-  ICE_SERVER_BASE_URL = 'https://networktraversal.googleapis.com'
+  ICE_SERVER_BASE_URL = 'https://appr.tc'
   ICE_SERVER_URL_TEMPLATE = '%s/v1alpha/iceconfig?key=%s'
   ICE_SERVER_API_KEY = os.environ.get('ICE_SERVER_API_KEY')
   ```
