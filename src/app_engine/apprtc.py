@@ -594,6 +594,16 @@ def checkIfRedirect(self):
     redirect_url = constants.REDIRECT_URL + self.request.path + parsed_args
     webapp2.redirect(redirect_url, permanent=True, abort=True)
 
+class IceConfigurationPage(webapp2.RequestHandler):
+  def post(self):
+    ice_config = {}
+    if constants.ICE_SERVER_OVERRIDE:
+      ice_config = {"iceServers": constants.ICE_SERVER_OVERRIDE}
+    else:
+      ice_config = {"iceServers": [{"urls": constants.ICE_SERVER_URLS}]}
+    self.response.write(json.dumps(ice_config))
+
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/a/', analytics_page.AnalyticsPage),
@@ -602,5 +612,6 @@ app = webapp2.WSGIApplication([
     ('/leave/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)', LeavePage),
     ('/message/([a-zA-Z0-9-_]+)/([a-zA-Z0-9-_]+)', MessagePage),
     ('/params', ParamsPage),
+    ('/v1alpha/iceconfig', IceConfigurationPage),
     ('/r/([a-zA-Z0-9-_]+)', RoomPage),
 ], debug=True)
