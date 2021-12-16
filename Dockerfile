@@ -53,25 +53,24 @@ RUN chmod +x start.sh
 CMD ./start.sh
 
 ## Instructions (Tested on Debian 11 only):
-# - Download the Dockerfile from the AppRTC repo and put it in a folder, e.g. apprtc
-# - Build the Dockerfile into an image: sudo docker build apprtc/
+# - Download the Dockerfile from the AppRTC repo and put it in a folder, e.g. 'apprtc'
+# - Build the Dockerfile into an image: 'sudo docker build apprtc/'
 #   Note the image ID from the build command, e.g. something like 'Successfully built 503621f4f7bd'.
-# - Run 'sudo docker run -p 8080:8080 -p 8089:8089 --rm -ti 503621f4f7bd'
-# - The container will now run in interactive mode and output logging. This can ofc be prevent if you run in 
+# - Run: 'sudo docker run -p 8080:8080 -p 8089:8089 --rm -ti 503621f4f7bd'
+#   The container will now run in interactive mode and output logging. This can ofc be prevent if you run in 
 #   non-interactive mode. The -p are port mappings to the GAE app and Collider instances, the host ones can be changed.
-
-# On the same machine that this docker image is running on you can now join apprtc calls using 
-# http://localhost:8080/?wshpp=localhost:8089&wstls=false,  once you join the URL will have 
-# appended the room name which you can share, e.g. http://localhost:8080/r/315402015?wshpp=localhost:8089&wstls=false. 
-
-# Keep in mind that you need to pass in those 'wshpp' and 'wstls' URL parameters everytime you join with as they override 
-# the websocket server address and turns off secure websockets.
-
-# NOTE that localhost is special allowing getusermedia to be accessed without TLS. If you host it on a different hostname
+#
+# - On the same machine that this docker image is running on you can now join apprtc calls using 
+#   http://localhost:8080/?wshpp=localhost:8089&wstls=false,  once you join the URL will have 
+#   appended the room name which you can share, e.g. 'http://localhost:8080/r/315402015?wshpp=localhost:8089&wstls=false'.
+#   
+#   Keep in mind that you need to pass in those 'wshpp' and 'wstls' URL parameters everytime you join with as they override 
+#   the websocket server address and turns off secure websockets.
+#
+# NOTE: that localhost is special (at least on Chrome) allowing getusermedia to be accessed without TLS. If you host it on a different hostname
 # or host alltogheter, TLS is most likely required unless you can do fancy forwarding (so that each client appears
 # to be using localhost but forwards the traffic to the machine running the docker container, not sure if this is possible).
-
-# NOTE it is possible to run docker without sudo but requires extra setup to do so.
+# The steps assume sudo is required for docker, that can be avoided but is out of scope.
 
 ## TODO
 # Investigate if TLS support can be added using self signed certificates. 
