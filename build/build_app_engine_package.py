@@ -9,7 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
-import requests
+#import requests
 
 import test_file_herder
 
