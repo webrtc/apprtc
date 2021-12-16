@@ -116,7 +116,7 @@ def main():
 
   src_path, dest_path = args[0:2]
   CopyApprtcSource(src_path, dest_path)
-  copyPako(dest_path)
+  #copyPako(dest_path)
   if options.include_tests:
     app_engine_code = os.path.join(src_path, 'app_engine')
     test_file_herder.CopyTests(os.path.join(src_path, 'app_engine'), dest_path)
