@@ -57,8 +57,8 @@ CMD ./start.sh
 # - Build the Dockerfile into an image: 'sudo docker build apprtc/'
 #   Note the image ID from the build command, e.g. something like 'Successfully built 503621f4f7bd'.
 # - Run: 'sudo docker run -p 8080:8080 -p 8089:8089 --rm -ti 503621f4f7bd'
-#   The container will now run in interactive mode and output logging. This can ofc be prevent if you run in 
-#   non-interactive mode. The -p are port mappings to the GAE app and Collider instances, the host ones can be changed.
+#   The container will now run in interactive mode and output logging. If you do not want this, omit the '-ti' argument.
+#   The '-p' options are port mappings to the GAE app and Collider instances, the host ones can be changed.
 #
 # - On the same machine that this docker image is running on you can now join apprtc calls using 
 #   http://localhost:8080/?wshpp=localhost:8089&wstls=false,  once you join the URL will have 
