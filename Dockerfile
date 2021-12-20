@@ -24,10 +24,10 @@ RUN echo -e "#!/bin/sh\n" > /go/start.sh \
     && echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 `pwd`/apprtc/out/app.yaml &\n" >> /go/start.sh
 
 # Collider setup
-
+# Go environment setup.
 RUN export GOPATH=$HOME/goWorkspace/ \
     && go env -w GO111MODULE=off
-# Go environment setup.
+
 RUN ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src \
     && ln -s `pwd`/apprtc/src/collider/collidertest $GOPATH/src \
     && ln -s `pwd`/apprtc/src/collider/collider $GOPATH/src \
