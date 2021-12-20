@@ -9,48 +9,40 @@ RUN git clone https://github.com/webrtc/apprtc.git
 # AppRTC GAE setup
 
 # Required to run GAE dev_appserver.py.
-RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz --output gcloud.tar.gz
-RUN tar -xf gcloud.tar.gz
-RUN google-cloud-sdk/bin/gcloud components install app-engine-python-extras app-engine-python cloud-datastore-emulator --quiet
+RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-367.0.0-linux-x86_64.tar.gz --output gcloud.tar.gz \
+    && tar -xf gcloud.tar.gz \
+    && google-cloud-sdk/bin/gcloud components install app-engine-python-extras app-engine-python cloud-datastore-emulator --quiet \
+    && rm -f gcloud.tar.gz
 
 # Mimick build step by manually copying everything into the appropriate folder and run build script.
-WORKDIR apprtc
-RUN python build/build_app_engine_package.py src/ out/
-RUN curl https://webrtc.github.io/adapter/adapter-latest.js --output src/web_app/js/adapter.js
-RUN cp src/web_app/js/*.js out/js/
+RUN python apprtc/build/build_app_engine_package.py apprtc/src/ apprtc/out/ \
+    && curl https://webrtc.github.io/adapter/adapter-latest.js --output apprtc/src/web_app/js/adapter.js \
+    && cp apprtc/src/web_app/js/*.js apprtc/out/js/
 
 # Wrap AppRTC GAE app in a bash script due to needing to run two apps within one container.
-# Make sure we are in the /go/ root folder.
-WORKDIR ../
-RUN echo -e "#!/bin/sh\n" > start.sh
-RUN echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 `pwd`/apprtc/out/app.yaml &\n" >> start.sh
+RUN echo -e "#!/bin/sh\n" > /go/start.sh \
+    && echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 `pwd`/apprtc/out/app.yaml &\n" >> /go/start.sh
 
 # Collider setup
 
+RUN export GOPATH=$HOME/goWorkspace/ \
+    && go env -w GO111MODULE=off
 # Go environment setup.
-RUN export GOPATH=$HOME/goWorkspace/
-RUN go env -w GO111MODULE=off
-RUN  ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src
-RUN  ln -s `pwd`/apprtc/src/collider/collidertest $GOPATH/src
-RUN  ln -s `pwd`/apprtc/src/collider/collider $GOPATH/src
-WORKDIR $GOPATH/src
-
-# Download all the dependencies
-RUN go get collidermain
-
-# Install the package
-RUN go install collidermain
+RUN ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src \
+    && ln -s `pwd`/apprtc/src/collider/collidertest $GOPATH/src \
+    && ln -s `pwd`/apprtc/src/collider/collider $GOPATH/src \
+    && cd $GOPATH/src \
+    && go get collidermain \
+    && go install collidermain
 
 # Add Collider executable to the start.sh bash script.
-WORKDIR ../
-RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=false -room-server=http://localhost &\n" >> start.sh
-RUN echo -e "wait -n\n" >> start.sh
-RUN echo -e "exit $?\n" >> start.sh
-# Make it executable.
-RUN chmod +x start.sh
+RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=false -room-server=http://localhost &\n" >> /go/start.sh \
+    && echo -e "wait -n\n" >> /go/start.sh \
+    && echo -e "exit $?\n" >> /go/start.sh \
+    && chmod +x /go/start.sh
 
 # Start the bash wrapper that keeps both collider and the AppRTC GAE app running. 
-CMD ./start.sh
+CMD /go/start.sh
 
 ## Instructions (Tested on Debian 11 only):
 # - Download the Dockerfile from the AppRTC repo and put it in a folder, e.g. 'apprtc'
