@@ -2,6 +2,8 @@
 
 # AppRTC Demo Code
 
+NOTE: This project is no longer served via https://appr.tc. See [Docker](#docker) for local dev/testing deployment.
+
 ## Development
 
 Detailed information on developing in the [webrtc](https://github.com/webrtc) github repo can be found in the [WebRTC GitHub repo developer's guide](https://docs.google.com/document/d/1tn1t6LW2ffzGuYTK3366w1fhTkkzsSvHsBnOHoDfRzY/edit?pli=1#heading=h.e3366rrgmkdk).
@@ -37,6 +39,14 @@ grunt runPythonTests
 ```
 
 ## Deployment
+
+### Docker
+This allows it to be setup on a machine and accessed by other machines on the same local network for testing purposes.
+
+Download the [Dockerfile](https://github.com/webrtc/apprtc/blob/master/Dockerfile#L72) to a new folder and follow the instructions within the Dockerfile.
+
+### Manual setup
+
 Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 
 1. Clone the AppRTC repository
@@ -44,13 +54,13 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 3. Install and start a Coturn TURN server according to the [instructions](https://github.com/coturn/coturn/wiki/CoturnConfig) on the project page.
 4. Open [src/app_engine/constants.py](https://github.com/webrtc/apprtc/blob/master/src/app_engine/constants.py) and do the following:
 
-### Collider
+#### Collider
  * **If using Google Cloud Engine VM's for Collider**
     * Change `WSS_INSTANCE_HOST_KEY`, `WSS_INSTANCE_NAME_KEY` and `WSS_INSTANCE_ZONE_KEY` to corresponding values for your VM instances which can be found in the Google Cloud Engine management console.
  * **Else if using other VM hosting solution**
     *  Change `WSS_INSTANCE_HOST_KEY` to the hostname and port Collider is listening too, e.g. `localhost:8089` or `otherHost:443`.
 
-### TURN/STUN
+#### TURN/STUN
 
 * **If using TURN and STUN servers directly**
 
