@@ -3,7 +3,7 @@
 FROM golang:1.17.5-alpine3.15
 
 # Install and download deps.
-RUN apk add --no-cache git curl python2
+RUN apk add --no-cache git curl python2 build-base openssl-dev openssl 
 RUN git clone https://github.com/webrtc/apprtc.git
 
 # AppRTC GAE setup
@@ -36,7 +36,32 @@ RUN ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src \
     && go install collidermain
 
 # Add Collider executable to the start.sh bash script.
-RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=false -room-server=http://localhost &\n" >> /go/start.sh \
+RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=true -room-server=http://localhost &\n" >> /go/start.sh
+
+ENV STUNNEL_VERSION 5.60
+
+WORKDIR /usr/src
+RUN curl  https://www.stunnel.org/downloads/stunnel-${STUNNEL_VERSION}.tar.gz --output stunnel.tar.gz\
+    && tar -xf /usr/src/stunnel.tar.gz
+WORKDIR /usr/src/stunnel-${STUNNEL_VERSION}
+RUN ./configure --prefix=/usr && make && make install
+
+RUN mkdir /cert
+RUN openssl req -x509 -out /cert/cert.crt -keyout /cert/key.pem \
+  -newkey rsa:2048 -nodes -sha256 \
+  -subj '/CN=localhost' -extensions EXT -config <( \
+   printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth") \
+  && cat /cert/key.pem > /cert/cert.pem \
+  && cat /cert/cert.crt >> /cert/cert.pem \
+  && chmod 600 /cert/cert.pem /cert/key.pem /cert/cert.crt
+
+RUN echo -e "foreground=yes\n" > /usr/etc/stunnel/stunnel.conf \
+    && echo -e "[AppRTC GAE]\n" >> /usr/etc/stunnel/stunnel.conf \ 
+    && echo -e "accept=0.0.0.0:443\n" >> /usr/etc/stunnel/stunnel.conf \
+    && echo -e "connect=0.0.0.0:8080\n" >> /usr/etc/stunnel/stunnel.conf \
+    && echo -e "cert=/cert/cert.pem\n" >> /usr/etc/stunnel/stunnel.conf 
+
+RUN echo -e  "/usr/bin/stunnel &\n" >> /go/start.sh \
     && echo -e "wait -n\n" >> /go/start.sh \
     && echo -e "exit $?\n" >> /go/start.sh \
     && chmod +x /go/start.sh
@@ -48,23 +73,21 @@ CMD /go/start.sh
 # - Download the Dockerfile from the AppRTC repo and put it in a folder, e.g. 'apprtc'
 # - Build the Dockerfile into an image: 'sudo docker build apprtc/'
 #   Note the image ID from the build command, e.g. something like 'Successfully built 503621f4f7bd'.
-# - Run: 'sudo docker run -p 8080:8080 -p 8089:8089 --rm -ti 503621f4f7bd'
+# - Run: 'sudo docker run -p 443:443 -p 8089:8089 --rm -ti 503621f4f7bd'
 #   The container will now run in interactive mode and output logging. If you do not want this, omit the '-ti' argument.
 #   The '-p' options are port mappings to the GAE app and Collider instances, the host ones can be changed.
 #
 # - On the same machine that this docker image is running on you can now join apprtc calls using 
-#   http://localhost:8080/?wshpp=localhost:8089&wstls=false,  once you join the URL will have 
-#   appended the room name which you can share, e.g. 'http://localhost:8080/r/315402015?wshpp=localhost:8089&wstls=false'.
+#   https://localhost:8080/?wshpp=localhost:8089&wstls=true,  once you join the URL will have 
+#   appended the room name which you can share, e.g. 'http://localhost:8080/r/315402015?wshpp=localhost:8089&wstls=true'. 
+#   If you want to connect to this instance from another machine, use the IP address of the machine running this docker container 
+#   instead of localhost.
 #   
 #   Keep in mind that you need to pass in those 'wshpp' and 'wstls' URL parameters everytime you join with as they override 
-#   the websocket server address and turns off secure websockets.
+#   the websocket server address.
 #
-# NOTE: that localhost is special (at least on Chrome) allowing getusermedia to be accessed without TLS. If you host it on a different hostname
-# or host alltogheter, TLS is most likely required unless you can do fancy forwarding (so that each client appears
-# to be using localhost but forwards the traffic to the machine running the docker container, not sure if this is possible).
 # The steps assume sudo is required for docker, that can be avoided but is out of scope.
 
 ## TODO
-# Investigate if TLS support can be added using self signed certificates. 
 # Verify if this docker container run on more OS's?
 
