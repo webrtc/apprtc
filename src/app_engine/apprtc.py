@@ -111,6 +111,12 @@ def make_pc_constraints(dtls, dscp, ipv6):
 
   return constraints
 
+def maybe_use_https_host_url(request):
+    if request.get('wstls') == 'true' and request.scheme == 'http':
+    # Assume AppRTC is running behind a stunnel proxy and fix base URL.
+      return request.host_url.replace('http:', 'https:')
+    return request.host_url
+
 def append_url_arguments(request, link):
   arguments = request.arguments()
   if len(arguments) == 0:
@@ -296,7 +302,7 @@ def get_room_parameters(request, room_id, client_id, is_initiator):
   }
 
   if room_id is not None:
-    room_link = request.host_url + '/r/' + room_id
+    room_link = maybe_use_https_host_url(request) + '/r/' + room_id
     room_link = append_url_arguments(request, room_link)
     params['room_id'] = room_id
     params['room_link'] = room_link
@@ -562,7 +568,7 @@ class RoomPage(webapp2.RequestHandler):
     checkIfRedirect(self)
     # Check if room is full.
     room = memcache.get(
-        get_memcache_key_for_room(self.request.host_url, room_id))
+        get_memcache_key_for_room(maybe_use_https_host_url(self.request), room_id))
     if room is not None:
       logging.info('Room ' + room_id + ' has state ' + str(room))
       if room.get_occupancy() >= 2:
