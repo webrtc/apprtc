@@ -41,7 +41,7 @@ RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=true -room-server=http://l
 ENV STUNNEL_VERSION 5.60
 
 WORKDIR /usr/src
-RUN curl  https://www.stunnel.org/downloads/stunnel-${STUNNEL_VERSION}.tar.gz --output stunnel.tar.gz\
+RUN curl  https://www.stunnel.org/archive/5.x/stunnel-${STUNNEL_VERSION}.tar.gz --output stunnel.tar.gz\
     && tar -xf /usr/src/stunnel.tar.gz
 WORKDIR /usr/src/stunnel-${STUNNEL_VERSION}
 RUN ./configure --prefix=/usr && make && make install
