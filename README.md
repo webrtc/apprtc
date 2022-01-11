@@ -66,10 +66,10 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 
     Either:
 
-    * Comment out `TURN_SERVER_OVERRIDE = []` and then uncomment `TURN_SERVER_OVERRIDE = [ { "urls":...]` three lines below and fill your TURN server details, e.g.
+    * Comment out `ICE_SERVER_OVERRIDE = None` and then uncomment `ICE_SERVER_OVERRIDE = [ { "urls":...]` three lines below and fill your TURN server details in `src/app_engine/constants.py`. e.g.
 
     ```python
-    TURN_SERVER_OVERRIDE = [
+    ICE_SERVER_OVERRIDE = [
       {
         "urls": [
           "turn:hostnameForYourTurnServer:19305?transport=udp",
@@ -88,7 +88,7 @@ Instructions were performed on Ubuntu 14.04 using Python 2.7.6 and Go 1.6.3.
 
     * Or:
 
-    Set the the comma-separated list of STUN servers in app.yaml. e.g.
+    Set the the comma-separated list of STUN servers in `app.yaml`. e.g.
 
     ```
     ICE_SERVER_URLS: "stun:hostnameForYourStunServer,stun:hostnameForYourSecondStunServer"
