@@ -73,7 +73,7 @@ CMD /go/start.sh
 # - Download the Dockerfile from the AppRTC repo and put it in a folder, e.g. 'apprtc'
 # - Build the Dockerfile into an image: 'sudo docker build apprtc/'
 #   Note the image ID from the build command, e.g. something like 'Successfully built 503621f4f7bd'.
-# - Run: 'sudo docker run -p 443:443 -p 8089:8089 --rm -ti 503621f4f7bd'
+# - Run: 'sudo docker run -p 8080:443 -p 8089:8089 --rm -ti 503621f4f7bd'
 #   The container will now run in interactive mode and output logging. If you do not want this, omit the '-ti' argument.
 #   The '-p' options are port mappings to the GAE app and Collider instances, the host ones can be changed.
 #
