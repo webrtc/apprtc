@@ -78,7 +78,7 @@ CMD /go/start.sh
 #   The '-p' options are port mappings to the GAE app and Collider instances, the host ones can be changed.
 #
 # - On the same machine that this docker image is running on you can now join apprtc calls using 
-#   https://localhost:8080/?wshpp=localhost:8089&wstls=true,  once you join the URL will have 
+#   https://localhost/?wshpp=localhost:8089&wstls=true,  once you join the URL will have 
 #   appended the room name which you can share, e.g. 'http://localhost:8080/r/315402015?wshpp=localhost:8089&wstls=true'. 
 #   If you want to connect to this instance from another machine, use the IP address of the machine running this docker container 
 #   instead of localhost.
