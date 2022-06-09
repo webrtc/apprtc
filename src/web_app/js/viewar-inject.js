@@ -1,11 +1,26 @@
-function injectScript(url) {
+function injectScript(url, alternativeUrl) {
   return new Promise(function(resolve, reject) {
     var script = document.createElement('script');
-    script.src = url;
+
+    if (urlExists(url)) {
+      script.src = url;
+    } else if(alternativeUrl) {
+      script.src = alternativeUrl;
+    } else {
+      resolve();
+    }
+
     script.onload = resolve.bind(this);
     script.onerror = reject.bind(this);
     document.body.appendChild(script);
   });
+}
+
+function urlExists(url) {
+  const http = new XMLHttpRequest();
+  http.open('HEAD', url, false);
+  http.send();
+  return http.status !== 404;
 }
 
 // function injectStyle(url) {
@@ -44,7 +59,7 @@ function getBase64EncodedAppFiles(appId, appVersion) {
         resolve(btoa(encodeURIComponent(appConfig.config.appFiles)));
       }
     };
-    const url = 'https://api.viewar.com/api20/configuration/bundleidentifier:' + appId + '/fakeversion:' + appVersion;
+    const url = 'https://api.viewar.com/api20/configuration/bundleidentifier:' + appId + '/version:' + appVersion;
     console.log('[Inject] Configuration: ' + url);
     xhr.open('GET', url, true);
     xhr.send();
@@ -52,10 +67,10 @@ function getBase64EncodedAppFiles(appId, appVersion) {
 }
 
 window.inject = function(
-  // appId = 'com.viewar.servicear.dev', appVersion = '100'
-  appId = 'com.viewar.streamingbare', appVersion = '100'
+  // appId = 'com.viewar.servicear.dev', appVersion = '100', coreVersion
+  appId = 'com.viewar.streamingbare', appVersion = '100', coreVersion
 ) {
-  console.log('[Inject] app ' + appId + ' ' + appVersion);
+  console.log('[Inject] app ' + appId + ' ' + appVersion + '(core: ' + coreVersion + ')');
 
   window.bundleIdentifier = appId;
   window.bundleVersion = appVersion;
@@ -69,21 +84,19 @@ window.inject = function(
     const base = document.createElement('base');
     base.setAttribute('href', 'https://webversion.viewar.com/web/action:proxy/appFiles:' + appFiles + '/');
     base.setAttribute('target', 'self');
-    // document.head.appendChild(base);
+    document.head.appendChild(base);
 
-    // const coreFile = 'https://webversion.viewar.com/versions/' + coreVersion + '/viewar-core.js';
-    const coreFile = 'https://webversion.viewar.com/versions/11.113.47/viewar-core.js';
-
-    // TODO: Inject html content directly, but probably only
-    // possible in php (because of CORS policy restriction).
-    // const htmlFile =
-    //      `https://webversion.viewar.com/web/action:proxy/appFiles:${appFiles}/index.html`;
-    // const htmlContent = await loadFile(htmlFile):
+    let coreFileAlternative;
+    let coreFile;
+    if (coreVersion) {
+      coreFile = 'https://webversion.viewar.com/versions/' + coreVersion + '/viewar-core.js';
+      coreFileAlternative = `https://unpkg.com/viewar-core@${coreVersion}/viewar-core.js`;
+    } else {
+      coreFile = `${window.location.origin}/js/ViewAR.js`;
+    }
 
     Promise.resolve()
-    // Don't inject core file, gives us a stack error somewhere.
-    // Just include it as script directly in the html.
-        .then(() => injectScript(coreFile))
+        .then(() => injectScript(coreFile, coreFileAlternative))
         .then(() => injectScript(vendorFile))
         .then(() => injectScript(indexFile));
   });
