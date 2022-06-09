@@ -1,3 +1,5 @@
+.vscode
+npm-debug.log
 *.pyc
 .DS_Store
 /src/web_app/js/enums.js

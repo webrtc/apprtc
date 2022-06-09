@@ -136,6 +136,21 @@ var AppController = function(loadingParams) {
   }.bind(this));
 };
 
+// Custom viewar function.
+AppController.prototype.viewarCall = function(roomName) {
+  this.createCall_();
+  this.finishCallSetup_(roomName);
+  this.roomSelection_.removeEventListeners();
+  this.roomSelection_ = null;
+  if (this.localStream_) {
+    this.attachLocalStream_();
+  }
+};
+// Custom viewar function.
+AppController.prototype.viewarStopCall = function() {
+  this.hangup_();
+};
+
 AppController.prototype.createCall_ = function() {
   var privacyLinks = $(UI_CONSTANTS.privacyLinks);
   this.hide_(privacyLinks);
@@ -280,6 +295,11 @@ AppController.prototype.onRemoteStreamAdded_ = function(stream) {
   this.remoteVideo_.srcObject = stream;
   this.infoBox_.getRemoteTrackIds(stream);
 
+  // Viewar specific.
+  window.stream = stream;
+  if (window.viewarVideoChannel) {
+    window.viewarVideoChannel.onstream(stream);
+  }
 
   if (this.remoteVideoResetTimer_) {
     clearTimeout(this.remoteVideoResetTimer_);
@@ -429,8 +449,11 @@ AppController.prototype.onKeyPress_ = function(event) {
 };
 
 AppController.prototype.pushCallNavigation_ = function(roomId, roomLink) {
-  window.history.pushState({'roomId': roomId, 'roomLink': roomLink}, roomId,
-      roomLink);
+  // TODO(kh): Maybe this is the entry point for not using # routing?
+  window.history.pushState({
+    'roomId': roomId,
+    'roomLink': roomLink
+  }, roomId, roomLink.replace(/http:\/\//, 'https://'));
 };
 
 AppController.prototype.displaySharingInfo_ = function(roomId, roomLink) {

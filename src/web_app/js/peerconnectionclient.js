@@ -66,6 +66,102 @@ var PeerConnectionClient = function(params, startTime) {
   this.onremotestreamadded = null;
   this.onsignalingmessage = null;
   this.onsignalingstatechange = null;
+
+  // ViewAR specific:
+  // ViewAR data channel.
+  var dataChannel = this.pc_.createDataChannel(
+    'viewar-data-channel',
+    {
+      ordered: true,
+      maxRetransmits: 2,
+      id: 1
+    }
+  );
+  dataChannel.onerror = function(error) {
+    if (window.viewarDataChannel) {
+      window.viewarDataChannel.onerror(error);
+    }
+  };
+  dataChannel.onmessage = function(event) {
+    if (window.viewarDataChannel) {
+      window.viewarDataChannel.onmessage(event);
+    }
+  };
+  dataChannel.onopen = function() {
+    if (window.viewarDataChannel) {
+      window.viewarDataChannel.properDataChannel = dataChannel;
+      window.viewarDataChannel.onopen(dataChannel);
+    }
+  };
+  dataChannel.onclose = function() {
+    if (window.viewarDataChannel) {
+      window.viewarDataChannel.onclose();
+    }
+  };
+
+  // ViewAR point data channel.
+  var pointDataChannel = this.pc_.createDataChannel(
+      'viewar-point-data-channel',
+      {
+        ordered: true,
+        maxRetransmits: 2,
+        id: 2
+      }
+  );
+  pointDataChannel.onerror = function(error) {
+    if (window.viewarPointDataChannel) {
+      window.viewarPointDataChannel.onerror(error);
+    }
+  };
+  pointDataChannel.onmessage = function(event) {
+    if (window.viewarPointDataChannel) {
+      window.viewarPointDataChannel.onmessage(event);
+    }
+  };
+  pointDataChannel.onopen = function() {
+    if (window.viewarPointDataChannel) {
+      window.viewarPointDataChannel.properDataChannel = dataChannel;
+      window.viewarPointDataChannel.onopen(dataChannel);
+    }
+  };
+  pointDataChannel.onclose = function() {
+    if (window.viewarPointDataChannel) {
+      window.viewarPointDataChannel.onclose();
+    }
+  };
+
+  // ViewAR mesh data channel.
+  var meshDataChannel = this.pc_.createDataChannel(
+      'viewar-mesh-data-channel',
+      {
+        ordered: true,
+        maxRetransmits: 2,
+        id: 3
+      }
+  );
+  meshDataChannel.onerror = function(error) {
+    if (window.viewarMeshDataChannel) {
+      window.viewarMeshDataChannel.onerror(error);
+    }
+  };
+  meshDataChannel.onmessage = function(event) {
+    if (window.viewarMeshDataChannel) {
+      window.viewarMeshDataChannel.onmessage(event);
+    }
+  };
+  meshDataChannel.onopen = function() {
+    if (window.viewarMeshDataChannel) {
+      window.viewarMeshDataChannel.properDataChannel = dataChannel;
+      window.viewarMeshDataChannel.onopen(dataChannel);
+    }
+  };
+  meshDataChannel.onclose = function() {
+    if (window.viewarMeshDataChannel) {
+      window.viewarMeshDataChannel.onclose();
+    }
+  };
+
+  // ViewAR specific end.
 };
 
 // Set up audio and video regardless of what devices are present.

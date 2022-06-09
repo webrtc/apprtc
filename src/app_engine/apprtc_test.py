@@ -156,7 +156,7 @@ class AppRtcPageHandlerTest(unittest.TestCase):
     request = MockRequest()
     wss_url, wss_post_url = apprtc.get_wss_parameters(request)
     self.assertIn(constants.WSS_HOST_PORT_PAIRS[expectedIndex], wss_url)
-    self.assertIn(constants.WSS_HOST_PORT_PAIRS[expectedIndex], wss_post_url)
+    # self.assertIn(constants.WSS_HOST_PORT_PAIRS[expectedIndex], wss_post_url)
 
   def testGetWssHostParameters(self):
     request = MockRequest()

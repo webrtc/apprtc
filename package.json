@@ -9,7 +9,12 @@
     "url": "https://github.com/webrtc/apprtc.git"
   },
   "scripts": {
-    "test": "grunt"
+    "test": "grunt",
+    "build": "grunt",
+    "start": "dev_appserver.py --host=0.0.0.0 --port=8080 --admin_port=8000 --enable_host_checking=false ./out/app_engine",
+    "dev": "dev_appserver.py --host=0.0.0.0 --port=8082 --admin_port=8002 --enable_host_checking=false ./out/app_engine",
+    "production": "./start.sh"
+
   },
   "devDependencies": {
     "eslint-config-webrtc": ">=1.0.0",

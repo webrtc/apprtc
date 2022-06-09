@@ -21,7 +21,7 @@ RUN python apprtc/build/build_app_engine_package.py apprtc/src/ apprtc/out/ \
 
 # Wrap AppRTC GAE app in a bash script due to needing to run two apps within one container.
 RUN echo -e "#!/bin/sh\n" > /go/start.sh \
-    && echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 `pwd`/apprtc/out/app.yaml &\n" >> /go/start.sh
+    && echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --enable_host_checking=false --host 0.0.0.0 `pwd`/apprtc/out/app.yaml &\n" >> /go/start.sh
 
 # Collider setup
 # Go environment setup.

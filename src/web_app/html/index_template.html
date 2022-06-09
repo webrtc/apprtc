@@ -29,15 +29,99 @@
 </head>
 
 <body>
-  {% if header_message %}
-  <header>
-    {{ header_message }}
-  </header>
-  {% endif %}
   <!--
-   * Keep the HTML id attributes in sync with |UI_CONSTANTS| defined in
-   * appcontroller.js.
+  * VIEWAR STUFF
   -->
+
+  <style>
+    #viewar_app #app  {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        pointer-events: none;
+    }
+
+    #viewar_app {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        box-sizing: border-box;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .emscripten {
+        width: 100vw !important;
+        height: 100vh !important;
+        bottom: 0px !important;
+        top: inherit !important;
+        z-index: 1 !important;
+    }
+
+    /* Hide all initial apprtc stuff. */
+    #confirm-join-div,
+    #icons,
+    #privacy,
+    footer,
+    #room-selection {
+      display: none;
+    }
+  </style>
+
+  <div id="app_container"></div>
+  <div id="viewar_app">
+    <div id="app"></div>
+  </div>
+
+  <script type="text/javascript" src="./js/viewar-inject.js"></script>
+  <script type="text/javascript">
+    const args = {};
+    const entries = window.location.hash.slice(1).split('/').map(entries => entries.split(':'))
+    for(let entry of entries) {
+      args[entry[0]] = entry[1];
+    }
+    console.log(args);
+    window.args = args;
+  </script>
+
+  <script
+    type="text/javascript"
+    src="./js/ViewAR.js"
+    >
+  </script>
+
+  <script type="text/javascript">
+
+    window.viewarPeerConnection = {};
+
+    window.viewarDataChannel = {};
+
+    window.viewarPointDataChannel = {};
+
+    window.viewarMeshDataChannel = {};
+
+    // for variable resolution saving
+    window.resolution = {};
+
+  </script>
+
+  <script type="text/javascript">
+    // Inject app.
+    inject(window.args.appId, window.args.appVersion);
+  </script>
+
+  <!--
+  * VIEWAR STUFF END
+  -->
+
+  <!--
+  * Keep the HTML id attributes in sync with |UI_CONSTANTS| defined in
+  * appcontroller.js.
+  -->
+
   <div id="videos">
     <video id="mini-video" autoplay playsinline muted></video>
     <video id="remote-video" autoplay playsinline></video>
