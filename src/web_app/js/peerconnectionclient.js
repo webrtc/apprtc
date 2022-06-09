@@ -70,12 +70,12 @@ var PeerConnectionClient = function(params, startTime) {
   // ViewAR specific:
   // ViewAR data channel.
   var dataChannel = this.pc_.createDataChannel(
-    'viewar-data-channel',
-    {
-      ordered: true,
-      maxRetransmits: 2,
-      id: 1
-    }
+      'viewar-data-channel',
+      {
+        ordered: true,
+        maxRetransmits: 2,
+        id: 1
+      }
   );
   dataChannel.onerror = function(error) {
     if (window.viewarDataChannel) {

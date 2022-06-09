@@ -45,7 +45,9 @@ module.exports = function(grunt) {
     },
     eslint: {
       options: {
-        configFile: 'build/.eslintrc'
+        configFile: 'build/.eslintrc',
+        quiet: true,
+        fix: true
       },
       // TODO(kh): Get core js dynamically from npm/our server.
       target: ['src/**/*.js', '!src/**/enums.js', '!src/**/adapter.js', '!src/**/ViewAR*.js' ]

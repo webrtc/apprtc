@@ -22,6 +22,8 @@
         "max-len": [2, 160, 2, {"ignoreUrls": true}],
         "new-cap": 2,
         "no-console": 0,
+        "no-redeclare": 1,
+        "no-prototype-builtins": 1,
         "no-else-return": 2,
         "no-eval": 2,
         "no-multi-spaces": 2,
