@@ -24,7 +24,8 @@
 
   <link rel="icon" sizes="192x192" href="/images/webrtc-icon-192x192.png">
   <link rel="canonical" href="{{ room_link }}">
-  <link rel="stylesheet" href="/css/main.css">
+  <!-- VIEWAR: Use styling coming from our app. -->
+  <!-- <link rel="stylesheet" href="/css/main.css"> -->
 
 </head>
 
@@ -79,19 +80,23 @@
   <script type="text/javascript" src="./js/viewar-inject.js"></script>
   <script type="text/javascript">
     const args = {};
-    const entries = window.location.hash.slice(1).split('/').map(entries => entries.split(':'))
-    for(let entry of entries) {
-      args[entry[0]] = entry[1];
+    const search = window.location.search.substr(1);
+    if (search) {
+      const entries = search.split('&').map(entry => entry.split('='));
+
+      for(let entry of entries) {
+        args[entry[0]] = entry[1];
+      }
     }
     console.log(args);
     window.args = args;
   </script>
 
-  <script
+  <!-- <script
     type="text/javascript"
     src="./js/ViewAR.js"
     >
-  </script>
+  </script> -->
 
   <script type="text/javascript">
 
@@ -110,7 +115,7 @@
 
   <script type="text/javascript">
     // Inject app.
-    inject(window.args.appId, window.args.appVersion);
+    inject(window.args.appId, window.args.appVersion, window.args.coreVersion);
   </script>
 
   <!--
@@ -239,6 +244,7 @@
       wssPostUrl: '{{ wss_post_url }}',
       bypassJoinConfirmation: {{ bypass_join_confirmation }},
       versionInfo: {{ version_info }},
+      roomServer: 'https://helpar.viewar.com:8888'
     };
 
     var appController;
@@ -266,7 +272,8 @@
     initialize();
   </script>
 
-  <script>
+  <!-- VIEWAR: Disable google analytics.  -->
+  <!-- <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -274,6 +281,63 @@
 
     ga('create', 'UA-48530561-2', 'auto');
     ga('send', 'pageview');
-  </script>
+  </script> -->
+
+  <!-- VIEWAR: Show spinner while downloading resources.  -->
+  <style>
+    .SpinnerSVG {
+      animation: rotate 1s linear infinite;
+      height: 50px;
+      width: 50px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: -9999999;
+    }
+
+    .SpinnerSVG .Path {
+      stroke: #0093ff;
+      stroke-linecap: round;
+      animation: dash 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    @keyframes dash {
+      0% {
+        stroke-dasharray: 1, 150;
+        stroke-dashoffset: 0;
+      }
+      50% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -35;
+      }
+      100% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -124;
+      }
+    }
+  </style>
+
+  <svg
+    id="WebVersionSpinner"
+    class="SpinnerSVG"
+    view-box="0 0 50 50"
+  >
+    <circle
+      class="Path"
+      cx="25"
+      cy="25"
+      r="20"
+      fill="none"
+      stroke-width="3"
+    />
+  </svg>
+
 </body>
 </html>

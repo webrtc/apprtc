@@ -52,12 +52,15 @@ ICE_SERVER_URLS = [url for url in os.environ.get('ICE_SERVER_URLS', '').split(',
 WSS_INSTANCE_HOST_KEY = 'host_port_pair'
 WSS_INSTANCE_NAME_KEY = 'vm_name'
 WSS_INSTANCE_ZONE_KEY = 'zone'
+# ViewAR Note: We also changed helpar.viewar.com:3005 to localhost:3005 in apprtc.py's function get_wss_parameters().
 WSS_INSTANCES = [{
-    WSS_INSTANCE_HOST_KEY: 'apprtc-ws.webrtc.org:443',
+    # WSS_INSTANCE_HOST_KEY: 'apprtc-ws.webrtc.org:443',
+    WSS_INSTANCE_HOST_KEY: 'helpar.viewar.com:3005',
     WSS_INSTANCE_NAME_KEY: 'wsserver-std',
     WSS_INSTANCE_ZONE_KEY: 'us-central1-a'
 }, {
-    WSS_INSTANCE_HOST_KEY: 'apprtc-ws-2.webrtc.org:443',
+    # WSS_INSTANCE_HOST_KEY: 'apprtc-ws-2.webrtc.org:443',
+    WSS_INSTANCE_HOST_KEY: 'helpar.viewar.com:3005',
     WSS_INSTANCE_NAME_KEY: 'wsserver-std-2',
     WSS_INSTANCE_ZONE_KEY: 'us-central1-f'
 }]

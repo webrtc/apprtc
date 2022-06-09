@@ -69,13 +69,13 @@ var PeerConnectionClient = function(params, startTime) {
 
   // ViewAR specific:
   // ViewAR data channel.
-  var dataChannel = this.pc_.createDataChannel(
-      'viewar-data-channel',
-      {
-        ordered: true,
-        maxRetransmits: 2,
-        id: 1
-      }
+  const dataChannel = this.pc_.createDataChannel(
+    'viewar-data-channel',
+    {
+      ordered: true,
+      maxRetransmits: 2,
+      id: 1
+    }
   );
   dataChannel.onerror = function(error) {
     if (window.viewarDataChannel) {
@@ -100,12 +100,13 @@ var PeerConnectionClient = function(params, startTime) {
   };
 
   // ViewAR point data channel.
-  var pointDataChannel = this.pc_.createDataChannel(
+  const pointDataChannel = this.pc_.createDataChannel(
       'viewar-point-data-channel',
       {
         ordered: true,
         maxRetransmits: 2,
-        id: 2
+        id: 2,
+        negotiated: true
       }
   );
   pointDataChannel.onerror = function(error) {
@@ -131,12 +132,13 @@ var PeerConnectionClient = function(params, startTime) {
   };
 
   // ViewAR mesh data channel.
-  var meshDataChannel = this.pc_.createDataChannel(
+  const meshDataChannel = this.pc_.createDataChannel(
       'viewar-mesh-data-channel',
       {
         ordered: true,
         maxRetransmits: 2,
-        id: 3
+        id: 3,
+        negotiated: true
       }
   );
   meshDataChannel.onerror = function(error) {
@@ -160,6 +162,7 @@ var PeerConnectionClient = function(params, startTime) {
       window.viewarMeshDataChannel.onclose();
     }
   };
+
 
   // ViewAR specific end.
 };
@@ -190,7 +193,7 @@ PeerConnectionClient.prototype.startAsCaller = function(offerOptions) {
 
   this.isInitiator_ = true;
   this.started_ = true;
-  var constraints = mergeConstraints(
+  const constraints = mergeConstraints(
       PeerConnectionClient.DEFAULT_SDP_OFFER_OPTIONS_, offerOptions);
   trace('Sending offer to peer, with constraints: \n\'' +
       JSON.stringify(constraints) + '\'.');
@@ -216,7 +219,7 @@ PeerConnectionClient.prototype.startAsCallee = function(initialMessages) {
   if (initialMessages && initialMessages.length > 0) {
     // Convert received messages to JSON objects and add them to the message
     // queue.
-    for (var i = 0, len = initialMessages.length; i < len; i++) {
+    for (let i = 0, len = initialMessages.length; i < len; i++) {
       this.receiveSignalingMessage(initialMessages[i]);
     }
     return true;
@@ -259,7 +262,7 @@ PeerConnectionClient.prototype.close = function() {
   window.dispatchEvent(new CustomEvent('pcclosed', {
     detail: {
       pc: this,
-      time: new Date(),
+      time: new Date()
     }
   }));
   this.pc_ = null;
@@ -345,7 +348,7 @@ PeerConnectionClient.prototype.onSetRemoteDescriptionSuccess_ = function() {
   // By now all onaddstream events for the setRemoteDescription have fired,
   // so we can know if the peer has any remote video streams that we need
   // to wait for. Otherwise, transition immediately to the active state.
-  var remoteStreams = this.pc_.getRemoteStreams();
+  const remoteStreams = this.pc_.getRemoteStreams();
   if (this.onremotesdpset) {
     this.onremotesdpset(remoteStreams.length > 0 &&
                         remoteStreams[0].getVideoTracks().length > 0);
@@ -369,7 +372,7 @@ PeerConnectionClient.prototype.processSignalingMessage_ = function(message) {
     }
     this.setRemoteSdp_(message);
   } else if (message.type === 'candidate') {
-    var candidate = new RTCIceCandidate({
+    const candidate = new RTCIceCandidate({
       sdpMLineIndex: message.label,
       candidate: message.candidate
     });
@@ -397,7 +400,7 @@ PeerConnectionClient.prototype.drainMessageQueue_ = function() {
   if (!this.pc_ || !this.started_ || !this.hasRemoteSdp_) {
     return;
   }
-  for (var i = 0, len = this.messageQueue_.length; i < len; i++) {
+  for (let i = 0, len = this.messageQueue_.length; i < len; i++) {
     this.processSignalingMessage_(this.messageQueue_[i]);
   }
   this.messageQueue_ = [];
@@ -407,7 +410,7 @@ PeerConnectionClient.prototype.onIceCandidate_ = function(event) {
   if (event.candidate) {
     // Eat undesired candidates.
     if (this.filterIceCandidate_(event.candidate)) {
-      var message = {
+      const message = {
         type: 'candidate',
         label: event.candidate.sdpMLineIndex,
         id: event.candidate.sdpMid,

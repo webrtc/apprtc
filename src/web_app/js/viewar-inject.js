@@ -52,6 +52,7 @@ function getBase64EncodedAppFiles(appId, appVersion) {
 }
 
 window.inject = function(
+  // appId = 'com.viewar.servicear.dev', appVersion = '100'
   appId = 'com.viewar.streamingbare', appVersion = '100'
 ) {
   console.log('[Inject] app ' + appId + ' ' + appVersion);
@@ -71,6 +72,7 @@ window.inject = function(
     // document.head.appendChild(base);
 
     // const coreFile = 'https://webversion.viewar.com/versions/' + coreVersion + '/viewar-core.js';
+    const coreFile = 'https://webversion.viewar.com/versions/11.113.47/viewar-core.js';
 
     // TODO: Inject html content directly, but probably only
     // possible in php (because of CORS policy restriction).
@@ -79,10 +81,10 @@ window.inject = function(
     // const htmlContent = await loadFile(htmlFile):
 
     Promise.resolve()
-        .then(() => injectScript(vendorFile))
-        .then(() => injectScript(indexFile));
     // Don't inject core file, gives us a stack error somewhere.
     // Just include it as script directly in the html.
-    //    .then(() => injectScript(coreFile));
+        .then(() => injectScript(coreFile))
+        .then(() => injectScript(vendorFile))
+        .then(() => injectScript(indexFile));
   });
 };
