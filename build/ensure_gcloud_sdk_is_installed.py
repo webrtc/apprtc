@@ -21,7 +21,7 @@ GCLOUD_SDK_PATH = os.path.join(TEMP_DIR, GCLOUD_SDK_INSTALL_FOLDER)
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  request = urllib2.urlopen(url)
+  request = urllib2.Request(url)
   try:
     f = urllib2.urlopen(request)
     with open(to, 'wb') as to_file:
