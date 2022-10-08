@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals randomString, Storage, parseJSON */
+/* globals randomString, parseJSON, trace */
 /* exported RoomSelection */
 
 'use strict';

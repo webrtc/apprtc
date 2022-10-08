@@ -8,7 +8,7 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals  adapter, trace */
+/* globals trace */
 /* exported setCodecParam, iceCandidateType,
    maybeSetOpusOptions, maybePreferAudioReceiveCodec,
    maybePreferAudioSendCodec, maybeSetAudioReceiveBitRate,
@@ -404,7 +404,8 @@ function parseFmtpLine(fmtpLine) {
 
 // Generate an fmtp line from an object including 'pt' and 'params'.
 function writeFmtpLine(fmtpObj) {
-  if (!fmtpObj.hasOwnProperty('pt') || !fmtpObj.hasOwnProperty('params')) {
+  if (!Object.prototype.hasOwnProperty.call(fmtpObj, 'pt') ||
+      !Object.prototype.hasOwnProperty.call(fmtpObj, 'params')) {
     return null;
   }
   var pt = fmtpObj.pt;

@@ -8,7 +8,8 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals trace, InfoBox, setUpFullScreen, isFullScreen, RoomSelection, $ */
+/* globals trace, InfoBox, setUpFullScreen, isFullScreen, RoomSelection, $,
+   Call, queryStringToDictionary */
 /* exported AppController, remoteVideo */
 
 'use strict';

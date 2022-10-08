@@ -12,7 +12,7 @@
 
 'use strict';
 
-var Storage = function() {};
+window.Storage = function() {};
 
 // Get a value from local browser storage. Calls callback with value.
 Storage.prototype.getStorage = function(key, callback) {

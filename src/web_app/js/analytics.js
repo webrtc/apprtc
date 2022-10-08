@@ -5,7 +5,7 @@
  * can be found in the LICENSE file in the root of the source tree.
  */
 
-/* globals sendAsyncUrlRequest, enums, JSON */
+/* globals sendAsyncUrlRequest, enums, trace */
 
 'use strict';
 
