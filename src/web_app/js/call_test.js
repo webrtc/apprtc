@@ -9,9 +9,8 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals  describe, Call, expect, it, FAKE_ICE_SERVER, beforeEach, afterEach,
-   SignalingChannel:true, MockWindowPort, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
-   FAKE_CLIENT_ID, apprtc, Constants, xhrs, MockXMLHttpRequest,
-   XMLHttpRequest:true */
+   SignalingChannel:true, FAKE_WSS_POST_URL, FAKE_ROOM_ID,
+   FAKE_CLIENT_ID, xhrs, MockXMLHttpRequest */
 
 'use strict';
 
@@ -68,7 +67,7 @@ describe('Call test', function() {
       peerConnectionConfig: {iceServers: FAKE_ICE_SERVER}
     };
 
-    XMLHttpRequest = MockXMLHttpRequest;
+    window.XMLHttpRequest = MockXMLHttpRequest;
   });
 
   afterEach(function() {
@@ -76,7 +75,7 @@ describe('Call test', function() {
     navigator.mediaDevices.getUserMedia = this.requestUserMediaBackup_;
     // Removes the xhrs queue.
     XMLHttpRequest.cleanQueue();
-    XMLHttpRequest = realXMLHttpRequest;
+    window.XMLHttpRequest = realXMLHttpRequest;
   });
 
   it('Restart initializes media', function(done) {

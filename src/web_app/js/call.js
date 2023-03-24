@@ -9,8 +9,7 @@
 /* More information about these options at jshint.com/docs/options */
 
 /* globals trace, requestIceServers, sendUrlRequest, sendAsyncUrlRequest,
-   SignalingChannel, PeerConnectionClient, setupLoopback,
-   parseJSON, apprtc, Constants */
+   SignalingChannel, PeerConnectionClient, setupLoopback, parseJSON */
 
 /* exported Call */
 

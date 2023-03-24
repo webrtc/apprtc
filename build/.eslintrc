@@ -52,17 +52,5 @@
     },
     "extends": ["eslint:recommended", "webrtc"],
   "globals": {
-    "adapter": true,
-    "AppController": true,
-    "audioContext": true,
-    "browserSupportsIPHandlingPolicy": true,
-    "browserSupportsNonProxiedUdpBoolean": true,
-    "Call": true,
-    "chrome": true,
-    "ga": true,
-    "getPolicyFromBooleans": true,
-    "remoteVideo": true,
-    "trace": true,
-    "queryStringToDictionary": true
   }
 }

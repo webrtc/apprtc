@@ -14,7 +14,7 @@
    maybeSetAudioSendBitRate, maybeSetVideoSendBitRate,
    maybeSetAudioReceiveBitRate, maybeSetVideoSendInitialBitRate,
    maybeSetVideoReceiveBitRate, maybeSetVideoSendInitialBitRate,
-   maybeRemoveVideoFec, maybeSetOpusOptions, DOMException */
+   maybeRemoveVideoFec, maybeSetOpusOptions */
 
 /* exported PeerConnectionClient */
 

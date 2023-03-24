@@ -8,8 +8,8 @@
 
 /* More information about these options at jshint.com/docs/options */
 
-/* globals  describe, expect, it, beforeEach, afterEach, fail, WebSocket:true,
-   XMLHttpRequest:true, SignalingChannel, webSockets:true, xhrs:true,
+/* globals  describe, expect, it, beforeEach, afterEach, fail,
+   SignalingChannel, webSockets:true, xhrs:true,
    FAKE_WSS_URL, FAKE_WSS_POST_URL, FAKE_ROOM_ID, FAKE_CLIENT_ID,
    MockXMLHttpRequest, MockWebSocket */
 
@@ -21,18 +21,18 @@ describe('Signaling Channel Test', function() {
     xhrs = [];
 
     this.realWebSocket = WebSocket;
-    WebSocket = MockWebSocket;
+    window.WebSocket = MockWebSocket;
 
     this.channel =
         new SignalingChannel(FAKE_WSS_URL, FAKE_WSS_POST_URL);
 
     this.realXMLHttpRequest = XMLHttpRequest;
-    XMLHttpRequest = MockXMLHttpRequest;
+    window.XMLHttpRequest = MockXMLHttpRequest;
   });
 
   afterEach(function() {
-    WebSocket = this.realWebSocket;
-    XMLHttpRequest = this.realXMLHttpRequest;
+    window.WebSocket = this.realWebSocket;
+    window.XMLHttpRequest = this.realXMLHttpRequest;
   });
 
   it('open success', function(done) {

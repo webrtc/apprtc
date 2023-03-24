@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tarfile
 import urllib2
+import platform
 
 # We are downloading a specific version of the Gcloud SDK because we have not
 # found a URL to fetch the "latest" version.
@@ -14,14 +15,18 @@ import urllib2
 # https://cloud.google.com/sdk/downloads#versioned
 
 GCLOUD_DOWNLOAD_URL = 'https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/'
-GCLOUD_SDK_TAR_FILE = 'google-cloud-sdk-308.0.0-linux-x86_64.tar.gz'
+system = platform.system().lower()
+machine = platform.machine().lower()
+if machine == 'arm64' or machine == 'aarch64':
+  machine = 'arm'
+GCLOUD_SDK_TAR_FILE = 'google-cloud-sdk-404.0.0-' + system + '-' +  machine + '.tar.gz'
 GCLOUD_SDK_INSTALL_FOLDER = 'google-cloud-sdk'
 TEMP_DIR = 'temp'
 GCLOUD_SDK_PATH = os.path.join(TEMP_DIR, GCLOUD_SDK_INSTALL_FOLDER)
 
 def _Download(url, to):
   print 'Downloading %s to %s...' % (url, to)
-  request = urllib2.urlopen(url)
+  request = urllib2.Request(url)
   try:
     f = urllib2.urlopen(request)
     with open(to, 'wb') as to_file:
@@ -41,9 +46,10 @@ def _Extract(file_to_extract_path, destination_path):
 def _EnsureAppEngineIsInstalled(path_to_gcloud_sdk):
   gcloud_exec = os.path.join(path_to_gcloud_sdk, 'bin', 'gcloud')
   subprocess.call([gcloud_exec, '--quiet',
-                   'components', 'install', 'app-engine-python'])
+                   'components', 'install', 'app-engine-python', 
+                   'app-engine-python-extras', 'cloud-datastore-emulator'])
   subprocess.call([gcloud_exec, '--quiet',
-                   'components', 'update'])
+                    'components', 'update'])
 
 
 def _Cleanup(file_paths_to_remove):

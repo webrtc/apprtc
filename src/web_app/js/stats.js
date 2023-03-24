@@ -171,7 +171,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
     stats.forEach(function(report, stat) {
       switch(report.type) {
         case 'outbound-rtp':
-          if (report.hasOwnProperty('trackId')) {
+          if (Object.prototype.hasOwnProperty.call(report, 'trackId')) {
             if (report.trackId.indexOf(localTrackIds.audio) !== -1) {
               statsObject.audio.local.bytesSent = report.bytesSent;
               statsObject.audio.local.codecId = report.codecId;
@@ -196,7 +196,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
           }
           break;
         case 'inbound-rtp':
-          if (report.hasOwnProperty('trackId')) {
+          if (Object.prototype.hasOwnProperty.call(report, 'trackId')) {
             if(report.trackId.indexOf(remoteTrackIds.audio) !== -1) {
               statsObject.audio.remote.bytesReceived = report.bytesReceived;
               statsObject.audio.remote.codecId = report.codecId;
@@ -225,7 +225,8 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
           }
           break;
         case 'candidate-pair':
-          if (report.hasOwnProperty('availableOutgoingBitrate')) {
+          if (Object.prototype.hasOwnProperty.call(report,
+              'availableOutgoingBitrate')) {
             statsObject.connection.availableOutgoingBitrate =
                 report.availableOutgoingBitrate;
             statsObject.connection.bytesReceived = report.bytesReceived;
@@ -255,7 +256,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
     stats.forEach(function(report) {
       switch(report.type) {
         case 'track':
-          if (report.hasOwnProperty('trackIdentifier')) {
+          if (Object.prototype.hasOwnProperty.call(report, 'trackIdentifier')) {
             if (report.trackIdentifier.indexOf(localTrackIds.video) !== -1) {
               statsObject.video.local.frameHeight = report.frameHeight;
               statsObject.video.local.framesSent = report.framesSent;
@@ -277,7 +278,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
           }
           break;
         case 'codec':
-          if (report.hasOwnProperty('id')) {
+          if (Object.prototype.hasOwnProperty.call(report, 'id')) {
             if (report.id.indexOf(statsObject.audio.local.codecId) !== -1) {
               statsObject.audio.local.clockRate = report.clockRate;
               statsObject.audio.local.mimeType = report.mimeType;
@@ -301,7 +302,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
           }
           break;
         case 'local-candidate':
-          if (report.hasOwnProperty('id')) {
+          if (Object.prototype.hasOwnProperty.call(report, 'id')) {
             if (report.id.indexOf(
                 statsObject.connection.localCandidateId) !== -1) {
               statsObject.connection.localIp = report.ip;
@@ -314,7 +315,7 @@ function enumerateStats(stats, localTrackIds, remoteTrackIds) {
           }
           break;
         case 'remote-candidate':
-          if (report.hasOwnProperty('id')) {
+          if (Object.prototype.hasOwnProperty.call(report, 'id')) {
             if (report.id.indexOf(
                 statsObject.connection.remoteCandidateId) !== -1) {
               statsObject.connection.remoteIp = report.ip;
