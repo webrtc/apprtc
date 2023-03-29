@@ -173,7 +173,7 @@ InfoBox.prototype.updateInfoDiv = function() {
     if (localAddr && remoteAddr) {
       var relayProtocol = connectionStats.localRelayProtocol;
       contents += this.buildLine_('LocalAddr', localAddr +
-          ' (' + localAddrType + (typeof relayProtocol !== undefined ? '' +
+          ' (' + localAddrType + (typeof relayProtocol === undefined ? '' +
           'TURN/' + relayProtocol.toUpperCase() : '') + ')');
       contents += this.buildLine_('LocalPort', localPort);
       contents += this.buildLine_('RemoteAddr', remoteAddr + ' (' +
