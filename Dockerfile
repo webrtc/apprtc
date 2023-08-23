@@ -2,6 +2,16 @@
 
 FROM golang:1.17.5-alpine3.15
 
+# Build arguments.
+#
+# Override on the docker command line with
+#   --build-arg USE_TLS_SOCKETS=false
+#   --build-arg ENABLE_HOST_CHECK=false
+#
+ARG USE_TLS_SOCKETS=true
+ARG ENABLE_HOST_CHECK=true
+
+
 # Install and download deps.
 RUN apk add --no-cache git curl python2 build-base openssl-dev openssl 
 RUN git clone https://github.com/webrtc/apprtc.git
@@ -21,7 +31,7 @@ RUN python apprtc/build/build_app_engine_package.py apprtc/src/ apprtc/out/ \
 
 # Wrap AppRTC GAE app in a bash script due to needing to run two apps within one container.
 RUN echo -e "#!/bin/sh\n" > /go/start.sh \
-    && echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 `pwd`/apprtc/out/app.yaml &\n" >> /go/start.sh
+    && echo -e "`pwd`/google-cloud-sdk/bin/dev_appserver.py --host 0.0.0.0 --enable_host_checking=$ENABLE_HOST_CHECK `pwd`/apprtc/out/app.yaml &\n" >> /go/start.sh
 
 # Collider setup
 # Go environment setup.
@@ -36,7 +46,7 @@ RUN ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src \
     && go install collidermain
 
 # Add Collider executable to the start.sh bash script.
-RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=true -room-server=http://localhost &\n" >> /go/start.sh
+RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=$USE_TLS_SOCKETS -room-server=http://localhost &\n" >> /go/start.sh
 
 ENV STUNNEL_VERSION 5.60
 
@@ -71,9 +81,10 @@ CMD /go/start.sh
 
 ## Instructions (Tested on Debian 11 only):
 # - Download the Dockerfile from the AppRTC repo and put it in a folder, e.g. 'apprtc'
-# - Build the Dockerfile into an image: 'sudo docker build apprtc/'
-#   Note the image ID from the build command, e.g. something like 'Successfully built 503621f4f7bd'.
-# - Run: 'sudo docker run -p 443:443 -p 8089:8089 --rm -ti 503621f4f7bd'
+# - Build the Dockerfile into an image: 'sudo docker build apprtc/ --tag apprtc:latest'
+#   If you want to disable TLS (not recommended) add '--build-arg USE_TLS_SOCKETS=false' to that command.
+#   If you want to allow connection from any remote client, add '--build-arg ENABLE_HOST_CHECK=false'.
+# - Run: 'sudo docker run -p 443:443 -p 8080:8080 -p 8089:8089 --rm -ti apprtc:latest'
 #   The container will now run in interactive mode and output logging. If you do not want this, omit the '-ti' argument.
 #   The '-p' options are port mappings to the GAE app and Collider instances, the host ones can be changed.
 #
