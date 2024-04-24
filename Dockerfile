@@ -38,6 +38,16 @@ RUN ln -s `pwd`/apprtc/src/collider/collidermain $GOPATH/src \
 # Add Collider executable to the start.sh bash script.
 RUN echo -e "$GOPATH/bin/collidermain -port=8089 -tls=true -room-server=http://localhost &\n" >> /go/start.sh
 
+# TURN/STUN server setup
+ENV COTURN_VERSION 4.5.2
+WORKDIR /usr/src
+RUN git clone --depth 1 --branch ${COTURN_VERSION} https://github.com/coturn/coturn.git
+WORKDIR /usr/src/coturn
+RUN ./configure --prefix=/usr && make && make install
+
+# Add TURN server executable to the start.sh bash script.
+RUN echo -e "turnserver -c /usr/share/examples/turnserver/etc/turnserver.conf &\n" >> /go/start.sh
+
 ENV STUNNEL_VERSION 5.60
 
 WORKDIR /usr/src
